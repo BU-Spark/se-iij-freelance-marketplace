@@ -1,115 +1,59 @@
-'use client';
-
-import React, { useState } from 'react';
-import { ThemeToggle } from './components/ThemeToggle';
-import { Button } from './components/Button';
-import { FeatureCard, FeatureCardProps } from './components/FeatureCard';
-import {
-  ModernStackDetails,
-  StylingFreedomDetails,
-  DevToolsDetails,
-  ResponsiveDesignDetails,
-} from './components/FeatureCard/details';
+import Link from 'next/link';
+import IIJLogo from './components/IIJLogo';
 import styles from './page.module.css';
 
-type FeatureData = Omit<FeatureCardProps, 'onClick' | 'isExpanded'>;
-
-const featureData: FeatureData[] = [
-  {
-    id: 'modern-stack',
-    icon: '🚀',
-    title: 'Modern Stack',
-    description: 'Next.js 15, React 19, TypeScript. Fast, efficient, and type-safe development.',
-    details: <ModernStackDetails />,
-  },
-  {
-    id: 'styling-freedom',
-    icon: '🎨',
-    title: 'Styling Freedom',
-    description: 'Styling agnostic! Choose Tailwind, CSS Modules, Emotion, or your favorite solution.',
-    details: <StylingFreedomDetails />,
-  },
-  {
-    id: 'dev-tools',
-    icon: '🛠️',
-    title: 'Dev Tools Ready',
-    description: 'ESLint, Prettier, Husky hooks, and Jest testing pre-configured for quality code.',
-    details: <DevToolsDetails />,
-  },
-  {
-    id: 'responsive-design',
-    icon: '📱',
-    title: 'Responsive Design',
-    description: 'Built with a responsive layout in mind. Looks great on all devices.',
-    details: <ResponsiveDesignDetails />,
-  },
+const FEATURES = [
+  { label: 'Post & find assignments', color: 'var(--c-green)' },
+  { label: 'Pitch to real editors', color: 'var(--c-amber)' },
+  { label: 'Get paid for your work', color: 'var(--c-purple)' },
 ];
 
-export default function HomePage() {
-  const openLink = (url: string) => window.open(url, '_blank');
-  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
-
-  const handleCardClick = (cardId: string) => {
-    setExpandedCardId((prevId) => (prevId === cardId ? null : cardId));
-  };
-
-  // Split featureData into two columns
-  const column1Features = featureData.filter((_, index) => index % 2 === 0);
-  const column2Features = featureData.filter((_, index) => index % 2 === 1);
-
+export default function Home() {
   return (
-    <div className={styles.container}>
-      <div className={styles.themeToggleContainer}>
-        <ThemeToggle />
+    <main className={styles.main}>
+      <div className={styles.blobs} aria-hidden="true">
+        <span style={{ background: 'var(--c-green)' }} />
+        <span style={{ background: 'var(--c-yellow)' }} />
+        <span style={{ background: 'var(--c-pink)' }} />
+        <span style={{ background: 'var(--c-sky)' }} />
       </div>
 
-      <main className={styles.pageMain}>
-        <section className={styles.heroSection}>
-          <h1 className={styles.title}>Spark Your Next Creation! ✨</h1>
-          <p className={styles.subtitle}>
-            A Next.js & TypeScript template designed for rapid development and learning industry best practices.
-          </p>
-          <div className={styles.ctaButtons}>
-            <Button variant="primary" size="large" onClick={() => openLink('https://nextjs.org/docs')}>
-              Explore Next.js Docs
-            </Button>
-            <Button
-              variant="secondary"
-              size="large"
-              onClick={() => openLink('https://github.com/BU-Spark/TEMPLATE-next-js-starter')}
-            >
-              View on GitHub
-            </Button>
-          </div>
-        </section>
+      <section className={styles.hero}>
+        <div className={styles.logoWrap}>
+          <IIJLogo size={190} />
+        </div>
 
-        <section className={styles.featuresContainer}>
-          <div className={styles.featureColumn}>
-            {column1Features.map((feature) => (
-              <FeatureCard
-                key={feature.id}
-                {...feature}
-                isExpanded={expandedCardId === feature.id}
-                onClick={handleCardClick}
-              />
-            ))}
-          </div>
-          <div className={styles.featureColumn}>
-            {column2Features.map((feature) => (
-              <FeatureCard
-                key={feature.id}
-                {...feature}
-                isExpanded={expandedCardId === feature.id}
-                onClick={handleCardClick}
-              />
-            ))}
-          </div>
-        </section>
-      </main>
+        <p className={styles.eyebrow}>The freelance assignment desk</p>
 
-      <footer className={styles.footer}>
-        <p>This template is a launchpad for your amazing projects. Happy coding!</p>
-      </footer>
-    </div>
+        <h1 className={styles.title}>
+          Welcome to the
+          <br />
+          <span className={styles.highlight}>Institute for Independent Journalists</span>
+        </h1>
+
+        <p className={styles.subtitle}>
+          Where newsroom editors meet the independent journalists who can take the work. Set up your profile in under
+          two minutes.
+        </p>
+
+        <Link href="/onboarding" className={styles.cta}>
+          <span>Let&apos;s get started</span>
+          <span className={styles.arrow} aria-hidden="true">
+            →
+          </span>
+        </Link>
+
+        <ul className={styles.features}>
+          {FEATURES.map((f, i) => (
+            <li key={f.label} style={{ animationDelay: `${700 + i * 120}ms` }}>
+              <span className={styles.dot} style={{ background: f.color }} />
+              {f.label}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <div className={styles.rainbowBar} aria-hidden="true" />
+    </main>
   );
 }

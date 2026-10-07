@@ -22,7 +22,8 @@
   border-width: 2px;
   border-color: transparent;
   padding: calc(2rem - 1px);
-  background-image: linear-gradient(var(--card-bg), var(--card-bg)),
+  background-image:
+    linear-gradient(var(--card-bg), var(--card-bg)),
     linear-gradient(120deg, var(--primary-accent), var(--secondary-accent));
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
@@ -38,7 +39,8 @@
 /* Explicitly set expanded border color for dark mode */
 :global(html.dark) .featureCard.expanded {
   border-color: transparent;
-  background-image: linear-gradient(var(--card-bg), var(--card-bg)),
+  background-image:
+    linear-gradient(var(--card-bg), var(--card-bg)),
     linear-gradient(120deg, var(--primary-accent), var(--secondary-accent));
 }
 
