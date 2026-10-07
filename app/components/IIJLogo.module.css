@@ -1,0 +1,45 @@
+.logo {
+  display: block;
+  overflow: visible;
+}
+
+.text {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2.2px;
+  fill: var(--navy);
+}
+
+.fan {
+  transform-origin: 100px 100px;
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.logo:hover .fan {
+  transform: rotate(24deg);
+}
+
+.wedge {
+  transform-origin: 100px 100px;
+  transition: transform 0.3s ease;
+}
+
+.logo:hover .wedge:nth-child(odd) {
+  transform: scale(1.08);
+}
+
+.animated .wedge {
+  animation: wedgeIn 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.3) backwards;
+}
+
+@keyframes wedgeIn {
+  from {
+    transform: scale(0) rotate(-40deg);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) rotate(0);
+    opacity: 1;
+  }
+}

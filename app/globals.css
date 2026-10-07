@@ -1,87 +1,67 @@
+/* ============================================================
+   Institute for Independent Journalists — global theme
+   Colors are taken from the IIJ logo (navy ring + rainbow fan)
+   ============================================================ */
+
 :root {
-  /* Global Theme Variables (Light Mode is default) */
-  --page-bg: #f0f4f8;
-  --page-bg-gradient-start: #e6f4ff;
-  --page-bg-gradient-end: #89b2fa;
-  --text-color: #2c3e50;
-  --primary-accent: #0060c7;
-  --secondary-accent: #28a745;
-  --card-bg: #bdd5ff;
-  --card-border: #78a0c8;
-  --link-color: var(--primary-accent);
-  --code-bg: #e9ecef;
-}
+  /* Brand base */
+  --navy: #1b3a6b;
+  --navy-deep: #0f2347;
+  --ink: #111827;
+  --muted: #5b6475;
+  --line: #e3e7ee;
+  --bg: #f7f9fc;
+  --mist: #e3e8f0;
+  --white: #ffffff;
 
-html {
-  color-scheme: light;
-}
+  /* Logo fan colors */
+  --c-green-d: #2e7d32;
+  --c-green: #4cbb47;
+  --c-sky: #4fa3e0;
+  --c-blue: #2563eb;
+  --c-violet: #7c6fd6;
+  --c-yellow: #f5c842;
+  --c-amber: #f59e2b;
+  --c-orange: #ef6c2b;
+  --c-red: #e5395b;
+  --c-pink: #ec4899;
+  --c-purple: #a33bdb;
+  --c-lavender: #d58bf0;
 
-html.dark {
-  color-scheme: dark;
-  /* Dark Mode Theme Overrides */
-  --page-bg: #1a202c;
-  --page-bg-gradient-start: #191425;
-  --page-bg-gradient-end: #0D1117;
-  --text-color: #e2e8f0;
-  --primary-accent: #a246f8;
-  --secondary-accent: #f595c6;
-  --card-bg: #191425;
-  --card-border: #2c3034;
-  --link-color: var(--primary-accent);
-  --code-bg: #2c3034;
-}
+  --rainbow: linear-gradient(
+    90deg,
+    var(--c-green-d),
+    var(--c-green),
+    var(--c-yellow),
+    var(--c-amber),
+    var(--c-red),
+    var(--c-purple),
+    var(--c-sky),
+    var(--c-blue)
+  );
 
-body {
-  background-image: linear-gradient(to bottom, var(--page-bg-gradient-start), var(--page-bg-gradient-end));
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  color: var(--text-color);
-  font-family: var(--font-outfit), Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease;
-}
+  --font-serif: var(--font-dm-serif), Georgia, serif;
+  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
 
-/* Apply dark mode variables to body when html.dark is present */
-html.dark body {
-  color: var(--text-color);
-}
-
-.main-content-container {
-  width: 100%;
-  max-width: 70rem;
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
-  flex-grow: 1; /* Ensure main content can grow */
-  display: flex; /* Added to allow children to flex if needed */
-  flex-direction: column; /* Added for default stacking */
-}
-
-@media (min-width: 640px) {
-  .main-content-container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  .main-content-container {
-    padding-left: 2rem;
-    padding-right: 2rem;
-  }
+  --radius: 14px;
+  --shadow-sm: 0 1px 2px rgba(15, 35, 71, 0.06);
+  --shadow-md: 0 10px 30px -12px rgba(15, 35, 71, 0.25);
+  --shadow-lg: 0 24px 60px -20px rgba(15, 35, 71, 0.35);
 }
 
 * {
   box-sizing: border-box;
-  padding: 0;
   margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100%;
 }
 
 a {
@@ -89,62 +69,35 @@ a {
   text-decoration: none;
 }
 
-/* ErrorBoundary Fallback UI Styling */
-.error-boundary {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex-grow: 1; /* Ensure it can take up space if it's the main content */
-  padding: 2rem;
-  text-align: center;
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border: 1px solid var(--card-border);
-  border-radius: 8px;
-  margin: 2rem; /* Add some margin if it's inside another container */
-}
-
-html.dark .error-boundary {
-  background-color: var(--card-bg);
-  color: var(--text-color);
-  border-color: var(--card-border);
-}
-
-.error-boundary h2 {
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-  color: var(--secondary-accent);
-}
-
-html.dark .error-boundary h2 {
-  color: var(--secondary-accent);
-}
-
-.error-boundary details {
-  margin-top: 1rem;
-  padding: 0.75rem;
-  background-color: var(--code-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 4px;
-  max-width: 600px;
-  overflow-x: auto; /* For long error messages */
-}
-
-html.dark .error-boundary details {
-  background-color: var(--code-bg);
-  border-color: var(--card-border);
-}
-
-.error-boundary summary {
+button {
+  font: inherit;
   cursor: pointer;
-  font-weight: bold;
-  margin-bottom: 0.5rem;
+  border: none;
+  background: none;
+  color: inherit;
 }
 
-.error-boundary pre {
-  white-space: pre-wrap; /* Wrap long lines */
-  word-break: break-all; /* Break long words/strings */
-  font-size: 0.875rem;
-  text-align: left;
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--c-yellow);
+  color: var(--navy-deep);
+}
+
+:focus-visible {
+  outline: 3px solid var(--c-sky);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

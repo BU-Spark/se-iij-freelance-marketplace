@@ -1,31 +1,27 @@
 import type { Metadata } from 'next';
-import { Outfit } from 'next/font/google';
+import { DM_Serif_Display, Inter } from 'next/font/google';
 import './globals.css';
-import { ErrorBoundary } from './components/ErrorBoundary';
 
-const outfit = Outfit({
+const serif = DM_Serif_Display({
   subsets: ['latin'],
-  variable: '--font-outfit',
+  weight: '400',
+  variable: '--font-dm-serif',
+});
+
+const sans = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {
-  title: 'Spark! Next.js Template',
-  description: 'Spark! Next.js Template',
-  keywords: ['Next.js', 'React', 'TypeScript', 'Template'],
+  title: 'Institute for Independent Journalists',
+  description: 'The assignment desk that connects newsroom editors with independent journalists.',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${outfit.variable}`}>
-      <body>
-        <ErrorBoundary>
-          <div className="main-content-container">{children}</div>
-        </ErrorBoundary>
-      </body>
+    <html lang="en" className={`${serif.variable} ${sans.variable}`}>
+      <body>{children}</body>
     </html>
   );
 }
