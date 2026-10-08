@@ -3,72 +3,11 @@
 import { useMemo, useState, KeyboardEvent } from 'react';
 import Link from 'next/link';
 import IIJLogo from '../components/IIJLogo';
+import PreviewCard from '../components/PreviewCard';
+import { EditorIcon, FreelancerIcon } from '../components/RoleIcons';
 import styles from './onboarding.module.css';
-import type { Availability, Organization, ProfileData, ProfileErrors, Role } from '../types/onboarding.types';
-
-/* ------------------------------------------------------------------ */
-/*  Static data                                                        */
-/* ------------------------------------------------------------------ */
-
-const DEFAULT_ORGS: Organization[] = [
-  { id: 'meridian', name: 'The Meridian Post', city: 'New York' },
-  { id: 'crosswind', name: 'Crosswind Weekly', city: 'Berlin' },
-  { id: 'signal', name: 'Signal Room', city: 'Remote' },
-  { id: 'broadsheet', name: 'Broadsheet Pacific', city: 'Tokyo' },
-];
-
-const TOPICS = [
-  'Politics',
-  'Business',
-  'Climate',
-  'Tech',
-  'Culture',
-  'Health',
-  'Local',
-  'World',
-  'Sports',
-  'Investigations',
-];
-
-const MEDIUMS = ['Text', 'Photo', 'Video', 'Audio', 'Data', 'Illustration'];
-
-// Each chip gets a logo color, cycling through the fan
-const CHIP_COLORS = [
-  'var(--c-green)',
-  'var(--c-amber)',
-  'var(--c-red)',
-  'var(--c-purple)',
-  'var(--c-sky)',
-  'var(--c-blue)',
-  'var(--c-yellow)',
-  'var(--c-pink)',
-  'var(--c-green-d)',
-  'var(--c-orange)',
-];
-
-const AVAILABILITY: { value: Availability; label: string; color: string }[] = [
-  { value: 'available', label: 'Available today', color: 'var(--c-green)' },
-  { value: 'this-week', label: 'Later this week', color: 'var(--c-amber)' },
-  { value: 'booked', label: 'Fully booked', color: 'var(--c-red)' },
-];
-
-const EMPTY: ProfileData = {
-  fullName: '',
-  email: '',
-  bio: '',
-  title: '',
-  experience: '',
-  orgId: 'meridian',
-  desks: [],
-  location: '',
-  beats: [],
-  mediums: [],
-  tools: [],
-  portfolio: '',
-  availability: 'available',
-};
-
-type Step = 'role' | 'profile' | 'done';
+import { AVAILABILITY, CHIP_COLORS, DEFAULT_ORGS, EMPTY, MEDIUMS, TOPICS } from './constants';
+import type { Organization, ProfileData, ProfileErrors, Role, Step } from '../types/onboarding.types';
 
 /* ------------------------------------------------------------------ */
 /*  Validation                                                         */
@@ -683,93 +622,5 @@ function TagInput({ tags, onChange }: { tags: string[]; onChange: (t: string[]) 
         placeholder={tags.length ? '' : 'Premiere Pro, Datawrapper, Lightroom…'}
       />
     </div>
-  );
-}
-
-function PreviewCard({ role, data, org }: { role: Role; data: ProfileData; org?: Organization }) {
-  const initials =
-    data.fullName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase())
-      .join('') || '?';
-
-  const tags = role === 'editor' ? data.desks : [...data.beats, ...data.mediums];
-  const avail = AVAILABILITY.find((a) => a.value === data.availability)!;
-
-  return (
-    <div className={styles.preview}>
-      <div className={styles.previewBanner} />
-      <div className={styles.avatar}>{initials}</div>
-      <h4>{data.fullName || 'Your name'}</h4>
-      <p className={styles.previewMeta}>
-        {role === 'editor'
-          ? `${data.title || 'Your title'} · ${org?.name ?? 'Your newsroom'}`
-          : `Freelancer${data.location ? ` · ${data.location}` : ''}`}
-      </p>
-
-      {role === 'freelancer' && (
-        <span className={styles.previewAvail} style={{ ['--accent' as string]: avail.color }}>
-          <span className={styles.pulseDot} /> {avail.label}
-        </span>
-      )}
-
-      {data.bio && <p className={styles.previewBio}>{data.bio}</p>}
-
-      <div className={styles.previewTags}>
-        {tags.length ? (
-          tags.map((t, i) => (
-            <span key={t} style={{ ['--accent' as string]: CHIP_COLORS[i % CHIP_COLORS.length] }}>
-              {t}
-            </span>
-          ))
-        ) : (
-          <em>{role === 'editor' ? 'Desks appear here' : 'Beats & mediums appear here'}</em>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Icons                                                              */
-/* ------------------------------------------------------------------ */
-
-function EditorIcon() {
-  return (
-    <svg
-      width="26"
-      height="26"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="9" cy="7" r="4" />
-      <path d="M2 21v-1a6 6 0 0 1 9.5-4.9" />
-      <circle cx="18" cy="17" r="2.5" />
-      <path d="M18 13v1.5M18 19.5V21M14 17h1.5M20.5 17H22" />
-    </svg>
-  );
-}
-
-function FreelancerIcon() {
-  return (
-    <svg
-      width="26"
-      height="26"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="7" r="4" />
-      <path d="M4 21v-1a8 8 0 0 1 16 0v1" />
-    </svg>
   );
 }

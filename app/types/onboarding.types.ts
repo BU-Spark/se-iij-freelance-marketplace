@@ -28,3 +28,4 @@ export interface ProfileData {
 }
 
 export type ProfileErrors = Partial<Record<keyof ProfileData, string>>;
+export type Step = 'role' | 'profile' | 'done';
