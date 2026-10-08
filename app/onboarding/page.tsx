@@ -1,34 +1,19 @@
 'use client';
 
-import { useMemo, useState, KeyboardEvent } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import IIJLogo from '../components/IIJLogo';
 import PreviewCard from '../components/PreviewCard';
 import { EditorIcon, FreelancerIcon } from '../components/RoleIcons';
+import Section from '../components/Section';
+import Field from '../components/Field';
+import ChipGroup from '../components/ChipGroup';
+import OrgPicker from '../components/OrgPicker';
+import TagInput from '../components/TagInput';
 import styles from './onboarding.module.css';
 import { AVAILABILITY, CHIP_COLORS, DEFAULT_ORGS, EMPTY, MEDIUMS, TOPICS } from './constants';
 import type { Organization, ProfileData, ProfileErrors, Role, Step } from '../types/onboarding.types';
-
-/* ------------------------------------------------------------------ */
-/*  Validation                                                         */
-/* ------------------------------------------------------------------ */
-
-function validate(role: Role, d: ProfileData): ProfileErrors {
-  const e: ProfileErrors = {};
-  if (d.fullName.trim().length < 2) e.fullName = 'Please enter your full name';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) e.email = 'Enter a valid email address';
-
-  if (role === 'editor') {
-    if (!d.title.trim()) e.title = "What's your position?";
-    if (d.desks.length === 0) e.desks = 'Pick at least one desk';
-  } else {
-    if (d.beats.length === 0) e.beats = 'Pick at least one beat';
-    if (d.mediums.length === 0) e.mediums = 'Pick at least one medium';
-    if (d.portfolio && !/^https?:\/\/\S+\.\S+/.test(d.portfolio))
-      e.portfolio = 'Link should start with http:// or https://';
-  }
-  return e;
-}
+import { validateProfile } from '../utils/validation.utils';
 
 /* ------------------------------------------------------------------ */
 /*  Page                                                               */
@@ -43,7 +28,7 @@ export default function OnboardingPage() {
   const [shake, setShake] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const errors = useMemo(() => (role ? validate(role, data) : {}), [role, data]);
+  const errors = useMemo(() => (role ? validateProfile(role, data) : {}), [role, data]);
 
   const update = <K extends keyof ProfileData>(key: K, value: ProfileData[K]) =>
     setData((d) => ({ ...d, [key]: value }));
@@ -455,172 +440,5 @@ function DoneStep({
         </Link>
       </div>
     </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/*  Small building blocks                                              */
-/* ------------------------------------------------------------------ */
-
-function Section({
-  title,
-  hint,
-  color,
-  error,
-  children,
-}: {
-  title: string;
-  hint?: string;
-  color: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className={styles.section} style={{ ['--accent' as string]: color }}>
-      <h3 className={styles.sectionTitle}>{title}</h3>
-      {hint && <p className={styles.hint}>{hint}</p>}
-      {children}
-      {error && <p className={styles.error}>{error}</p>}
-    </section>
-  );
-}
-
-function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
-  return (
-    <label className={styles.field} data-error={!!error}>
-      <span className={styles.label}>{label}</span>
-      {children}
-      {error && <span className={styles.error}>{error}</span>}
-    </label>
-  );
-}
-
-function ChipGroup({
-  options,
-  selected,
-  onToggle,
-}: {
-  options: string[];
-  selected: string[];
-  onToggle: (v: string) => void;
-}) {
-  return (
-    <div className={styles.chips}>
-      {options.map((o, i) => {
-        const active = selected.includes(o);
-        return (
-          <button
-            key={o}
-            type="button"
-            className={styles.chip}
-            data-active={active}
-            aria-pressed={active}
-            style={{ ['--accent' as string]: CHIP_COLORS[i % CHIP_COLORS.length] }}
-            onClick={() => onToggle(o)}
-          >
-            <span className={styles.chipMark}>{active ? '✓' : '+'}</span>
-            {o}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-function OrgPicker({
-  orgs,
-  selected,
-  onSelect,
-  onAdd,
-}: {
-  orgs: Organization[];
-  selected: string;
-  onSelect: (id: string) => void;
-  onAdd: (o: Organization) => void;
-}) {
-  const [adding, setAdding] = useState(false);
-  const [name, setName] = useState('');
-  const [city, setCity] = useState('');
-
-  const save = () => {
-    if (!name.trim()) return;
-    onAdd({ id: `org-${Date.now()}`, name: name.trim(), city: city.trim() || '—' });
-    setName('');
-    setCity('');
-    setAdding(false);
-  };
-
-  return (
-    <div className={styles.orgGrid}>
-      {orgs.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          className={styles.orgCard}
-          data-active={selected === o.id}
-          onClick={() => onSelect(o.id)}
-        >
-          <strong>{o.name}</strong>
-          <span>{o.city}</span>
-        </button>
-      ))}
-
-      {adding ? (
-        <div className={`${styles.orgAdd} ${styles.fadeIn}`}>
-          <input autoFocus placeholder="Newsroom name" value={name} onChange={(e) => setName(e.target.value)} />
-          <input
-            placeholder="City"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && save()}
-          />
-          <div className={styles.orgAddActions}>
-            <button type="button" onClick={() => setAdding(false)}>
-              Cancel
-            </button>
-            <button type="button" className={styles.miniPrimary} onClick={save}>
-              Add
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button type="button" className={styles.orgNew} onClick={() => setAdding(true)}>
-          <span>＋</span> Add new organization
-        </button>
-      )}
-    </div>
-  );
-}
-
-function TagInput({ tags, onChange }: { tags: string[]; onChange: (t: string[]) => void }) {
-  const [value, setValue] = useState('');
-
-  const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
-    if ((e.key === 'Enter' || e.key === ',') && value.trim()) {
-      e.preventDefault();
-      if (!tags.includes(value.trim())) onChange([...tags, value.trim()]);
-      setValue('');
-    } else if (e.key === 'Backspace' && !value && tags.length) {
-      onChange(tags.slice(0, -1));
-    }
-  };
-
-  return (
-    <div className={styles.tagInput}>
-      {tags.map((t, i) => (
-        <span key={t} className={styles.tag} style={{ ['--accent' as string]: CHIP_COLORS[i % CHIP_COLORS.length] }}>
-          {t}
-          <button type="button" aria-label={`Remove ${t}`} onClick={() => onChange(tags.filter((x) => x !== t))}>
-            ×
-          </button>
-        </span>
-      ))}
-      <input
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onKeyDown={onKey}
-        placeholder={tags.length ? '' : 'Premiere Pro, Datawrapper, Lightroom…'}
-      />
-    </div>
   );
 }

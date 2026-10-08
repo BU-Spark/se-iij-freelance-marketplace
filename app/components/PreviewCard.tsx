@@ -1,4 +1,4 @@
-import styles from '../onboarding/onboarding.module.css';
+import styles from './PreviewCard.module.css';
 import { AVAILABILITY, CHIP_COLORS } from '../onboarding/constants';
 import type { Organization, ProfileData, Role } from '../types/onboarding.types';
 
