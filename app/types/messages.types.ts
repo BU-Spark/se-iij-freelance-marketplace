@@ -1,14 +1,17 @@
-export type Messages = {
-  timestamp: Date;
-  publisherId: string; // todo: Change to UUID
-  freelancerId: string; // todo: Change to UUID
-  message: string;
+export type Message = {
   id: string;
+  conversationId: string;
+  senderId: string;
+  body: string;
+  createdAt: Date;
+  readAt?: Date;
 };
 
-export type Chats = {
+export type Conversation = {
   id: string;
-  timestamp: Date;
-  title: string;
-  messages: Messages[];
+  participantIds: string[];
+  assignmentId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  lastMessageAt?: Date;
 };
