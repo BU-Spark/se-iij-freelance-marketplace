@@ -8,6 +8,7 @@
  * This file defines a simple User interface.
  */
 
+import { PortfolioItems } from './portfolioItem.types';
 export interface User {
   id: string;
   username: string;
@@ -18,6 +19,11 @@ export interface User {
   roles: Role[];
   createdAt: Date;
   updatedAt: Date;
+  bio?: string;
+  organizationId?: string;
+  availabilityTracker?: Date[];
+  verified: boolean;
+  portfolio: PortfolioItems[];
 }
 
 export enum Role {
