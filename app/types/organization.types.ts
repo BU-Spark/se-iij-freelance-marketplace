@@ -8,4 +8,5 @@ export type Organization = {
   timestamp: Date;
   admins: string[]; // To Do: UUID?
   users: string[]; // To Do: UUID?
+  city: string;
 };
