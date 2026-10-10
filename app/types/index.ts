@@ -14,5 +14,5 @@ export * from './user.types'; // Exports User, Role, UserProfilePageData, etc.
 // export * from './api.types';
 export * from './assignments.types'; // Export Assignment
 export * from './badges.types'; // Export Badges
-export * from './messages.types'; // Export Messages, Chat
+export * from './messages.types'; // Export Message, Conversation
 export * from './organization.types'; // Export Organization
