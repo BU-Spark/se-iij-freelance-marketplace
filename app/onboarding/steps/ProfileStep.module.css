@@ -1,0 +1,147 @@
+/* ============ Step 2: layout ============ */
+.profileLayout {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 48px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .profileLayout {
+    grid-template-columns: 1fr;
+  }
+  .previewCol {
+    order: -1;
+    position: static !important;
+  }
+}
+
+.back {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 0;
+  transition:
+    color 0.2s,
+    transform 0.2s;
+}
+.back:hover {
+  color: var(--navy);
+  transform: translateX(-3px);
+}
+
+.roleTag {
+  margin-top: 20px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.roleTag[data-role='editor'] {
+  color: var(--c-blue);
+}
+.roleTag[data-role='freelancer'] {
+  color: var(--c-purple);
+}
+
+.grid2 {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px 20px;
+}
+
+/* ============ Availability ============ */
+.availability {
+  margin-top: 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.availBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.availBtn:hover {
+  border-color: var(--accent);
+}
+.availBtn[data-active='true'] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, white);
+}
+.pulseDot {
+  position: relative;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.availBtn[data-active='true'] .pulseDot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.6s ease-out infinite;
+}
+@keyframes pulse {
+  to {
+    transform: scale(2.8);
+    opacity: 0;
+  }
+}
+
+/* ============ Submit states ============ */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.shake {
+  animation: shake 0.45s ease;
+}
+@keyframes shake {
+  20%,
+  60% {
+    transform: translateX(-8px);
+  }
+  40%,
+  80% {
+    transform: translateX(8px);
+  }
+}
+
+/* ============ Preview card ============ */
+.previewCol {
+  position: sticky;
+  top: 96px;
+}
+.previewLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
