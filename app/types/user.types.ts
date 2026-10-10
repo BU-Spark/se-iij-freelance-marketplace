@@ -8,7 +8,8 @@
  * This file defines a simple User interface.
  */
 
-import { PortfolioItems } from './portfolioItem.types';
+import type { Availability } from './availability.types';
+import type { PortfolioItems } from './portfolioItem.types';
 export interface User {
   id: string;
   username: string;
@@ -19,11 +20,8 @@ export interface User {
   roles: Role[];
   createdAt: Date;
   updatedAt: Date;
-  bio?: string;
-  organizationId?: string;
-  availabilityTracker?: Date[];
   verified: boolean;
-  portfolio: PortfolioItems[];
+  shortBio?: string;
 }
 
 export enum Role {
@@ -32,9 +30,43 @@ export enum Role {
   EDITOR = 'EDITOR',
 }
 
+export interface Editor {
+  user: User;
+  longBio?: string;
+  organizationId?: string;
+  availability?: Availability;
+  desks: string[];
+  pitchPreferences: PitchPreferences;
+  jobTitle: string;
+  yearsAtDesk: number;
+}
+
+export interface Freelancer {
+  user: User;
+  location?: string;
+  rate?: string;
+  communityCovered?: string;
+  reportingBeats?: string[];
+  beatTags?: string[]; //todo: Expand into its own type
+  workMediums?: string[];
+  tools?: string[];
+  portfolio?: PortfolioItems[];
+  availability?: Availability;
+}
+
+export interface PitchPreferences {
+  preferredPitchFormat: string;
+  averageResponseTime: number;
+  interestedTopics: string[];
+  editorialPreferences: string[];
+  lookingFor: string[];
+}
+
+export type UserProfile = Editor | Freelancer;
+
 // Example of a more complex type that might use the User interface
 export interface UserProfilePageData {
-  user: User;
+  user: UserProfile;
   recentActivity: ActivityLog[];
   preferences: UserPreferences;
 }
