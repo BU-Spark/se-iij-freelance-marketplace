@@ -1,0 +1,113 @@
+/* ============ Step 3: done ============ */
+.done {
+  position: relative;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.centerLead {
+  margin-inline: auto;
+}
+
+.checkRing {
+  width: 96px;
+  height: 96px;
+  margin-bottom: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--navy);
+  box-shadow:
+    0 0 0 6px #fff,
+    0 0 0 10px transparent;
+  position: relative;
+  animation: popIn 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+}
+.checkRing::before {
+  content: '';
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--c-green-d),
+    var(--c-green),
+    var(--c-yellow),
+    var(--c-amber),
+    var(--c-red),
+    var(--c-purple),
+    var(--c-sky),
+    var(--c-blue),
+    var(--c-green-d)
+  );
+  z-index: -1;
+  animation: spin 6s linear infinite;
+}
+.checkRing path {
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: draw 0.5s 0.4s ease forwards;
+}
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes popIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+.doneCard {
+  width: 100%;
+  max-width: 360px;
+  margin-top: 36px;
+  animation: fadeUp 0.6s 0.3s both;
+}
+
+.confetti {
+  position: absolute;
+  inset: -40px 0 auto 0;
+  height: 300px;
+  pointer-events: none;
+  overflow: hidden;
+}
+.confetti span {
+  position: absolute;
+  top: -20px;
+  width: 8px;
+  height: 14px;
+  border-radius: 2px;
+  opacity: 0;
+  animation: fall 1.8s ease-in forwards;
+}
+@keyframes fall {
+  0% {
+    opacity: 1;
+    transform: translateY(0) rotate(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(320px) rotate(540deg);
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
