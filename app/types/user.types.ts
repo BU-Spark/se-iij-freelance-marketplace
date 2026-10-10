@@ -9,6 +9,7 @@
  */
 
 import type { Availability } from './availability.types';
+import { Badge } from './badges.types';
 import type { PortfolioItem } from './portfolioItem.types';
 export interface User {
   id: string;
@@ -69,6 +70,7 @@ export interface UserProfilePageData {
   user: UserProfile;
   recentActivity: ActivityLog[];
   preferences: UserPreferences;
+  badges: Badge[];
 }
 
 export interface ActivityLog {
