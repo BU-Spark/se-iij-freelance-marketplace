@@ -10,7 +10,7 @@
 
 export * from './user.types'; // Exports User, Role, UserProfilePageData, etc.
 export * from './availability.types'; // Export availability types
-export * from './portfolioItem.types'; // Export PortfolioItem
+export * from './portfolioItem.types'; // Export PortfolioItem and ClipType
 // Add other type files here as they are created, e.g.:
 // export * from './product.types';
 // export * from './api.types';

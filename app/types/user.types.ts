@@ -9,7 +9,7 @@
  */
 
 import type { Availability } from './availability.types';
-import type { PortfolioItems } from './portfolioItem.types';
+import type { PortfolioItem } from './portfolioItem.types';
 export interface User {
   id: string;
   username: string;
@@ -50,7 +50,7 @@ export interface Freelancer {
   beatTags?: string[]; //todo: Expand into its own type
   workMediums?: string[];
   tools?: string[];
-  portfolio?: PortfolioItems[];
+  portfolio?: PortfolioItem[];
   availability?: Availability;
 }
 
