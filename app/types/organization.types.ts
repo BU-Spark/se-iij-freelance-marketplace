@@ -4,7 +4,7 @@ export type Organization = {
   id: string;
   name: string;
   bio: string;
-  openAssignments: Assignment;
+  openAssignments: Assignment[];
   timestamp: Date;
   admins: string[]; // To Do: UUID?
   users: string[]; // To Do: UUID?

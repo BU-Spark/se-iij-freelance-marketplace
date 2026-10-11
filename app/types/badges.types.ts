@@ -1,6 +1,7 @@
-export type Badges = {
+export type Badge = {
+  id: string;
+  userId: string;
   name: string;
-  uuid: string;
-  timestamp: Date;
+  awardedAt: Date;
   iconUrl: string;
 };
