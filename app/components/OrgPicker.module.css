@@ -1,0 +1,126 @@
+/* OrgPicker: newsroom cards + "add new" form */
+.orgGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+}
+.orgCard {
+  text-align: left;
+  padding: 18px 20px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  transition: all 0.25s ease;
+}
+.orgCard strong {
+  display: block;
+  font-size: 16px;
+  color: var(--navy-deep);
+}
+.orgCard span {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.orgCard:hover {
+  border-color: var(--navy);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+.orgCard[data-active='true'] {
+  background: var(--navy-deep);
+  border-color: var(--navy-deep);
+  box-shadow:
+    0 0 0 3px rgba(27, 58, 107, 0.15),
+    var(--shadow-md);
+}
+.orgCard[data-active='true'] strong {
+  color: #fff;
+}
+.orgCard[data-active='true'] span {
+  color: #c4cde0;
+}
+
+.orgNew {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  border: 1.5px dashed #c9d0dc;
+  border-radius: 10px;
+  font-size: 15px;
+  color: var(--navy-deep);
+  transition: all 0.2s;
+}
+.orgNew span {
+  font-size: 18px;
+  transition: transform 0.3s;
+}
+.orgNew:hover {
+  border-color: var(--c-green);
+  background: color-mix(in srgb, var(--c-green) 6%, white);
+}
+.orgNew:hover span {
+  transform: rotate(90deg);
+}
+
+.orgAdd input {
+  width: 100%;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  font-size: 15px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+.orgAdd input:focus {
+  outline: none;
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+.orgAdd {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1.5px solid var(--c-green);
+  border-radius: 10px;
+  background: #fff;
+}
+.orgAdd input {
+  padding: 10px 12px;
+  font-size: 14px;
+}
+.orgAddActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.orgAddActions button {
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--muted);
+}
+.miniPrimary {
+  background: var(--navy);
+  color: #fff !important;
+}
+
+.fadeIn {
+  animation: fadeUp 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
