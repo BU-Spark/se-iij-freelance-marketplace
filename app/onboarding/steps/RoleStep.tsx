@@ -1,4 +1,5 @@
-import { EditorIcon, FreelancerIcon } from '../../components/RoleIcons';
+import { EditorIcon } from '../../components/icons/EditorIcon';
+import { FreelancerIcon } from '../../components/icons/FreelancerIcon';
 import shared from '../onboarding.module.css';
 import styles from './RoleStep.module.css';
 import type { Role } from '../../types/onboarding.types';
