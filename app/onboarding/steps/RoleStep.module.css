@@ -1,0 +1,93 @@
+/* ============ Step 1: role cards ============ */
+.roleGrid {
+  margin-top: 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.roleCard {
+  position: relative;
+  text-align: left;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease,
+    border-color 0.3s ease;
+}
+.roleCard::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--rainbow);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.roleCard:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+  border-color: transparent;
+}
+.roleCard:hover::before {
+  transform: scaleX(1);
+}
+.roleCard:active {
+  transform: translateY(-2px) scale(0.99);
+}
+
+.roleIcon {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  transition:
+    transform 0.35s ease,
+    background 0.3s ease,
+    color 0.3s ease;
+}
+.roleCard:hover .roleIcon {
+  transform: rotate(-8deg) scale(1.08);
+  background: var(--accent);
+  color: #fff;
+}
+
+.roleCard h2 {
+  margin-top: 20px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 26px;
+  color: var(--navy-deep);
+}
+.roleCard p {
+  margin-top: 8px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.roleLink {
+  display: inline-block;
+  margin-top: 20px;
+  font-weight: 600;
+  font-size: 15px;
+  color: var(--navy-deep);
+}
+.arrow {
+  display: inline-block;
+  transition: transform 0.25s ease;
+}
+.roleCard:hover .roleLink {
+  color: var(--accent);
+}
+.roleCard:hover .arrow {
+  transform: translateX(6px);
+}
