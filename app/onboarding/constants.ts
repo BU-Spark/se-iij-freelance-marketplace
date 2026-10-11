@@ -1,11 +1,11 @@
-import type { Availability, Organization, ProfileData } from '../types/onboarding.types';
+import type { OrgOption, ProfileData } from '../types/onboarding.types';
 
 /* ------------------------------------------------------------------ */
 /*  Temporary static data for onboarding                               */
 /*  TODO: replace with data from the backend once the API exists       */
 /* ------------------------------------------------------------------ */
 
-export const DEFAULT_ORGS: Organization[] = [
+export const DEFAULT_ORGS: OrgOption[] = [
   { id: 'meridian', name: 'The Meridian Post', city: 'New York' },
   { id: 'crosswind', name: 'Crosswind Weekly', city: 'Berlin' },
   { id: 'signal', name: 'Signal Room', city: 'Remote' },
@@ -41,24 +41,18 @@ export const CHIP_COLORS = [
   'var(--c-orange)',
 ];
 
-export const AVAILABILITY: { value: Availability; label: string; color: string }[] = [
-  { value: 'available', label: 'Available today', color: 'var(--c-green)' },
-  { value: 'this-week', label: 'Later this week', color: 'var(--c-amber)' },
-  { value: 'booked', label: 'Fully booked', color: 'var(--c-red)' },
-];
-
 export const EMPTY: ProfileData = {
-  fullName: '',
+  firstName: '',
+  lastName: '',
   email: '',
-  bio: '',
-  title: '',
-  experience: '',
-  orgId: 'meridian',
+  shortBio: '',
+  jobTitle: '',
+  yearsAtDesk: 0,
+  organizationId: 'meridian',
   desks: [],
   location: '',
-  beats: [],
-  mediums: [],
+  reportingBeats: [],
+  workMediums: [],
   tools: [],
-  portfolio: '',
-  availability: 'available',
+  portfolio: [],
 };

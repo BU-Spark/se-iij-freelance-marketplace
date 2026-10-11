@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import styles from './OrgPicker.module.css';
-import type { Organization } from '../types/onboarding.types';
+import type { OrgOption } from '../types/onboarding.types';
 
 type OrgPickerProps = {
-  orgs: Organization[];
+  orgs: OrgOption[];
   selected: string;
   onSelect: (id: string) => void;
-  onAdd: (o: Organization) => void;
+  onAdd: (o: OrgOption) => void;
 };
 
 export default function OrgPicker({ orgs, selected, onSelect, onAdd }: OrgPickerProps) {

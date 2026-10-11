@@ -50,7 +50,8 @@ describe('Onboarding page', () => {
 
     it('shows validation errors when submitted empty', () => {
       submit();
-      expect(screen.getByText(/please enter your full name/i)).toBeInTheDocument();
+      expect(screen.getByText(/please enter your first name/i)).toBeInTheDocument();
+      expect(screen.getByText(/please enter your last name/i)).toBeInTheDocument();
       expect(screen.getByText(/enter a valid email address/i)).toBeInTheDocument();
       expect(screen.getByText(/what's your position\?/i)).toBeInTheDocument();
       expect(screen.getByText(/pick at least one desk/i)).toBeInTheDocument();
@@ -59,7 +60,8 @@ describe('Onboarding page', () => {
     });
 
     it('updates the live preview as the user types', () => {
-      type(/full name/i, 'Sarah Jenkins');
+      type(/first name/i, 'Sarah');
+      type(/last name/i, 'Jenkins');
       type(/position \/ title/i, 'News Editor');
       expect(screen.getByRole('heading', { level: 4, name: 'Sarah Jenkins' })).toBeInTheDocument();
       expect(screen.getByText('SJ')).toBeInTheDocument();
@@ -80,7 +82,8 @@ describe('Onboarding page', () => {
     });
 
     it('reaches the success screen with valid details', async () => {
-      type(/full name/i, 'Sarah Jenkins');
+      type(/first name/i, 'Sarah');
+      type(/last name/i, 'Jenkins');
       type(/work email/i, 'sarah@newsroom.example');
       type(/position \/ title/i, 'News Editor');
       fireEvent.click(chip('Politics'));
@@ -117,7 +120,8 @@ describe('Onboarding page', () => {
     });
 
     it('reaches the success screen with valid details', async () => {
-      type(/full name/i, 'Alex Rivera');
+      type(/first name/i, 'Alex');
+      type(/last name/i, 'Rivera');
       type(/^email/i, 'alex@example.com');
       fireEvent.click(chip('Climate'));
       fireEvent.click(chip('Photo'));

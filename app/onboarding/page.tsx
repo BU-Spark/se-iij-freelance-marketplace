@@ -5,7 +5,7 @@ import Link from 'next/link';
 import IIJLogo from '../components/IIJLogo';
 import styles from './onboarding.module.css';
 import { DEFAULT_ORGS, EMPTY } from './constants';
-import type { Organization, ProfileData, Role, Step } from '../types/onboarding.types';
+import type { OnboardingRole, OrgOption, ProfileData, Step } from '../types/onboarding.types';
 import { validateProfile } from '../utils/validation.utils';
 import RoleStep from './steps/RoleStep';
 import ProfileStep, { type Touched } from './steps/ProfileStep';
@@ -21,9 +21,9 @@ const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
 export default function OnboardingPage() {
   const [step, setStep] = useState<Step>('role');
-  const [role, setRole] = useState<Role | null>(null);
+  const [role, setRole] = useState<OnboardingRole | null>(null);
   const [data, setData] = useState<ProfileData>(EMPTY);
-  const [orgs, setOrgs] = useState<Organization[]>(DEFAULT_ORGS);
+  const [orgs, setOrgs] = useState<OrgOption[]>(DEFAULT_ORGS);
   const [touched, setTouched] = useState<Touched>({});
   const [shake, setShake] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -35,7 +35,7 @@ export default function OnboardingPage() {
 
   const touch = (key: keyof ProfileData) => setTouched((t) => ({ ...t, [key]: true }));
 
-  const pickRole = (r: Role) => {
+  const pickRole = (r: OnboardingRole) => {
     setRole(r);
     setTouched({});
     setStep('profile');
@@ -53,7 +53,7 @@ export default function OnboardingPage() {
     }
 
     setSubmitting(true);
-    // TODO: replace with your real API call, e.g. await fetch("/api/profile", {...})
+    // TODO: replace with the real API call, sending toProfile(role, data) from utils/profile.utils
     await new Promise((r) => setTimeout(r, 900));
     setSubmitting(false);
     setStep('done');
@@ -61,7 +61,7 @@ export default function OnboardingPage() {
   };
 
   const { progress, label } = STEP_META[step];
-  const selectedOrg = orgs.find((o) => o.id === data.orgId);
+  const selectedOrg = orgs.find((o) => o.id === data.organizationId);
 
   return (
     <div className={styles.shell}>
@@ -95,7 +95,7 @@ export default function OnboardingPage() {
             touch={touch}
             addOrg={(o) => {
               setOrgs((list) => [...list, o]);
-              update('orgId', o.id);
+              update('organizationId', o.id);
             }}
             onBack={() => setStep('role')}
             onSubmit={handleSubmit}
