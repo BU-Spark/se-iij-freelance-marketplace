@@ -6,24 +6,24 @@ import OrgPicker from '../../components/OrgPicker';
 import TagInput from '../../components/TagInput';
 import shared from '../onboarding.module.css';
 import styles from './ProfileStep.module.css';
-import { AVAILABILITY, MEDIUMS, TOPICS } from '../constants';
-import type { Organization, ProfileData, ProfileErrors, Role } from '../../types/onboarding.types';
+import { MEDIUMS, TOPICS } from '../constants';
+import type { OnboardingRole, OrgOption, ProfileData, ProfileErrors } from '../../types/onboarding.types';
 
 export type Touched = Partial<Record<keyof ProfileData, boolean>>;
-type TextKey = 'fullName' | 'email' | 'title' | 'experience' | 'location' | 'portfolio';
-type ChipKey = 'desks' | 'beats' | 'mediums';
+type TextKey = 'firstName' | 'lastName' | 'email' | 'jobTitle' | 'location';
+type ChipKey = 'desks' | 'reportingBeats' | 'workMediums';
 
 type ProfileStepProps = {
-  role: Role;
+  role: OnboardingRole;
   data: ProfileData;
-  orgs: Organization[];
+  orgs: OrgOption[];
   errors: ProfileErrors;
   touched: Touched;
   shake: boolean;
   submitting: boolean;
   update: <K extends keyof ProfileData>(key: K, value: ProfileData[K]) => void;
   touch: (key: keyof ProfileData) => void;
-  addOrg: (o: Organization) => void;
+  addOrg: (o: OrgOption) => void;
   onBack: () => void;
   onSubmit: () => void;
 };
@@ -73,24 +73,32 @@ export default function ProfileStep(p: ProfileStepProps) {
 
         <Section title="Basics" color="var(--c-green)">
           <div className={styles.grid2}>
-            <Field label="Full name" error={err('fullName')}>
-              {input('fullName', 'Sarah Jenkins')}
+            <Field label="First name" error={err('firstName')}>
+              {input('firstName', 'Sarah')}
+            </Field>
+            <Field label="Last name" error={err('lastName')}>
+              {input('lastName', 'Jenkins')}
             </Field>
             <Field label={isEditor ? 'Work email' : 'Email'} error={err('email')}>
               {input('email', isEditor ? 'you@newsroom.example' : 'you@example.com', 'email')}
             </Field>
             {isEditor ? (
               <>
-                <Field label="Position / title" error={err('title')}>
-                  {input('title', 'News Editor')}
+                <Field label="Position / title" error={err('jobTitle')}>
+                  {input('jobTitle', 'News Editor')}
                 </Field>
-                <Field label="Years at desk">{input('experience', '4 years at desk · 18 in journalism')}</Field>
+                <Field label="Years at desk" error={err('yearsAtDesk')}>
+                  <input
+                    type="number"
+                    min={0}
+                    value={data.yearsAtDesk}
+                    onChange={(e) => update('yearsAtDesk', e.target.valueAsNumber || 0)}
+                    onBlur={() => touch('yearsAtDesk')}
+                  />
+                </Field>
               </>
             ) : (
-              <>
-                <Field label="Based in">{input('location', 'Boston, MA')}</Field>
-                <Field label="Experience">{input('experience', '6 years freelancing')}</Field>
-              </>
+              <Field label="Based in">{input('location', 'Boston, MA')}</Field>
             )}
           </div>
         </Section>
@@ -102,7 +110,12 @@ export default function ProfileStep(p: ProfileStepProps) {
               hint="Pick your newsroom, or add one that isn't listed."
               color="var(--c-amber)"
             >
-              <OrgPicker orgs={p.orgs} selected={data.orgId} onSelect={(id) => update('orgId', id)} onAdd={p.addOrg} />
+              <OrgPicker
+                orgs={p.orgs}
+                selected={data.organizationId}
+                onSelect={(id) => update('organizationId', id)}
+                onAdd={p.addOrg}
+              />
             </Section>
             <Section
               title="Desks you staff"
@@ -115,45 +128,41 @@ export default function ProfileStep(p: ProfileStepProps) {
           </>
         ) : (
           <>
-            <Section title="Beats" hint="What do you cover?" color="var(--c-amber)" error={err('beats')}>
-              {chips('beats', TOPICS)}
+            <Section title="Beats" hint="What do you cover?" color="var(--c-amber)" error={err('reportingBeats')}>
+              {chips('reportingBeats', TOPICS)}
             </Section>
-            <Section title="Mediums" hint="How do you tell stories?" color="var(--c-red)" error={err('mediums')}>
-              {chips('mediums', MEDIUMS)}
+            <Section title="Mediums" hint="How do you tell stories?" color="var(--c-red)" error={err('workMediums')}>
+              {chips('workMediums', MEDIUMS)}
             </Section>
             <Section title="Tools" hint="Type a tool and press Enter." color="var(--c-purple)">
               <TagInput tags={data.tools} onChange={(t) => update('tools', t)} />
             </Section>
-            <Section title="Clips & availability" color="var(--c-sky)">
+            <Section title="Clips" color="var(--c-sky)">
               <Field label="Portfolio link" error={err('portfolio')}>
-                {input('portfolio', 'https://yourportfolio.com')}
+                <input
+                  value={data.portfolio[0]?.url ?? ''}
+                  placeholder="https://yourportfolio.com"
+                  onChange={(e) => {
+                    const url = e.target.value;
+                    update(
+                      'portfolio',
+                      url ? [{ id: 'portfolio-link', type: 'article', title: 'Portfolio', url }] : []
+                    );
+                  }}
+                  onBlur={() => touch('portfolio')}
+                />
               </Field>
-              <div className={styles.availability}>
-                {AVAILABILITY.map((a) => (
-                  <button
-                    key={a.value}
-                    type="button"
-                    className={styles.availBtn}
-                    data-active={data.availability === a.value}
-                    style={{ ['--accent' as string]: a.color }}
-                    onClick={() => update('availability', a.value)}
-                  >
-                    <span className={styles.pulseDot} />
-                    {a.label}
-                  </button>
-                ))}
-              </div>
             </Section>
           </>
         )}
 
         <Section title="Short bio" color="var(--c-blue)">
-          <Field label={`About you · ${data.bio.length}/280`}>
+          <Field label={`About you · ${data.shortBio.length}/280`}>
             <textarea
               rows={4}
               maxLength={280}
-              value={data.bio}
-              onChange={(e) => update('bio', e.target.value)}
+              value={data.shortBio}
+              onChange={(e) => update('shortBio', e.target.value)}
               placeholder={
                 isEditor
                   ? 'What kinds of stories are you looking to commission?'
@@ -175,7 +184,7 @@ export default function ProfileStep(p: ProfileStepProps) {
 
       <aside className={styles.previewCol}>
         <p className={styles.previewLabel}>Live preview</p>
-        <PreviewCard role={role} data={data} org={p.orgs.find((o) => o.id === data.orgId)} />
+        <PreviewCard role={role} data={data} org={p.orgs.find((o) => o.id === data.organizationId)} />
       </aside>
     </div>
   );
