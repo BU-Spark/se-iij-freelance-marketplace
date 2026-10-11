@@ -1,0 +1,49 @@
+/* ChipGroup: toggleable pill buttons */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px 9px 12px;
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--navy-deep);
+  transition: all 0.2s ease;
+}
+.chipMark {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-size: 12px;
+  background: color-mix(in srgb, var(--accent) 15%, white);
+  color: var(--accent);
+  transition: all 0.25s;
+}
+.chip:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+}
+.chip[data-active='true'] {
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  border-color: var(--accent);
+  animation: pop 0.3s ease;
+}
+.chip[data-active='true'] .chipMark {
+  background: var(--accent);
+  color: #fff;
+}
+
+@keyframes pop {
+  50% {
+    transform: scale(1.08);
+  }
+}
