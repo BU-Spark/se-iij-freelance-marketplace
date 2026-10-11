@@ -3,12 +3,12 @@ import PreviewCard from '../../components/PreviewCard';
 import shared from '../onboarding.module.css';
 import styles from './DoneStep.module.css';
 import { CHIP_COLORS } from '../constants';
-import type { Organization, ProfileData, Role } from '../../types/onboarding.types';
+import type { OnboardingRole, OrgOption, ProfileData } from '../../types/onboarding.types';
 
 type DoneStepProps = {
-  role: Role;
+  role: OnboardingRole;
   data: ProfileData;
-  org?: Organization;
+  org?: OrgOption;
   onEdit: () => void;
 };
 
@@ -36,7 +36,7 @@ export default function DoneStep({ role, data, org, onEdit }: DoneStepProps) {
         </svg>
       </div>
 
-      <h1 className={shared.h1}>You&apos;re all set, {data.fullName.split(' ')[0]}!</h1>
+      <h1 className={shared.h1}>You&apos;re all set, {data.firstName.trim()}!</h1>
       <p className={`${shared.lead} ${styles.centerLead}`}>
         {isEditor
           ? 'Your editor profile is live. Freelancers can now find you and start pitching.'

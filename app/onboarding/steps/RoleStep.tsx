@@ -2,9 +2,16 @@ import { EditorIcon } from '../../components/icons/EditorIcon';
 import { FreelancerIcon } from '../../components/icons/FreelancerIcon';
 import shared from '../onboarding.module.css';
 import styles from './RoleStep.module.css';
-import type { Role } from '../../types/onboarding.types';
+import type { OnboardingRole } from '../../types/onboarding.types';
 
-const ROLES: { id: Role; title: string; accent: string; Icon: typeof EditorIcon; desc: string; cta: string }[] = [
+const ROLES: {
+  id: OnboardingRole;
+  title: string;
+  accent: string;
+  Icon: typeof EditorIcon;
+  desc: string;
+  cta: string;
+}[] = [
   {
     id: 'editor',
     title: "I'm an editor",
@@ -23,7 +30,7 @@ const ROLES: { id: Role; title: string; accent: string; Icon: typeof EditorIcon;
   },
 ];
 
-export default function RoleStep({ onPick }: { onPick: (r: Role) => void }) {
+export default function RoleStep({ onPick }: { onPick: (r: OnboardingRole) => void }) {
   return (
     <section className={`${shared.narrow} ${shared.fadeIn}`}>
       <h1 className={shared.h1}>Welcome aboard</h1>
