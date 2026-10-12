@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { mockProposal } from '@/app/mocks/proposals';
 
 export async function POST(request: NextRequest) {
   let body: {
@@ -40,12 +41,12 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(
     {
-      id: 'proposal_mock_001',
+      id: mockProposal.id,
       gigId: body.gigId,
       freelancerId: body.freelancerId,
       coverLetter: body.coverLetter,
       proposedBudget: body.proposedBudget,
-      status: 'SUBMITTED',
+      status: mockProposal.status,
     },
     { status: 201 }
   );

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { mockVerification } from '@/app/mocks/verification';
 
 type VerificationDocument = { type: string; fileName: string };
 
@@ -27,5 +28,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'userId and at least one valid document are required' }, { status: 400 });
   }
 
-  return NextResponse.json({ success: true, requestId: 'verification_mock_001', status: 'PENDING' }, { status: 201 });
+  return NextResponse.json(mockVerification, { status: 201 });
 }
