@@ -1,0 +1,88 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  EDITOR
+  FREELANCER
+  ADMIN
+}
+
+enum PortfolioType {
+  ARTICLE
+  SOCIAL
+  BROADCAST
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  email       String   @unique
+  firstName   String
+  lastName    String
+  shortBio    String?  @db.VarChar(280)
+  role        UserRole
+  isActive    Boolean  @default(true)
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  editorProfile     EditorProfile?
+  freelancerProfile FreelancerProfile?
+
+  @@index([role, isActive])
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  city      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  editors EditorProfile[]
+
+  @@unique([name, city])
+}
+
+model EditorProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  organizationId String?
+  jobTitle       String
+  yearsAtDesk    Int      @default(0)
+  desks          String[]
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+}
+
+model FreelancerProfile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  location       String?
+  reportingBeats String[]
+  workMediums    String[]
+  tools          String[]
+
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  portfolio PortfolioItem[]
+}
+
+model PortfolioItem {
+  id                  String        @id @default(cuid())
+  freelancerProfileId String
+  type                PortfolioType @default(ARTICLE)
+  title               String
+  description         String?
+  url                 String
+
+  freelancerProfile FreelancerProfile @relation(fields: [freelancerProfileId], references: [id], onDelete: Cascade)
+
+  @@index([freelancerProfileId])
+}
