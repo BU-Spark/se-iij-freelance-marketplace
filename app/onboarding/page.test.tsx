@@ -93,6 +93,7 @@ describe('Onboarding page', () => {
         await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 })
       ).toBeInTheDocument();
       expect(screen.getByText(/your editor profile is live/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /post first assignment/i })).toHaveAttribute('href', '/dashboard');
     });
   });
 
