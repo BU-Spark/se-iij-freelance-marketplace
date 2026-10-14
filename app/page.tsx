@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import IIJLogo from './components/IIJLogo/IIJLogo';
+import { IIJLogo } from './components';
 import styles from './page.module.css';
 
 const FEATURES = [

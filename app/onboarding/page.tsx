@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import IIJLogo from '../components/IIJLogo/IIJLogo';
+import { IIJLogo } from '../components';
 import styles from './onboarding.module.css';
 import { DEFAULT_ORGS, EMPTY } from './constants';
 import type { OnboardingRole, OrgOption, ProfileData, Step } from '../types/onboarding.types';
