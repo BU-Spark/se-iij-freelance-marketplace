@@ -1,7 +1,6 @@
 import styles from './PreviewCard.module.css';
-import { CHIP_COLORS } from '../onboarding/constants';
-import type { OnboardingRole, OrgOption, ProfileData } from '../types/onboarding.types';
-
+import { CHIP_COLORS } from '../../onboarding/constants';
+import type { OnboardingRole, OrgOption, ProfileData } from '../../types/onboarding.types';
 type PreviewCardProps = {
   role: OnboardingRole;
   data: ProfileData;

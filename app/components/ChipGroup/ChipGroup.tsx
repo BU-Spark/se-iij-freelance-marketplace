@@ -1,6 +1,5 @@
 import styles from './ChipGroup.module.css';
-import { CHIP_COLORS } from '../onboarding/constants';
-
+import { CHIP_COLORS } from '../../onboarding/constants';
 type ChipGroupProps = {
   options: string[];
   selected: string[];

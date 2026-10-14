@@ -2,7 +2,7 @@
 
 import { useState, type KeyboardEvent } from 'react';
 import styles from './TagInput.module.css';
-import { CHIP_COLORS } from '../onboarding/constants';
+import { CHIP_COLORS } from '../../onboarding/constants';
 
 type TagInputProps = {
   tags: string[];
