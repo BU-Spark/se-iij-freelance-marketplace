@@ -1,0 +1,60 @@
+/* ============ Dashboard skeleton: layout only ============ */
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ---- Status bar under Joey's header ---- */
+.statusBar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px clamp(16px, 3vw, 40px);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+
+/* ---- Two columns: availability left, assignments right ---- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: clamp(24px, 3vw, 48px);
+  padding: 40px clamp(16px, 4vw, 64px) 80px;
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.toggles {
+  display: flex;
+  gap: 12px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  list-style: none;
+}
+
+/* Dashed boxes show where the cards will go */
+.placeholder {
+  padding: 16px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+/* ---- Phones and small tablets: stack the columns ---- */
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sectionHead {
+    flex-wrap: wrap;
+  }
+}
