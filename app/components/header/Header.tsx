@@ -57,6 +57,7 @@ export function Header() {
         ))}
       </div>
 
+      {/* To do: Refactor this to be a dynamic resuable component */}
       <button className={styles.newAssignment} type="button">
         {role == 'editor' ? (
           <div>
