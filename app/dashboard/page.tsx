@@ -1,4 +1,6 @@
+import Link from 'next/link';
 import { Header } from '../components/header/Header';
+import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
 import {
@@ -11,11 +13,25 @@ import {
   SLOT_STARTS,
   slotLabel,
 } from '../utils/dashboard.utils';
+import type { DeskFilter, RosterView } from '../types/dashboard.types';
 
 /*
- * Dashboard: shows the sample data as plain text.
- * Cards and styling come in the next PRs.
+ * Dashboard: status bar, section headings and toggles are styled.
+ * Roster and assignment cards get styled in the next PRs.
  */
+
+const VIEWS: SegmentOption<RosterView>[] = [
+  { value: 'day', label: 'day' },
+  { value: 'week', label: 'week' },
+  { value: 'month', label: 'month' },
+];
+
+const FILTERS: SegmentOption<DeskFilter>[] = [
+  { value: 'all', label: 'All' },
+  { value: 'open', label: 'Open' },
+  { value: 'invited', label: 'Invited' },
+  { value: 'assigned', label: 'Assigned' },
+];
 
 export default function Dashboard() {
   const counts = countByStatus(ASSIGNMENTS);
@@ -27,11 +43,16 @@ export default function Dashboard() {
       {/* ---- Status bar ---- */}
       <div className={styles.statusBar}>
         <p>
-          <strong>{formatDeskDate(new Date())}</strong> • Editor: {EDITOR_NAME} • {NEW_PITCHES} new pitches in inbox →
+          <strong>{formatDeskDate(new Date())}</strong> • Editor: {EDITOR_NAME} •{' '}
+          <Link href="/dashboard/pitches" className={styles.inboxLink}>
+            {NEW_PITCHES} new pitches in inbox →
+          </Link>
         </p>
-        <p>
-          {counts.open} open • {counts.invited} pending • {counts.assigned} assigned
-        </p>
+        <ul aria-label="Assignment counts" className={styles.counts}>
+          <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>
+          <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>{counts.invited} pending</li>
+          <li style={{ ['--dot' as string]: 'var(--c-green)' }}>{counts.assigned} assigned</li>
+        </ul>
       </div>
 
       <main className={styles.columns}>
@@ -39,16 +60,14 @@ export default function Dashboard() {
         <section aria-labelledby="availability-heading">
           <div className={styles.sectionHead}>
             <div>
-              <h2 id="availability-heading">Availability</h2>
-              <p>
+              <h2 id="availability-heading" className={styles.sectionTitle}>
+                Availability
+              </h2>
+              <p className={styles.sectionSub}>
                 {countOnRoster(ROSTER)} of {ROSTER.length} on roster
               </p>
             </div>
-            <div className={styles.toggles}>
-              <button type="button">day</button>
-              <button type="button">week</button>
-              <button type="button">month</button>
-            </div>
+            <SegmentedControl label="Availability range" options={VIEWS} value="day" />
           </div>
 
           <ul className={styles.list}>
@@ -77,13 +96,10 @@ export default function Dashboard() {
         {/* ---- Right column: assignments ---- */}
         <section aria-labelledby="assignments-heading">
           <div className={styles.sectionHead}>
-            <h2 id="assignments-heading">Assignments</h2>
-            <div className={styles.toggles}>
-              <button type="button">All</button>
-              <button type="button">Open</button>
-              <button type="button">Invited</button>
-              <button type="button">Assigned</button>
-            </div>
+            <h2 id="assignments-heading" className={styles.sectionTitle}>
+              Assignments
+            </h2>
+            <SegmentedControl label="Filter assignments" options={FILTERS} value="all" />
           </div>
 
           <ul className={styles.list}>

@@ -15,7 +15,11 @@ describe('Dashboard', () => {
   it('renders the shared header and the status bar with real numbers', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
     expect(screen.getByText(/editor: sarah jenkins/i)).toBeInTheDocument();
-    expect(screen.getByText('2 open • 1 pending • 1 assigned')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /2 new pitches in inbox/i })).toBeInTheDocument();
+    const counts = screen.getByRole('list', { name: /assignment counts/i });
+    expect(within(counts).getByText('2 open')).toBeInTheDocument();
+    expect(within(counts).getByText('1 pending')).toBeInTheDocument();
+    expect(within(counts).getByText('1 assigned')).toBeInTheDocument();
   });
 
   it('lists every roster member with the roster count', () => {
@@ -25,6 +29,14 @@ describe('Dashboard', () => {
       expect(within(column).getByRole('heading', { level: 3, name: m.name })).toBeInTheDocument();
     });
     expect(within(column).getByText('Free: 12p 2p 4p')).toBeInTheDocument();
+  });
+
+  it('shows the range and filter toggles with the defaults pressed', () => {
+    const range = screen.getByRole('group', { name: /availability range/i });
+    expect(within(range).getByRole('button', { name: 'day' })).toHaveAttribute('aria-pressed', 'true');
+    const filters = screen.getByRole('group', { name: /filter assignments/i });
+    expect(within(filters).getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(filters).getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'false');
   });
 
   it('lists every assignment with its details', () => {

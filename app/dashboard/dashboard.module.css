@@ -1,4 +1,4 @@
-/* ============ Dashboard skeleton: layout only ============ */
+/* ============ Dashboard: layout, status bar and section headings ============ */
 .shell {
   min-height: 100vh;
   background: var(--bg);
@@ -13,6 +13,32 @@
   padding: 12px clamp(16px, 3vw, 40px);
   color: var(--muted);
   border-bottom: 1px solid var(--line);
+}
+.statusBar strong {
+  color: var(--ink);
+}
+.inboxLink {
+  color: var(--c-blue);
+  font-weight: 600;
+}
+
+/* "2 open • 1 pending • 1 assigned" with a colored dot before each; --dot is set inline */
+.counts {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+}
+.counts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.counts li::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dot);
 }
 
 /* ---- Two columns: availability left, assignments right ---- */
@@ -30,9 +56,17 @@
   margin-bottom: 20px;
 }
 
-.toggles {
-  display: flex;
-  gap: 12px;
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy-deep);
+}
+.sectionSub {
+  margin-top: 4px;
+  color: var(--muted);
 }
 
 .list {
