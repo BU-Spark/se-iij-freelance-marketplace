@@ -2,6 +2,7 @@
 
 import { useState, type ChangeEvent, type InputHTMLAttributes, type KeyboardEvent } from 'react';
 import styles from './SearchBox.module.css';
+import { SearchIcon } from '../icons/SearchIcon';
 
 type SearchBoxProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'defaultValue' | 'onChange' | 'type' | 'value'> & {
   defaultValue?: string;
@@ -41,10 +42,7 @@ export function SearchBox({
 
   return (
     <div className={`${styles.searchBox} ${compact ? styles.compact : ''}${className ? ` ${className}` : ''}`}>
-      <svg className={styles.icon} aria-hidden="true" viewBox="0 0 24 24">
-        <circle cx="11" cy="11" r="7.5" />
-        <path d="m16.5 16.5 4 4" />
-      </svg>
+      <SearchIcon className={styles.icon} />
       <input
         {...inputProps}
         aria-label={ariaLabel}
