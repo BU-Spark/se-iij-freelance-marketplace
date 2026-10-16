@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import IIJLogo from './components/IIJLogo';
 import styles from './page.module.css';
+const unused = 1;
 
 const FEATURES = [
   { label: 'Post & find assignments', color: 'var(--c-green)' },
