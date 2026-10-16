@@ -1,9 +1,4 @@
-import PreviewCard from '../../components/PreviewCard';
-import Section from '../../components/Section';
-import Field from '../../components/Field';
-import ChipGroup from '../../components/ChipGroup';
-import OrgPicker from '../../components/OrgPicker';
-import TagInput from '../../components/TagInput';
+import { ChipGroup, Field, OrgPicker, PreviewCard, Section, TagInput } from '../../components';
 import shared from '../onboarding.module.css';
 import styles from './ProfileStep.module.css';
 import { MEDIUMS, TOPICS } from '../constants';

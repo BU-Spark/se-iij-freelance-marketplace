@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { OnboardingRole } from '../../types/onboarding.types';
-import IIJLogo from '../IIJLogo';
+import IIJLogo from '../IIJLogo/IIJLogo';
 import { SearchBox } from '../search/SearchBox';
 import { NAV_ITEMS, ROLE_OPTIONS } from './constants';
 import styles from './header.module.css';

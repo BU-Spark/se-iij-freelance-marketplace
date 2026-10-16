@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import PreviewCard from '../../components/PreviewCard';
+import { PreviewCard } from '../../components';
 import shared from '../onboarding.module.css';
 import styles from './DoneStep.module.css';
 import { CHIP_COLORS } from '../constants';

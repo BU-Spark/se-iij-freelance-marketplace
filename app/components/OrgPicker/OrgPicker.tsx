@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import styles from './OrgPicker.module.css';
-import type { OrgOption } from '../types/onboarding.types';
-
+import type { OrgOption } from '../../types/onboarding.types';
 type OrgPickerProps = {
   orgs: OrgOption[];
   selected: string;
