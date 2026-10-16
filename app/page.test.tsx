@@ -21,6 +21,10 @@ describe('Home (IIJ welcome page)', () => {
     expect(cta).toHaveAttribute('href', '/onboarding');
   });
 
+  it('offers existing users a link to log in', () => {
+    expect(screen.getByRole('link', { name: /log in/i })).toHaveAttribute('href', '/login');
+  });
+
   it('renders the IIJ logo', () => {
     expect(
       screen.getByRole('img', {
