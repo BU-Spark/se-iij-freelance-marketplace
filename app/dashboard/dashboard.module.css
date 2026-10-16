@@ -1,0 +1,94 @@
+/* ============ Dashboard: layout, status bar and section headings ============ */
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+/* ---- Status bar under Joey's header ---- */
+.statusBar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px clamp(16px, 3vw, 40px);
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.statusBar strong {
+  color: var(--ink);
+}
+.inboxLink {
+  color: var(--c-blue);
+  font-weight: 600;
+}
+
+/* "2 open • 1 pending • 1 assigned" with a colored dot before each; --dot is set inline */
+.counts {
+  display: flex;
+  gap: 20px;
+  list-style: none;
+}
+.counts li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.counts li::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--dot);
+}
+
+/* ---- Two columns: availability left, assignments right ---- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) 1fr;
+  gap: clamp(24px, 3vw, 48px);
+  padding: 40px clamp(16px, 4vw, 64px) 80px;
+}
+
+.sectionHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.sectionTitle {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 20px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--navy-deep);
+}
+.sectionSub {
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  list-style: none;
+}
+
+/* Dashed boxes show where the cards will go */
+.placeholder {
+  padding: 16px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+}
+
+/* ---- Phones and small tablets: stack the columns ---- */
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sectionHead {
+    flex-wrap: wrap;
+  }
+}

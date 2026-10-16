@@ -18,3 +18,4 @@ export * from './assignments.types'; // Export Assignment
 export * from './badges.types'; // Export Badges
 export * from './messages.types'; // Export Message, Conversation
 export * from './organization.types'; // Export Organization
+export * from './dashboard.types'; // Export DeskAssignment, RosterMember, etc.
