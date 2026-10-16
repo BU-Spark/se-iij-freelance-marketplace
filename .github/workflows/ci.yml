@@ -1,51 +1,56 @@
-name: Node.js CI
+name: CI
 
 on:
   push:
-    branches:
-      - dev
-      - main
-      - version-2
+    branches: [main, dev, version-2]
   pull_request:
-    branches:
-      - main
-      - dev
-      - version-2
+    branches: [main, dev, version-2]
 
 jobs:
-  test-lint-build:
-    name: Test, Lint, and Build
+  lint:
+    name: Lint (ESLint)
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [22.x] # Latest LTS version
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm' # Cache npm dependencies
-
+          node-version: 22.x
+          cache: npm
       - name: Install dependencies
-        run: npm ci # Use npm ci for cleaner installs in CI
+        run: npm ci
+      - name: Run ESLint (fails on errors)
+        run: npx eslint .
 
-      - name: Run linter
-        run: npm run lint
-
-      - name: Run tests and collect coverage
-        run: npm run test:coverage
-
-      - name: Upload coverage reports
+  test:
+    name: Unit tests (Jest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run Jest with coverage
+        run: npm run test:coverage -- --ci
+      - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
-          if-no-files-found: error # Fails the step if coverage/ directory is not found
 
-      - name: Build project
+  build:
+    name: Build (Next.js)
+    needs: [lint, test] # only runs if lint AND tests pass
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build the app
         run: npm run build
