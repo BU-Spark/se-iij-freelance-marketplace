@@ -14,3 +14,4 @@ export { default as Section } from './Section/Section';
 export { default as TagInput } from './TagInput/TagInput';
 export { EditorIcon } from './icons/EditorIcon';
 export { FreelancerIcon } from './icons/FreelancerIcon';
+export { default as Avatar } from './Avatar/Avatar';
