@@ -28,7 +28,7 @@ describe('Dashboard', () => {
     ROSTER.forEach((m) => {
       expect(within(column).getByRole('heading', { level: 3, name: m.name })).toBeInTheDocument();
     });
-    expect(within(column).getByText('Free: 12p 2p 4p')).toBeInTheDocument();
+    expect(within(column).getByText('Available 12:00 PM — 6:00 PM today')).toBeInTheDocument();
   });
 
   it('shows the range and filter toggles with the defaults pressed', () => {
