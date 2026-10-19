@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './NewAssignmentDrawer.module.css';
+import type { NewAssignmentDraft } from '../../types/dashboard.types';
+import { EMPTY_DRAFT } from './constants';
+import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
 
 type NewAssignmentDrawerProps = {
   /** Where to go when the drawer closes, e.g. "/dashboard" */
@@ -13,6 +16,10 @@ type NewAssignmentDrawerProps = {
 export default function NewAssignmentDrawer({ closeHref }: NewAssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
+
+  // everything typed into the form; the drawer keeps it so "Send invites" can use it later
+  const [draft, setDraft] = useState<NewAssignmentDraft>(EMPTY_DRAFT);
+  const updateDraft = (patch: Partial<NewAssignmentDraft>) => setDraft((d) => ({ ...d, ...patch }));
 
   useEffect(() => {
     // move keyboard focus into the drawer when it opens
@@ -76,8 +83,8 @@ export default function NewAssignmentDrawer({ closeHref }: NewAssignmentDrawerPr
         </div>
 
         <div className={styles.body}>
-          {/* TODO: form fields (next PR) and invite list (PR after) */}
-          <p>Form coming soon.</p>
+          <NewAssignmentForm draft={draft} onChange={updateDraft} />
+          {/* TODO: invite list (next PR) */}
         </div>
 
         <div className={styles.foot}>
