@@ -3,16 +3,9 @@ import { Header } from '../components/header/Header';
 import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
-import {
-  countByStatus,
-  countOnRoster,
-  formatDeadline,
-  formatDeskDate,
-  formatRate,
-  hourSlots,
-  SLOT_STARTS,
-  slotLabel,
-} from '../utils/dashboard.utils';
+import { RosterCard } from '../components';
+
+import { countByStatus, countOnRoster, formatDeadline, formatDeskDate, formatRate } from '../utils/dashboard.utils';
 import type { DeskFilter, RosterView } from '../types/dashboard.types';
 
 /*
@@ -71,25 +64,11 @@ export default function Dashboard() {
           </div>
 
           <ul className={styles.list}>
-            {ROSTER.map((m) => {
-              const slots = hourSlots(m.openHours);
-              return (
-                <li key={m.id} className={styles.placeholder}>
-                  <h3>{m.name}</h3>
-                  <p>
-                    {m.specialty} • {m.city}
-                  </p>
-                  <p>{m.status}</p>
-                  <p>
-                    Free:{' '}
-                    {SLOT_STARTS.filter((_, i) => slots[i])
-                      .map(slotLabel)
-                      .join(' ') || 'none today'}
-                  </p>
-                  <p>{m.note}</p>
-                </li>
-              );
-            })}
+            {ROSTER.map((m) => (
+              <li key={m.id}>
+                <RosterCard member={m} />
+              </li>
+            ))}
           </ul>
         </section>
 
