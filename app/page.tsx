@@ -43,6 +43,10 @@ export default function Home() {
           </span>
         </Link>
 
+        <p className={styles.loginPrompt}>
+          Already have an account? <Link href="/login">Log in</Link>
+        </p>
+
         <ul className={styles.features}>
           {FEATURES.map((f, i) => (
             <li key={f.label} style={{ animationDelay: `${700 + i * 120}ms` }}>
