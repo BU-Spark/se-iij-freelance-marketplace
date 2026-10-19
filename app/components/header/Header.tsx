@@ -58,20 +58,23 @@ export function Header() {
       </div>
 
       {/* To do: Refactor this to be a dynamic resuable component */}
-      <button className={styles.newAssignment} type="button">
-        {role == 'editor' ? (
+      {role === 'editor' ? (
+        // Opens the New Assignment drawer on the dashboard (?new=assignment)
+        <Link className={styles.newAssignment} href="/dashboard?new=assignment">
           <div>
             <span aria-hidden="true">+</span>
             <p>New Assignment</p>
           </div>
-        ) : (
+        </Link>
+      ) : (
+        <button className={styles.newAssignment} type="button">
           <div>
             {/* To Do: Replace ! with idea icon */}
             <span aria-hidden="true">!</span>
             <p>Make a Pitch</p>
           </div>
-        )}
-      </button>
+        </button>
+      )}
     </header>
   );
 }

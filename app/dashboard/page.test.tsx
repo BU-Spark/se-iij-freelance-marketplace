@@ -8,8 +8,8 @@ jest.mock('../components/header/Header', () => ({
 }));
 
 describe('Dashboard', () => {
-  beforeEach(() => {
-    render(<Dashboard />);
+  beforeEach(async () => {
+    render(await Dashboard({ searchParams: Promise.resolve({}) }));
   });
 
   it('renders the shared header and the status bar with real numbers', () => {

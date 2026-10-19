@@ -17,3 +17,4 @@ export { FreelancerIcon } from './icons/FreelancerIcon';
 export { default as Avatar } from './Avatar/Avatar';
 export { default as RosterCard } from './RosterCard/RosterCard';
 export { default as AssignmentCard } from './AssignmentCard/AssignmentCard';
+export { default as NewAssignmentDrawer } from './NewAssignmentDrawer/NewAssignmentDrawer';
