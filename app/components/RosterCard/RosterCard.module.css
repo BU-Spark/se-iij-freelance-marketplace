@@ -94,6 +94,15 @@
   color: var(--muted);
 }
 
+.rangeNotice {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #f6f7f9;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 /* text only screen readers hear ("free" / "busy") */
 .srOnly {
   position: absolute;

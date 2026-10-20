@@ -1,5 +1,5 @@
 import Avatar from '../Avatar/Avatar';
-import type { AvailabilityStatus, RosterMember } from '../../types/dashboard.types';
+import type { AvailabilityStatus, RosterMember, RosterView } from '../../types/dashboard.types';
 import { hourSlots, SLOT_STARTS, slotLabel } from '../../utils/dashboard.utils';
 import styles from './RosterCard.module.css';
 
@@ -11,9 +11,10 @@ const STATUS_LABEL: Record<AvailabilityStatus, string> = {
 
 type RosterCardProps = {
   member: RosterMember;
+  view?: RosterView;
 };
 
-export default function RosterCard({ member }: RosterCardProps) {
+export default function RosterCard({ member, view = 'day' }: RosterCardProps) {
   // one true/false per time box: 8a, 10a, 12p, 2p, 4p, 6p
   const slots = hourSlots(member.openHours);
 
@@ -30,13 +31,21 @@ export default function RosterCard({ member }: RosterCardProps) {
         <span className={`${styles.pill} ${styles[member.status]}`}>{STATUS_LABEL[member.status]}</span>
       </div>
 
-      <ul className={styles.slots} aria-label="Free time today">
-        {SLOT_STARTS.map((hour, i) => (
-          <li key={hour} className={slots[i] ? styles.free : styles.taken}>
-            {slotLabel(hour)} <span className={styles.srOnly}>{slots[i] ? 'free' : 'busy'}</span>
-          </li>
-        ))}
-      </ul>
+      {view === 'day' ? (
+        <ul className={styles.slots} aria-label="Free time today">
+          {SLOT_STARTS.map((hour, i) => (
+            <li key={hour} className={slots[i] ? styles.free : styles.taken}>
+              {slotLabel(hour)} <span className={styles.srOnly}>{slots[i] ? 'free' : 'busy'}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className={styles.rangeNotice}>
+          {view === 'week'
+            ? 'Weekly availability details are not provided.'
+            : 'Monthly availability details are not provided.'}
+        </p>
+      )}
 
       <p className={styles.note}>{member.note}</p>
     </article>

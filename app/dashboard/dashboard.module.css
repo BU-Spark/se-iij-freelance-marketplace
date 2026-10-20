@@ -76,11 +76,52 @@
   list-style: none;
 }
 
-/* Dashed boxes show where the cards will go */
-.placeholder {
-  padding: 16px;
-  border: 1px dashed var(--line);
-  color: var(--muted);
+.assignmentItem { list-style: none; }
+.assignmentCard {
+  padding: 20px;
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow-sm);
+}
+.assignmentTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.category { color: var(--muted); font-size: 13px; font-weight: 600; }
+.status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e8f1ff;
+  color: #23478f;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.open { background: #e8f1ff; color: #23478f; }
+.invited { background: #fff4e5; color: #8a4b00; }
+.assigned { background: #e8f6ee; color: #17663a; }
+.assignmentTitle { margin: 12px 0 6px; color: var(--navy-deep); font-size: 18px; }
+.contact { margin: 0; color: var(--muted); font-size: 14px; }
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 20px;
+  margin: 18px 0;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.details div { min-width: 0; }
+.details dt { margin-bottom: 3px; color: var(--muted); font-size: 12px; }
+.details dd { margin: 0; color: var(--ink); font-size: 14px; }
+.interested { margin: 0; color: var(--c-blue); font-size: 14px; font-weight: 600; }
+.empty { padding: 24px; color: var(--muted); text-align: center; border: 1px dashed var(--line); border-radius: 12px; }
+
+@media (max-width: 520px) {
+  .details { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* ---- Phones and small tablets: stack the columns ---- */

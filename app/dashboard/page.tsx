@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { Header } from '../components/header/Header';
 import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
@@ -9,8 +12,7 @@ import { countByStatus, countOnRoster, formatDeadline, formatDeskDate, formatRat
 import type { DeskFilter, RosterView } from '../types/dashboard.types';
 
 /*
- * Dashboard: status bar, section headings and toggles are styled.
- * Roster and assignment cards get styled in the next PRs.
+ * Editor dispatch dashboard.
  */
 
 const VIEWS: SegmentOption<RosterView>[] = [
@@ -27,7 +29,10 @@ const FILTERS: SegmentOption<DeskFilter>[] = [
 ];
 
 export default function Dashboard() {
+  const [view, setView] = useState<RosterView>('day');
+  const [filter, setFilter] = useState<DeskFilter>('all');
   const counts = countByStatus(ASSIGNMENTS);
+  const assignments = ASSIGNMENTS.filter((assignment) => filter === 'all' || assignment.status === filter);
 
   return (
     <div className={styles.shell}>
@@ -60,13 +65,13 @@ export default function Dashboard() {
                 {countOnRoster(ROSTER)} of {ROSTER.length} on roster
               </p>
             </div>
-            <SegmentedControl label="Availability range" options={VIEWS} value="day" />
+            <SegmentedControl label="Availability range" options={VIEWS} value={view} onChange={setView} />
           </div>
 
           <ul className={styles.list}>
             {ROSTER.map((m) => (
               <li key={m.id}>
-                <RosterCard member={m} />
+                <RosterCard member={m} view={view} />
               </li>
             ))}
           </ul>
@@ -78,29 +83,45 @@ export default function Dashboard() {
             <h2 id="assignments-heading" className={styles.sectionTitle}>
               Assignments
             </h2>
-            <SegmentedControl label="Filter assignments" options={FILTERS} value="all" />
+            <SegmentedControl label="Filter assignments" options={FILTERS} value={filter} onChange={setFilter} />
           </div>
 
           <ul className={styles.list}>
-            {ASSIGNMENTS.map((a) => (
-              <li key={a.id} className={styles.placeholder}>
-                <article>
-                  <p>
-                    {a.category} • {a.urgent ? 'Urgent' : a.status}
+            {assignments.map((a) => (
+              <li key={a.id} className={styles.assignmentItem}>
+                <article className={styles.assignmentCard}>
+                  <div className={styles.assignmentTop}>
+                    <span className={styles.category}>{a.category}</span>
+                    <span className={`${styles.status} ${styles[a.status]}`}>{a.urgent ? 'Urgent' : a.status}</span>
+                  </div>
+                  <h3 className={styles.assignmentTitle}>{a.title}</h3>
+                  <p className={styles.contact}>
+                    Point of contact: {a.contact.name}, {a.contact.desk}
                   </p>
-                  <h3>{a.title}</h3>
-                  <p>
-                    Point of Contact: {a.contact.name}, {a.contact.desk}
-                  </p>
-                  <p>Deadline: {formatDeadline(a.deadline)}</p>
-                  <p>
-                    Location: {a.location} • Length: {a.length} • Type: {a.type} • Rate: {formatRate(a.rate)}
-                  </p>
-                  <p>{a.interestedIds.length} interested</p>
+                  <dl className={styles.details}>
+                    <div>
+                      <dt>Deadline</dt>
+                      <dd>{formatDeadline(a.deadline)}</dd>
+                    </div>
+                    <div>
+                      <dt>Location</dt>
+                      <dd>{a.location}</dd>
+                    </div>
+                    <div>
+                      <dt>Length</dt>
+                      <dd>{a.length}</dd>
+                    </div>
+                    <div>
+                      <dt>Rate</dt>
+                      <dd>{formatRate(a.rate)}</dd>
+                    </div>
+                  </dl>
+                  <p className={styles.interested}>{a.interestedIds.length} interested</p>
                 </article>
               </li>
             ))}
           </ul>
+          {assignments.length === 0 && <p className={styles.empty}>No assignments in this view.</p>}
         </section>
       </main>
     </div>
