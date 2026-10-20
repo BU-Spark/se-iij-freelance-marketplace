@@ -11,7 +11,7 @@ describe('Login page', () => {
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /create an account/i })).toHaveAttribute('href', '/onboarding');
+    expect(screen.getByRole('link', { name: /create an account/i })).toHaveAttribute('href', '/signup');
   });
 
   it('validates required credentials', () => {
