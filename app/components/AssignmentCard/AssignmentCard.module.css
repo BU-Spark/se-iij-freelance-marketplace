@@ -79,12 +79,20 @@
 /* grey box with Location / Length / Type / Rate */
 .details {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  /* Location, Length, Type share the space; Rate gets the width it needs */
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
   gap: 12px;
   margin: 0;
   padding: 12px 14px;
   background: #f7f8fa;
   border-radius: 12px;
+}
+
+/* phones: two per row */
+@media (max-width: 600px) {
+  .details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 .details dt {
   font-size: 12px;

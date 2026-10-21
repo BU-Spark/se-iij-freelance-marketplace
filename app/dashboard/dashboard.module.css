@@ -1,20 +1,30 @@
 /* ============ Dashboard: layout, status bar and section headings ============ */
 .shell {
   min-height: 100vh;
-  background: var(--bg);
+  background: #f5f6f8;
 }
 
 /* ---- Status bar under Joey's header ---- */
 .statusBar {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  padding: 12px clamp(16px, 3vw, 40px);
+  gap: 12px 24px;
+  margin: 28px clamp(16px, 4vw, 64px) 0;
+  padding: 16px 22px;
   color: var(--muted);
-  border-bottom: 1px solid var(--line);
+  background: #fff;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -16px rgba(15, 23, 42, 0.18);
 }
 .statusBar strong {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
   color: var(--ink);
 }
 .inboxLink {
@@ -25,13 +35,23 @@
 /* "2 open • 1 pending • 1 assigned" with a colored dot before each; --dot is set inline */
 .counts {
   display: flex;
-  gap: 20px;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
   list-style: none;
 }
 .counts li {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  /* light tint of the same colour as the dot */
+  background: color-mix(in srgb, var(--dot) 12%, white);
 }
 .counts li::before {
   content: '';
@@ -46,7 +66,7 @@
   display: grid;
   grid-template-columns: minmax(280px, 420px) 1fr;
   gap: clamp(24px, 3vw, 48px);
-  padding: 40px clamp(16px, 4vw, 64px) 80px;
+  padding: 28px clamp(16px, 4vw, 64px) 80px;
 }
 
 .sectionHead {
@@ -57,11 +77,10 @@
 }
 
 .sectionTitle {
+  margin: 0;
   font-family: var(--font-serif);
-  font-weight: 400;
-  font-size: 20px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 26px;
   color: var(--navy-deep);
 }
 .sectionSub {
