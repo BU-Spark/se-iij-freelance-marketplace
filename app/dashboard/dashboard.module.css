@@ -76,12 +76,7 @@
   list-style: none;
 }
 
-/* Dashed boxes show where the cards will go */
-.placeholder {
-  padding: 16px;
-  border: 1px dashed var(--line);
-  color: var(--muted);
-}
+
 
 /* ---- Phones and small tablets: stack the columns ---- */
 @media (max-width: 900px) {

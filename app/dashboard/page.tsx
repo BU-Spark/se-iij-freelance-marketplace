@@ -3,9 +3,9 @@ import { Header } from '../components/header/Header';
 import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
-import { RosterCard } from '../components';
+import { AssignmentCard, RosterCard } from '../components';
 
-import { countByStatus, countOnRoster, formatDeadline, formatDeskDate, formatRate } from '../utils/dashboard.utils';
+import { countByStatus, countOnRoster, formatDeskDate } from '../utils/dashboard.utils';
 import type { DeskFilter, RosterView } from '../types/dashboard.types';
 
 /*
@@ -83,21 +83,8 @@ export default function Dashboard() {
 
           <ul className={styles.list}>
             {ASSIGNMENTS.map((a) => (
-              <li key={a.id} className={styles.placeholder}>
-                <article>
-                  <p>
-                    {a.category} • {a.urgent ? 'Urgent' : a.status}
-                  </p>
-                  <h3>{a.title}</h3>
-                  <p>
-                    Point of Contact: {a.contact.name}, {a.contact.desk}
-                  </p>
-                  <p>Deadline: {formatDeadline(a.deadline)}</p>
-                  <p>
-                    Location: {a.location} • Length: {a.length} • Type: {a.type} • Rate: {formatRate(a.rate)}
-                  </p>
-                  <p>{a.interestedIds.length} interested</p>
-                </article>
+              <li key={a.id}>
+                <AssignmentCard assignment={a} />
               </li>
             ))}
           </ul>
