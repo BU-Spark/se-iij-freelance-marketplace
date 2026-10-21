@@ -15,10 +15,10 @@ describe('Home (IIJ welcome page)', () => {
     ).toBeInTheDocument();
   });
 
-  it("renders the 'Let's get started' button linking to onboarding", () => {
+  it("renders the 'Let's get started' button linking to signup", () => {
     const cta = screen.getByRole('link', { name: /let's get started/i });
     expect(cta).toBeInTheDocument();
-    expect(cta).toHaveAttribute('href', '/onboarding');
+    expect(cta).toHaveAttribute('href', '/signup');
   });
 
   it('offers existing users a link to log in', () => {
