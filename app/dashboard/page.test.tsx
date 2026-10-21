@@ -7,9 +7,15 @@ jest.mock('../components/header/Header', () => ({
   Header: () => <header>Header</header>,
 }));
 
+// No real browser URL in tests; pretend there's no "?new=assignment"
+jest.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: jest.fn() }),
+}));
+
 describe('Dashboard', () => {
-  beforeEach(async () => {
-    render(await Dashboard({ searchParams: Promise.resolve({}) }));
+  beforeEach(() => {
+    render(<Dashboard />);
   });
 
   it('renders the shared header and the status bar with real numbers', () => {
@@ -28,7 +34,7 @@ describe('Dashboard', () => {
     ROSTER.forEach((m) => {
       expect(within(column).getByRole('heading', { level: 3, name: m.name })).toBeInTheDocument();
     });
-    expect(within(column).getByText('Available 12:00 PM — 6:00 PM today')).toBeInTheDocument();
+    expect(within(column).getByText(ROSTER[0].note)).toBeInTheDocument();
   });
 
   it('shows the range and filter toggles with the defaults pressed', () => {
@@ -49,5 +55,9 @@ describe('Dashboard', () => {
     expect(within(card).getByText(/sarah jenkins, news desk/i)).toBeInTheDocument();
     expect(within(card).getByText(/\$1\.10 \/ word \(≈ \$1,100 est\.\)/)).toBeInTheDocument();
     expect(within(card).getByText('3 interested')).toBeInTheDocument();
+  });
+
+  it('keeps the New Assignment drawer closed without ?new=assignment', () => {
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 });
