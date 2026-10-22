@@ -1,16 +1,16 @@
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { Header } from '../components/header/Header';
 import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
-import { AssignmentCard, RosterCard } from '../components';
-
+import { AssignmentCard, NewAssignmentFromUrl, RosterCard } from '../components';
 import { countByStatus, countOnRoster, formatDeskDate } from '../utils/dashboard.utils';
 import type { DeskFilter, RosterView } from '../types/dashboard.types';
 
 /*
- * Dashboard: status bar, section headings and toggles are styled.
- * Roster and assignment cards get styled in the next PRs.
+ * Dashboard: roster and assignments use RosterCard and AssignmentCard.
+ * The New Assignment drawer opens when the URL has ?new=assignment.
  */
 
 const VIEWS: SegmentOption<RosterView>[] = [
@@ -90,6 +90,11 @@ export default function Dashboard() {
           </ul>
         </section>
       </main>
+
+      {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
+      <Suspense fallback={null}>
+        <NewAssignmentFromUrl closeHref="/dashboard" />
+      </Suspense>
     </div>
   );
 }
