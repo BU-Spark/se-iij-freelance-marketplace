@@ -47,3 +47,15 @@ export type DeskAssignment = {
   /** RosterMember ids of freelancers who raised their hand */
   interestedIds: string[];
 };
+
+/** What the editor types into the New Assignment form (all text for now) */
+export type NewAssignmentDraft = {
+  category: string;
+  slug: string;
+  contact: string;
+  location: string;
+  length: string;
+  deadline: string;
+  compensation: string;
+  description: string;
+};
