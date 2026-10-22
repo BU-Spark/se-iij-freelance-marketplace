@@ -1,6 +1,15 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import LoginPage from './page';
 
+jest.mock('@clerk/nextjs', () => ({
+  ClerkProvider: ({ children }: { children: React.ReactNode }) => children,
+  useSignIn: () => ({
+    isLoaded: false,
+    signIn: { create: jest.fn() },
+    setActive: jest.fn(),
+  }),
+}));
+
 describe('Login page', () => {
   beforeEach(() => {
     render(<LoginPage />);

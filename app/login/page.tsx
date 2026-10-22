@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
-import { useSignIn } from '@clerk/nextjs/legacy';
+import { useSignIn } from '@clerk/nextjs';
 import { Field, IIJLogo } from '../components';
 import styles from './login.module.css';
 
