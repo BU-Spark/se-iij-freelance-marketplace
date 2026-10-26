@@ -28,4 +28,13 @@ describe('PitchInbox', () => {
     const detail = screen.getByRole('region', { name: /pitch details/i });
     expect(within(detail).getByText(second.slug)).toBeInTheDocument();
   });
+
+  it('accepting a pitch updates the list, the panel and the new count', () => {
+    // the first pitch is new and open by default
+    fireEvent.click(screen.getByRole('button', { name: 'Accept pitch' }));
+    expect(screen.getByRole('button', { name: 'Accepted ✓' })).toBeDisabled();
+    expect(screen.getByText(`2 new · ${PITCHES.length} total`)).toBeInTheDocument();
+    const firstCard = screen.getByRole('button', { name: new RegExp(PITCHES[0].slug) });
+    expect(within(firstCard).getByText('Accepted')).toBeInTheDocument();
+  });
 });
