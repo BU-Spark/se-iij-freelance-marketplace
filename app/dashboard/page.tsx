@@ -41,7 +41,7 @@ export default function Dashboard() {
         <AvailabilityColumn roster={ROSTER} />
 
         {/* ---- Right column: assignments ---- */}
-        <AssignmentsColumn assignments={ASSIGNMENTS} />
+        <AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />
       </main>
 
       {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
