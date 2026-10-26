@@ -108,6 +108,7 @@ export const ASSIGNMENTS: DeskAssignment[] = [
     length: '~ 6 hours',
     rate: { amount: 1.1, unit: 'word', estimate: 1100 },
     interestedIds: ['marcus', 'satoshi', 'amara'],
+    invitedIds: ['marcus', 'satoshi', 'amara', 'jonah'], // new
   },
   {
     id: 'port-oped',
@@ -121,6 +122,7 @@ export const ASSIGNMENTS: DeskAssignment[] = [
     length: '3–4 hours',
     rate: { amount: 85, unit: 'hour', estimate: 300 },
     interestedIds: [],
+    invitedIds: ['elena'], // new
   },
   {
     id: 'harbor-market',
@@ -147,5 +149,6 @@ export const ASSIGNMENTS: DeskAssignment[] = [
     length: '2 hours',
     rate: { amount: 70, unit: 'hour', estimate: 140 },
     interestedIds: ['priya'],
+    assignedToId: 'priya', // new
   },
 ];

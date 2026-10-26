@@ -80,3 +80,25 @@ export function countOnRoster(roster: RosterMember[]): number {
 export function filterAssignments(assignments: DeskAssignment[], filter: DeskFilter): DeskAssignment[] {
   return filter === 'all' ? assignments : assignments.filter((a) => a.status === filter);
 }
+/** One person in the Review candidates list */
+export type Candidate = {
+  member: RosterMember;
+  /** true = said they're interested; false = invited but hasn't answered yet */
+  interested: boolean;
+};
+
+/** Everyone invited to or interested in an assignment, interested people first */
+export function candidatesFor(assignment: DeskAssignment, roster: RosterMember[]): Candidate[] {
+  // join both id lists; Set removes people who are in both
+  const ids = Array.from(new Set([...assignment.interestedIds, ...(assignment.invitedIds ?? [])]));
+
+  return (
+    ids
+      // turn each id into the full roster person (skip ids that aren't on the roster)
+      .map((id) => roster.find((m) => m.id === id))
+      .filter((m): m is RosterMember => m !== undefined)
+      .map((member) => ({ member, interested: assignment.interestedIds.includes(member.id) }))
+      // interested (true) before waiting (false)
+      .sort((a, b) => Number(b.interested) - Number(a.interested))
+  );
+}
