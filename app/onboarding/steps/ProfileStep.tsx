@@ -21,6 +21,7 @@ type ProfileStepProps = {
   addOrg: (o: OrgOption) => void;
   onBack: () => void;
   onSubmit: () => void;
+  submitError: string | null;
 };
 
 export default function ProfileStep(p: ProfileStepProps) {
@@ -175,6 +176,7 @@ export default function ProfileStep(p: ProfileStepProps) {
             {p.submitting ? <span className={styles.spinner} /> : 'Create profile →'}
           </button>
         </div>
+        {p.submitError && <p role="alert">{p.submitError}</p>}
       </section>
 
       <aside className={styles.previewCol}>
