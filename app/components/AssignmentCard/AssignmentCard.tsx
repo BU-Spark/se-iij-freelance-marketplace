@@ -1,6 +1,7 @@
 import type { AssignmentStatus, DeskAssignment } from '../../types/dashboard.types';
 import { formatDeadline, formatRate } from '../../utils/dashboard.utils';
 import styles from './AssignmentCard.module.css';
+import { categoryColor } from '../../utils/category.utils';
 
 const STATUS_LABEL: Record<AssignmentStatus, string> = {
   open: 'Open',
@@ -9,12 +10,12 @@ const STATUS_LABEL: Record<AssignmentStatus, string> = {
 };
 
 // colour of the small square next to the category name
-const CATEGORY_COLOR: Record<string, string> = {
-  'Reporting/Writing': '#2f55d4',
-  Editing: '#c2417a',
-  Photo: '#d98a00',
-  Data: '#1f8a70',
-};
+// const CATEGORY_COLOR: Record<string, string> = {
+//   'Reporting/Writing': '#2f55d4',
+//   Editing: '#c2417a',
+//   Photo: '#d98a00',
+//   Data: '#1f8a70',
+// };
 
 type AssignmentCardProps = {
   assignment: DeskAssignment;
@@ -38,11 +39,7 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
     <article className={styles.card}>
       <div className={styles.top}>
         <span className={styles.category}>
-          <span
-            className={styles.dot}
-            style={{ background: CATEGORY_COLOR[a.category] ?? '#5f6878' }}
-            aria-hidden="true"
-          />
+          <span className={styles.dot} style={{ background: categoryColor(a.category) }} aria-hidden="true" />
           {a.category}
         </span>
         {a.urgent && <span className={`${styles.pill} ${styles.urgent}`}>Urgent</span>}

@@ -1,0 +1,90 @@
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #eceef2;
+  border-radius: 14px;
+  background: #fff;
+  font: inherit;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.item:hover {
+  border-color: #d5dae3;
+}
+
+/* the open pitch: blue outline + light blue fill */
+.selected {
+  border-color: var(--c-blue);
+  background: #f3f6fe;
+  box-shadow: 0 0 0 3px rgba(47, 85, 212, 0.12);
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4a5468;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+}
+
+/* status pills */
+.pill {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.new {
+  background: #eef2fd;
+  color: #1e3a9e;
+}
+.negotiating {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+.accepted {
+  background: #e8f6ee;
+  color: #17663a;
+}
+.declined {
+  background: #f0f2f5;
+  color: #4a5468;
+}
+
+.slug {
+  font-family: var(--font-serif);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--navy-deep);
+  overflow-wrap: anywhere;
+}
+.meta {
+  font-size: 13px;
+  color: var(--muted);
+}

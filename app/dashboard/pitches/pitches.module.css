@@ -1,0 +1,72 @@
+.shell {
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+/* list on the left, details on the right */
+.layout {
+  display: grid;
+  grid-template-columns: minmax(300px, 440px) minmax(0, 1fr);
+  gap: clamp(20px, 3vw, 40px);
+  align-items: start;
+  padding: 28px clamp(16px, 4vw, 64px) 80px;
+}
+
+.inboxHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.heading {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--navy-deep);
+}
+.sub {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* the white panel on the right; stays in view while the list scrolls */
+.detail {
+  position: sticky;
+  top: 24px;
+  padding: 28px 32px;
+  background: #fff;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -16px rgba(15, 23, 42, 0.18);
+}
+.placeholder {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--navy-deep);
+}
+
+/* phones and small tablets: one column */
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .detail {
+    position: static;
+  }
+}
