@@ -40,26 +40,17 @@ export async function POST(request: Request) {
     const connection = client;
     await connection.query('BEGIN');
     const userResult = await connection.query<{ id: string }>(
-      `INSERT INTO users (clerk_id, username, email, first_name, last_name, short_bio, roles)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO users (clerk_id, email, first_name, last_name, short_bio, role)
+       VALUES ($1, $2, $3, $4, $5, $6)
        ON CONFLICT (clerk_id) DO UPDATE SET
-         username = EXCLUDED.username,
          email = EXCLUDED.email,
          first_name = EXCLUDED.first_name,
          last_name = EXCLUDED.last_name,
          short_bio = EXCLUDED.short_bio,
-         roles = EXCLUDED.roles,
+         role = EXCLUDED.role,
          updated_at = NOW()
        RETURNING id`,
-      [
-        userId,
-        user.email,
-        user.email,
-        user.firstName,
-        user.lastName,
-        user.shortBio ?? null,
-        user.roles.map((role) => role.toString()),
-      ]
+      [userId, user.email, user.firstName ?? '', user.lastName ?? '', user.shortBio ?? null, body.role]
     );
     const databaseUserId = userResult.rows[0]?.id;
 
