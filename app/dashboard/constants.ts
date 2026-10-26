@@ -15,6 +15,12 @@ const at = (days: number, hour: number, minute = 0) => {
   d.setHours(hour, minute, 0, 0);
   return d;
 };
+/** "1101100" → [true, true, false, true, true, false, false]; spaces are ignored */
+const pattern = (s: string) =>
+  s
+    .replace(/\s/g, '')
+    .split('')
+    .map((c) => c === '1');
 
 export const ROSTER: RosterMember[] = [
   {
@@ -25,6 +31,8 @@ export const ROSTER: RosterMember[] = [
     status: 'available',
     openHours: [{ start: 12, end: 18 }],
     note: 'Available 12:00 PM — 6:00 PM today',
+    weekDays: pattern('1101100'),
+    monthDays: pattern('1101100110 1100110110 0110110011'),
   },
   {
     id: 'elena',
@@ -34,6 +42,8 @@ export const ROSTER: RosterMember[] = [
     status: 'busy',
     openHours: [],
     note: 'On assignment until Friday',
+    weekDays: pattern('0000111'),
+    monthDays: pattern('0000111000 0111000011 1000011110'),
   },
   {
     id: 'satoshi',
@@ -43,6 +53,8 @@ export const ROSTER: RosterMember[] = [
     status: 'available',
     openHours: [{ start: 8, end: 16 }],
     note: 'Morning shift, 8 AM — 4 PM',
+    weekDays: pattern('1111100'),
+    monthDays: pattern('1111100111 1100111110 0111110011'),
   },
   {
     id: 'amara',
@@ -55,6 +67,8 @@ export const ROSTER: RosterMember[] = [
       { start: 16, end: 20 },
     ],
     note: 'Flexible — most of today',
+    weekDays: pattern('1111110'),
+    monthDays: pattern('1111110111 1110111111 0111111011'),
   },
   {
     id: 'jonah',
@@ -64,6 +78,8 @@ export const ROSTER: RosterMember[] = [
     status: 'off',
     openHours: [],
     note: 'Out of office',
+    weekDays: pattern('0000000'),
+    monthDays: pattern('0000000000 0000000000 0000000000'),
   },
   {
     id: 'priya',
@@ -73,6 +89,8 @@ export const ROSTER: RosterMember[] = [
     status: 'available',
     openHours: [{ start: 14, end: 20 }],
     note: 'Afternoons this week',
+    weekDays: pattern('1010101'),
+    monthDays: pattern('1010101010 0101010101 1010101010'),
   },
 ];
 

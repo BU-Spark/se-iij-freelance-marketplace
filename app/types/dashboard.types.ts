@@ -24,6 +24,8 @@ export type RosterMember = {
   status: AvailabilityStatus;
   openHours: HourWindow[];
   note: string;
+  weekDays: boolean[];
+  monthDays: boolean[];
 };
 
 export type Rate = {
