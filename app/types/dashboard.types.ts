@@ -12,6 +12,11 @@ export type RosterView = 'day' | 'week' | 'month';
 export type ViewerRole = 'editor' | 'freelancer';
 
 export type RateUnit = 'word' | 'hour' | 'flat';
+/** Where a pitch is in the editor's review */
+export type PitchStatus = 'new' | 'reviewed' | 'negotiating' | 'accepted' | 'declined';
+
+/** The tabs above the inbox: every status, plus "all" */
+export type PitchFilter = 'all' | PitchStatus;
 
 /** A block of free time in 24h clock hours, e.g. { start: 14, end: 18 } is 2 PM to 6 PM */
 export type HourWindow = { start: number; end: number };
@@ -63,7 +68,6 @@ export type NewAssignmentDraft = {
   description: string;
 };
 /** Where a pitch is in the editor's review */
-export type PitchStatus = 'new' | 'negotiating' | 'accepted' | 'declined';
 
 /** A story idea a freelancer sends to the editor */
 export type Pitch = {

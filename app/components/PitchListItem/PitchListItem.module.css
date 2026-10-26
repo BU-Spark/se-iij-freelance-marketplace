@@ -64,6 +64,10 @@
   background: #eef2fd;
   color: #1e3a9e;
 }
+.reviewed {
+  background: #f1eefb;
+  color: #5b3fa8;
+}
 .negotiating {
   background: #fff4e5;
   color: #8a4b00;

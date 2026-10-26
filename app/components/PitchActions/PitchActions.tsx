@@ -11,6 +11,7 @@ export default function PitchActions({ status, freelancerName, onChange }: Pitch
   // a short line above the buttons that explains what happens / what happened
   const note: Record<PitchStatus, string> = {
     new: `Accepting turns this pitch into an assignment for ${freelancerName}.`,
+    reviewed: `Accepting turns this pitch into an assignment for ${freelancerName}.`,
     negotiating: `You're negotiating with ${freelancerName}. Accept once you agree on terms.`,
     accepted: `This pitch is now an assignment for ${freelancerName}.`,
     declined: 'Declined. You can still accept it if you change your mind.',
