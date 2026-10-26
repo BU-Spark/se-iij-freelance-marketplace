@@ -62,3 +62,28 @@ export type NewAssignmentDraft = {
   compensation: string;
   description: string;
 };
+/** Where a pitch is in the editor's review */
+export type PitchStatus = 'new' | 'negotiating' | 'accepted' | 'declined';
+
+/** A story idea a freelancer sends to the editor */
+export type Pitch = {
+  id: string;
+  /** short-name used as the title, e.g. "shadow-budget-city-hall" */
+  slug: string;
+  category: string;
+  /** extra labels shown as grey tags, e.g. ["City Hall", "Investigative feature"] */
+  tags: string[];
+  freelancer: { id: string; name: string };
+  submittedAt: Date;
+  status: PitchStatus;
+  summary: string;
+  location: string;
+  length: string;
+  deadline: string;
+  rate: string;
+  sources: string;
+  audience: string;
+  assets: string;
+  whyFit: string;
+  whyMe: string;
+};
