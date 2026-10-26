@@ -6,6 +6,13 @@ beforeAll(() => {
   window.scrollTo = jest.fn();
 });
 
+beforeEach(() => {
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    json: async () => ({ saved: true }),
+  });
+});
+
 const chip = (label: string) => screen.getByRole('button', { name: new RegExp(`^[+✓]\\s*${label}$`, 'i') });
 
 const type = (label: RegExp, value: string) => {
