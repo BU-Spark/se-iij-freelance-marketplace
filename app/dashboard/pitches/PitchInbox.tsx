@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import PitchListItem from '../../components/PitchListItem/PitchListItem';
+import PitchDetail from '../../components/PitchDetail/PitchDetail';
 import type { Pitch } from '../../types/dashboard.types';
 import styles from './pitches.module.css';
 
@@ -37,8 +38,7 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
       </section>
 
       <section aria-label="Pitch details" className={styles.detail}>
-        {/* TODO: full pitch detail panel (next PR) */}
-        {selected ? <p className={styles.placeholder}>{selected.slug}</p> : <p>Select a pitch</p>}
+        {selected ? <PitchDetail pitch={selected} /> : <p className={styles.empty}>Select a pitch to read it.</p>}
       </section>
     </main>
   );

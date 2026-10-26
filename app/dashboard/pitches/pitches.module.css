@@ -54,11 +54,10 @@
     0 8px 24px -16px rgba(15, 23, 42, 0.18);
 }
 .placeholder {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 28px;
-  font-weight: 600;
-  color: var(--navy-deep);
+    .empty {
+    margin: 0;
+    color: var(--muted);
+    }
 }
 
 /* phones and small tablets: one column */
