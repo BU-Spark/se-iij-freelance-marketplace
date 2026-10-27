@@ -51,15 +51,3 @@ export type DeskAssignment = {
   invitedIds?: string[];
   assignedToId?: string;
 };
-
-/** What the editor types into the New Assignment form (all text for now) */
-export type NewAssignmentDraft = {
-  category: string;
-  slug: string;
-  contact: string;
-  location: string;
-  length: string;
-  deadline: string;
-  compensation: string;
-  description: string;
-};
