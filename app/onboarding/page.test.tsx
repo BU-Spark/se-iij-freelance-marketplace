@@ -139,6 +139,10 @@ describe('Onboarding page', () => {
         await screen.findByRole('heading', { level: 1, name: /you're all set, alex/i }, { timeout: 2000 })
       ).toBeInTheDocument();
       expect(screen.getByText(/your freelancer profile is live/i)).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: /browse assignments/i })).toHaveAttribute(
+        'href',
+        '/dashboard/assignments'
+      );
     });
   });
 });
