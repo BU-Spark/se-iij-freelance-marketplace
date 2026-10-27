@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './NewAssignmentDrawer.module.css';
-import type { NewAssignmentDraft } from '../../types/dashboard.types';
-import { EMPTY_DRAFT } from './constants';
+import type { NewAssignment } from '../../types/assignments.types';
+import { EMPTY_ASSIGNMENT, hasErrors, validateAssignment, type AssignmentErrors } from '../../utils/assignment.utils';
 import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
 
 type NewAssignmentDrawerProps = {
@@ -13,13 +13,66 @@ type NewAssignmentDrawerProps = {
   closeHref: string;
 };
 
+type CreateAssignmentResponse = { error?: string; errors?: AssignmentErrors };
+
 export default function NewAssignmentDrawer({ closeHref }: NewAssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // everything typed into the form; the drawer keeps it so "Send invites" can use it later
-  const [draft, setDraft] = useState<NewAssignmentDraft>(EMPTY_DRAFT);
-  const updateDraft = (patch: Partial<NewAssignmentDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  // everything typed into the form, kept here so the submit button can post it
+  const [draft, setDraft] = useState<NewAssignment>(EMPTY_ASSIGNMENT);
+  const [errors, setErrors] = useState<AssignmentErrors>({});
+  const [formError, setFormError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const updateDraft = (patch: Partial<NewAssignment>) => {
+    setDraft((d) => ({ ...d, ...patch }));
+    setFormError('');
+
+    // drop the error for any field the editor just touched
+    setErrors((current) => {
+      const touched = Object.keys(patch) as Array<keyof NewAssignment>;
+      if (!touched.some((field) => current[field])) return current;
+      const next = { ...current };
+      touched.forEach((field) => delete next[field]);
+      return next;
+    });
+  };
+
+  const submitAssignment = async () => {
+    const nextErrors = validateAssignment(draft);
+    setErrors(nextErrors);
+    if (hasErrors(nextErrors)) return;
+
+    setSubmitting(true);
+    setFormError('');
+
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...draft,
+          // datetime-local values have no timezone; send an absolute instant
+          deadline: draft.deadline ? new Date(draft.deadline).toISOString() : '',
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as CreateAssignmentResponse | null;
+
+      if (!response.ok) {
+        setFormError(payload?.error ?? 'Unable to create the assignment. Please try again.');
+        if (payload?.errors) setErrors(payload.errors);
+        return;
+      }
+
+      router.push(closeHref, { scroll: false });
+      router.refresh();
+    } catch {
+      setFormError('Unable to create the assignment. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     // move keyboard focus into the drawer when it opens
@@ -83,14 +136,19 @@ export default function NewAssignmentDrawer({ closeHref }: NewAssignmentDrawerPr
         </div>
 
         <div className={styles.body}>
-          <NewAssignmentForm draft={draft} onChange={updateDraft} />
+          {formError && (
+            <p role="alert" className={styles.formError}>
+              {formError}
+            </p>
+          )}
+          <NewAssignmentForm draft={draft} onChange={updateDraft} errors={errors} />
           {/* TODO: invite list (next PR) */}
         </div>
 
         <div className={styles.foot}>
           <p className={styles.footNote}>Will post as open call</p>
-          <button type="button" className={styles.send} disabled>
-            Send invites
+          <button type="button" className={styles.send} onClick={submitAssignment} disabled={submitting}>
+            {submitting ? 'Posting…' : 'Post assignment'}
           </button>
         </div>
       </div>
