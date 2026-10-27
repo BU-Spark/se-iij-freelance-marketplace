@@ -10,6 +10,7 @@ import {
   initials,
   slotLabel,
   candidatesFor,
+  timeAgo,
 } from './dashboard.utils';
 
 describe('dashboard utils', () => {
@@ -108,5 +109,23 @@ describe('dashboard utils', () => {
       const list = candidatesFor({ ...byId('port-oped'), invitedIds: ['nobody'] }, ROSTER);
       expect(list).toEqual([]);
     });
+  });
+});
+describe('timeAgo', () => {
+  const now = new Date(2026, 9, 26, 12, 0); // Oct 26, 12:00
+  const minutesBefore = (m: number) => new Date(now.getTime() - m * 60000);
+
+  it('says "just now" for less than a minute', () => {
+    expect(timeAgo(minutesBefore(0), now)).toBe('just now');
+  });
+
+  it('uses minutes, hours and days', () => {
+    expect(timeAgo(minutesBefore(15), now)).toBe('15m ago');
+    expect(timeAgo(minutesBefore(3 * 60), now)).toBe('3h ago');
+    expect(timeAgo(minutesBefore(2 * 24 * 60), now)).toBe('2d ago');
+  });
+
+  it('shows the date for anything older than a week', () => {
+    expect(timeAgo(minutesBefore(10 * 24 * 60), now)).toBe('Oct 16');
   });
 });
