@@ -70,7 +70,13 @@ export async function POST(request: Request) {
 
     if (!author) {
       await connection.query('ROLLBACK');
-      return NextResponse.json({ error: 'Finish onboarding before creating an assignment.' }, { status: 400 });
+      return NextResponse.json(
+        {
+          error: 'Finish onboarding before creating an assignment.',
+          code: 'onboarding_required',
+        },
+        { status: 400 }
+      );
     }
 
     if (author.role !== 'editor') {

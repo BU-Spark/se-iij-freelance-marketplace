@@ -86,7 +86,9 @@ describe('POST /api/assignments', () => {
     const response = await POST(post(validAssignment));
 
     expect(response.status).toBe(400);
-    expect((await response.json()).error).toBe('Finish onboarding before creating an assignment.');
+    const payload = await response.json();
+    expect(payload.error).toBe('Finish onboarding before creating an assignment.');
+    expect(payload.code).toBe('onboarding_required');
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
     expect(client.release).toHaveBeenCalled();
   });
