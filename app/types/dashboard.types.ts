@@ -24,6 +24,8 @@ export type RosterMember = {
   status: AvailabilityStatus;
   openHours: HourWindow[];
   note: string;
+  weekDays: boolean[];
+  monthDays: boolean[];
 };
 
 export type Rate = {
@@ -44,8 +46,9 @@ export type DeskAssignment = {
   location: string;
   length: string;
   rate: Rate;
-  /** RosterMember ids of freelancers who raised their hand */
   interestedIds: string[];
+  invitedIds?: string[];
+  assignedToId?: string;
 };
 
 /** What the editor types into the New Assignment form (all text for now) */

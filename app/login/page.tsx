@@ -5,6 +5,7 @@ import { FormEvent, useState } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { useSignIn } from '@clerk/nextjs/legacy';
 import { Field, IIJLogo } from '../components';
+import { isValidEmail } from '../utils/validation.utils';
 import styles from './login.module.css';
 
 function LoginForm() {
@@ -18,7 +19,7 @@ function LoginForm() {
     event.preventDefault();
     const nextErrors: typeof errors = {};
 
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim() || !isValidEmail(email)) {
       nextErrors.email = 'Enter a valid email address.';
     }
 

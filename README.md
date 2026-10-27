@@ -89,7 +89,6 @@ You can run your tests using the following npm scripts:
 To maintain code quality and prevent regressions, this template uses [Husky](https://typicode.github.io/husky/) to manage Git hooks. The following hooks are configured:
 
 - **`pre-commit`**: Before any commit is finalized, this hook runs:
-
   1.  `npx lint-staged`: Lints and formats staged files (`*.{js,jsx,ts,tsx}`) using ESLint and Prettier.
   2.  `npm test`: Runs the entire test suite.
       If either linting/formatting fails or any test fails, the commit will be aborted, allowing you to fix the issues before committing.
@@ -131,3 +130,23 @@ Most projects will require the use of other technologies. Below are a few guides
 - [Clerk Setup w/ Next.js](https://clerk.com/docs/quickstarts/nextjs) - Clerk will be the default user authentication software for all new Spark! projects. Please reach out to Omar for creating and retrieving API keys for your project. Do NOT use firebase/auth even if your project uses Firestore.
 - ### Component Libraries
   All new projects will be required to use a [design system](https://www.figma.com/blog/design-systems-101-what-is-a-design-system/) You will receive designs from your DS488 design team which will utilize a design kit. Use the corresponding component library to implement those designs on the front end of your project.
+
+## Database setup
+
+Onboarding profiles are saved through `POST /api/onboarding` to PostgreSQL using the
+server-only `DATABASE_URL`. Apply [`db/schema.sql`](./db/schema.sql) to the configured
+database before running the app. The endpoint links each record to the authenticated
+Clerk user and updates the profile if onboarding is submitted again. The onboarding
+tables are `users`, `editors`, and `freelancers`, matching the domain models in
+`app/types/user.types.ts`.
+
+From a Railway service shell, run:
+
+```bash
+npm run db:migrate
+```
+
+Set the app service's `DATABASE_URL` to the PostgreSQL service reference
+(`${{Postgres.DATABASE_URL}}`, replacing `Postgres` with the exact Railway service
+name). The private hostname is available from Railway services, not from a local
+computer.

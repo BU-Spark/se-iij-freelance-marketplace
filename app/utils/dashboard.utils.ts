@@ -1,5 +1,11 @@
-import type { AssignmentStatus, DeskAssignment, HourWindow, Rate, RosterMember } from '../types/dashboard.types';
-
+import type {
+  AssignmentStatus,
+  DeskAssignment,
+  DeskFilter,
+  HourWindow,
+  Rate,
+  RosterMember,
+} from '../types/dashboard.types';
 /** The availability bar shows six 2-hour slots: 8a, 10a, 12p, 2p, 4p, 6p */
 export const SLOT_STARTS = [8, 10, 12, 14, 16, 18];
 
@@ -69,4 +75,30 @@ export function countByStatus(assignments: DeskAssignment[]): Record<AssignmentS
 /** Everyone on the roster who isn't marked off */
 export function countOnRoster(roster: RosterMember[]): number {
   return roster.filter((m) => m.status !== 'off').length;
+}
+/** The assignments that belong under a tab: "all" keeps everything */
+export function filterAssignments(assignments: DeskAssignment[], filter: DeskFilter): DeskAssignment[] {
+  return filter === 'all' ? assignments : assignments.filter((a) => a.status === filter);
+}
+/** One person in the Review candidates list */
+export type Candidate = {
+  member: RosterMember;
+  /** true = said they're interested; false = invited but hasn't answered yet */
+  interested: boolean;
+};
+
+/** Everyone invited to or interested in an assignment, interested people first */
+export function candidatesFor(assignment: DeskAssignment, roster: RosterMember[]): Candidate[] {
+  // join both id lists; Set removes people who are in both
+  const ids = Array.from(new Set([...assignment.interestedIds, ...(assignment.invitedIds ?? [])]));
+
+  return (
+    ids
+      // turn each id into the full roster person (skip ids that aren't on the roster)
+      .map((id) => roster.find((m) => m.id === id))
+      .filter((m): m is RosterMember => m !== undefined)
+      .map((member) => ({ member, interested: assignment.interestedIds.includes(member.id) }))
+      // interested (true) before waiting (false)
+      .sort((a, b) => Number(b.interested) - Number(a.interested))
+  );
 }
