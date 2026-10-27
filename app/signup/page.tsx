@@ -4,30 +4,50 @@ import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { useSignUp } from '@clerk/nextjs/legacy';
-import { Field, IIJLogo } from '../components';
+import { Field, IIJLogo, PasswordField } from '../components';
+import { MIN_PASSWORD_LENGTH, validatePassword, validatePasswordConfirmation } from '../utils/password.utils';
+import { isValidEmail } from '../utils/validation.utils';
 import styles from '../login/login.module.css';
 
-type FormErrors = { email?: string; password?: string; form?: string; code?: string };
+type FormErrors = {
+  email?: string;
+  password?: string;
+  confirmPassword?: string;
+  form?: string;
+  code?: string;
+};
 
 function SignupForm() {
   const { isLoaded, signUp, setActive } = useSignUp();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [code, setCode] = useState('');
   const [verificationPending, setVerificationPending] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
+  const clearErrors = (...fields: Array<keyof FormErrors>) =>
+    setErrors((current) => {
+      if (!fields.some((field) => current[field])) return current;
+      const next = { ...current };
+      fields.forEach((field) => delete next[field]);
+      return next;
+    });
+
   const submitSignup = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors: FormErrors = {};
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim() || !isValidEmail(email)) {
       nextErrors.email = 'Enter a valid email address.';
     }
 
-    if (password.length < 8) {
-      nextErrors.password = 'Use at least 8 characters.';
-    }
+    const passwordError = validatePassword(password);
+    if (passwordError) nextErrors.password = passwordError;
+
+    const confirmationError = validatePasswordConfirmation(password, confirmPassword);
+    if (confirmationError) nextErrors.confirmPassword = confirmationError;
+
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
       return;
@@ -122,14 +142,30 @@ function SignupForm() {
                 onChange={(event) => setEmail(event.target.value)}
               />
             </Field>
-            <Field label="Password" error={errors.password}>
-              <input
-                type="password"
-                autoComplete="new-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-              />
-            </Field>
+            <PasswordField
+              label="Password"
+              name="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(next) => {
+                setPassword(next);
+                clearErrors('password', 'confirmPassword', 'form');
+              }}
+              error={errors.password}
+              hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+              hintMet={password.length >= MIN_PASSWORD_LENGTH}
+            />
+            <PasswordField
+              label="Confirm password"
+              name="confirmPassword"
+              autoComplete="new-password"
+              value={confirmPassword}
+              onChange={(next) => {
+                setConfirmPassword(next);
+                clearErrors('confirmPassword', 'form');
+              }}
+              error={errors.confirmPassword}
+            />
             {errors.form && <p role="alert">{errors.form}</p>}
             <button type="submit" className={styles.submit} disabled={submitting}>
               {submitting ? (
