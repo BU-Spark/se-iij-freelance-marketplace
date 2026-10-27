@@ -1,9 +1,10 @@
 /** Types for the editor dashboard (the "Dispatch" desk) */
 
-export type AvailabilityStatus = 'available' | 'busy' | 'off';
+import type { AssignmentStatus } from './assignments.types';
 
-/** open = posted, invited = waiting on a freelancer (shown as "pending"), assigned = taken */
-export type AssignmentStatus = 'open' | 'invited' | 'assigned';
+export type { AssignmentStatus };
+
+export type AvailabilityStatus = 'available' | 'busy' | 'off';
 
 export type DeskFilter = 'all' | AssignmentStatus;
 
