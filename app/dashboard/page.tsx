@@ -2,22 +2,17 @@ import { Suspense } from 'react';
 import Link from 'next/link';
 import { Header } from '../components/header/Header';
 import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
+import AvailabilityColumn from './components/AvailabilityColumn';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
-import { AssignmentCard, NewAssignmentFromUrl, RosterCard } from '../components';
-import { countByStatus, countOnRoster, formatDeskDate } from '../utils/dashboard.utils';
-import type { DeskFilter, RosterView } from '../types/dashboard.types';
+import { AssignmentCard, NewAssignmentFromUrl } from '../components';
+import { countByStatus, formatDeskDate } from '../utils/dashboard.utils';
+import type { DeskFilter } from '../types/dashboard.types';
 
 /*
- * Dashboard: roster and assignments use RosterCard and AssignmentCard.
+ * Dashboard: availability (day / week / month) on the left, assignments on the right.
  * The New Assignment drawer opens when the URL has ?new=assignment.
  */
-
-const VIEWS: SegmentOption<RosterView>[] = [
-  { value: 'day', label: 'day' },
-  { value: 'week', label: 'week' },
-  { value: 'month', label: 'month' },
-];
 
 const FILTERS: SegmentOption<DeskFilter>[] = [
   { value: 'all', label: 'All' },
@@ -50,27 +45,7 @@ export default function Dashboard() {
 
       <main className={styles.columns}>
         {/* ---- Left column: who is available ---- */}
-        <section aria-labelledby="availability-heading">
-          <div className={styles.sectionHead}>
-            <div>
-              <h2 id="availability-heading" className={styles.sectionTitle}>
-                Availability
-              </h2>
-              <p className={styles.sectionSub}>
-                {countOnRoster(ROSTER)} of {ROSTER.length} on roster
-              </p>
-            </div>
-            <SegmentedControl label="Availability range" options={VIEWS} value="day" />
-          </div>
-
-          <ul className={styles.list}>
-            {ROSTER.map((m) => (
-              <li key={m.id}>
-                <RosterCard member={m} />
-              </li>
-            ))}
-          </ul>
-        </section>
+        <AvailabilityColumn roster={ROSTER} />
 
         {/* ---- Right column: assignments ---- */}
         <section aria-labelledby="assignments-heading">
