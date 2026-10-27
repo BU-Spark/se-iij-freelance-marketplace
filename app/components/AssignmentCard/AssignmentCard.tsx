@@ -16,18 +16,24 @@ const CATEGORY_COLOR: Record<string, string> = {
   Data: '#1f8a70',
 };
 
-// "3 interested", "No one interested yet", or "Assigned"
-function interestText(a: DeskAssignment): string {
-  if (a.status === 'assigned') return 'Assigned';
+type AssignmentCardProps = {
+  assignment: DeskAssignment;
+  /** name of the freelancer it was assigned to, if any */
+  assignedName?: string;
+  /** if given, shows a "Review candidates →" button when people are interested */
+  onReview?: () => void;
+};
+
+// "3 interested", "No one interested yet", or "Assigned to Marcus Thorne"
+function interestText(a: DeskAssignment, assignedName?: string): string {
+  if (a.status === 'assigned') return assignedName ? `Assigned to ${assignedName}` : 'Assigned';
   const n = a.interestedIds.length;
   return n === 0 ? 'No one interested yet' : `${n} interested`;
 }
 
-type AssignmentCardProps = {
-  assignment: DeskAssignment;
-};
+export default function AssignmentCard({ assignment: a, assignedName, onReview }: AssignmentCardProps) {
+  const canReview = onReview && a.status !== 'assigned' && a.interestedIds.length > 0;
 
-export default function AssignmentCard({ assignment: a }: AssignmentCardProps) {
   return (
     <article className={styles.card}>
       <div className={styles.top}>
@@ -70,7 +76,14 @@ export default function AssignmentCard({ assignment: a }: AssignmentCardProps) {
         </div>
       </dl>
 
-      <p className={styles.interest}>{interestText(a)}</p>
+      <div className={styles.footer}>
+        <p className={styles.interest}>{interestText(a, assignedName)}</p>
+        {canReview && (
+          <button type="button" className={styles.review} onClick={onReview}>
+            Review candidates →
+          </button>
+        )}
+      </div>
     </article>
   );
 }

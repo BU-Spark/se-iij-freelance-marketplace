@@ -103,3 +103,35 @@
   clip: rect(0 0 0 0);
   white-space: nowrap;
 }
+/* week: M T W T F S S */
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.week li {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* month: small boxes, 10 per row */
+.month {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 3px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.month li {
+  height: 14px;
+  border-radius: 4px;
+}

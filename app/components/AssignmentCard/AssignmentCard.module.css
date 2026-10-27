@@ -108,3 +108,24 @@
   font-size: 14px;
   color: #4a5468;
 }
+/* interest line + "Review candidates →" */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.review {
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-blue);
+  cursor: pointer;
+}
+.review:hover {
+  text-decoration: underline;
+}
