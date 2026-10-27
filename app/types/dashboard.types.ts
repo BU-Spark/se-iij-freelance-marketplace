@@ -56,17 +56,6 @@ export type DeskAssignment = {
   assignedToId?: string;
 };
 
-/** What the editor types into the New Assignment form (all text for now) */
-export type NewAssignmentDraft = {
-  category: string;
-  slug: string;
-  contact: string;
-  location: string;
-  length: string;
-  deadline: string;
-  compensation: string;
-  description: string;
-};
 /** Where a pitch is in the editor's review */
 
 /** A story idea a freelancer sends to the editor */

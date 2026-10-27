@@ -38,3 +38,27 @@ CREATE TABLE IF NOT EXISTS freelancers (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS assignments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- TEXT until an organizations table exists, matching editors.organization_id
+  organization_id TEXT,
+  created_by_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  category TEXT NOT NULL DEFAULT '',
+  slug TEXT NOT NULL,
+  contact TEXT NOT NULL DEFAULT '',
+  location TEXT NOT NULL DEFAULT '',
+  length TEXT NOT NULL DEFAULT '',
+  deadline TIMESTAMPTZ,
+  compensation TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'invited', 'assigned')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- One slug per organization; COALESCE so organization-less posts also stay unique
+CREATE UNIQUE INDEX IF NOT EXISTS assignments_org_slug_key ON assignments (COALESCE(organization_id, ''), slug);
+CREATE INDEX IF NOT EXISTS assignments_created_by_idx ON assignments (created_by_user_id);
+CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (status, deadline);
