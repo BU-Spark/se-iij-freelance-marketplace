@@ -46,7 +46,7 @@ export default function Dashboard() {
 
       {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
       <Suspense fallback={null}>
-        <NewAssignmentFromUrl closeHref="/dashboard" />
+        <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
       </Suspense>
     </div>
   );
