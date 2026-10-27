@@ -55,7 +55,7 @@ export const PITCHES: Pitch[] = [
     tags: ['Funding'],
     freelancer: { id: 'amara', name: 'Amara Diallo' },
     submittedAt: hoursAgo(48),
-    status: 'new',
+    status: 'reviewed',
     summary: 'Draft a proposal to the Local News Fund to pay for a year of city hall coverage.',
     location: 'Remote',
     length: '10-page proposal',

@@ -6,11 +6,11 @@ import styles from './PitchListItem.module.css';
 
 const STATUS_LABEL: Record<PitchStatus, string> = {
   new: 'New',
+  reviewed: 'Reviewed',
   negotiating: 'Negotiating',
   accepted: 'Accepted',
   declined: 'Declined',
 };
-
 type PitchListItemProps = {
   pitch: Pitch;
   /** true for the pitch currently open on the right */
