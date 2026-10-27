@@ -3,13 +3,10 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   clerk_id TEXT NOT NULL UNIQUE,
-  username TEXT NOT NULL,
   email TEXT NOT NULL,
-  first_name TEXT,
-  last_name TEXT,
-  is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  roles TEXT[] NOT NULL DEFAULT '{}',
-  verified BOOLEAN NOT NULL DEFAULT TRUE,
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  role TEXT NOT NULL CHECK (role IN ('editor', 'freelancer')),
   short_bio TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
