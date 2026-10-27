@@ -2,26 +2,55 @@
 
 import Link from 'next/link';
 import { FormEvent, useState } from 'react';
+import { ClerkProvider } from '@clerk/nextjs';
+import { useSignIn } from '@clerk/nextjs/legacy';
 import { Field, IIJLogo } from '../components';
+import { isValidEmail } from '../utils/validation.utils';
 import styles from './login.module.css';
 
-export default function LoginPage() {
+function LoginForm() {
+  const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; form?: string }>({});
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextErrors: typeof errors = {};
 
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim() || !isValidEmail(email)) {
       nextErrors.email = 'Enter a valid email address.';
     }
+
     if (!password) {
       nextErrors.password = 'Enter your password.';
     }
 
-    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      setErrors(nextErrors);
+      return;
+    }
+
+    if (!isLoaded) return;
+
+    setSubmitting(true);
+    setErrors({});
+    try {
+      const result = await signIn.create({ identifier: email.trim(), password });
+      if (result.status === 'complete') {
+        await setActive({ session: result.createdSessionId });
+        window.location.assign('/dashboard');
+      }
+    } catch (error) {
+      const message =
+        error && typeof error === 'object' && 'errors' in error
+          ? (error.errors as Array<{ longMessage?: string; message?: string }>)[0]
+          : undefined;
+      setErrors({ form: message?.longMessage ?? message?.message ?? 'Unable to log in. Please try again.' });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -60,6 +89,7 @@ export default function LoginPage() {
               aria-invalid={!!errors.password}
             />
           </Field>
+          {errors.form && <p role="alert">{errors.form}</p>}
 
           <div className={styles.formMeta}>
             <label className={styles.remember}>
@@ -69,15 +99,29 @@ export default function LoginPage() {
             <a href="mailto:support@iij.example?subject=Password%20reset">Forgot password?</a>
           </div>
 
-          <button type="submit" className={styles.submit}>
-            Log in <span aria-hidden="true">→</span>
+          <button type="submit" className={styles.submit} disabled={submitting}>
+            {submitting ? (
+              'Logging in…'
+            ) : (
+              <>
+                Log in <span aria-hidden="true">→</span>
+              </>
+            )}
           </button>
         </form>
 
         <p className={styles.signupPrompt}>
-          New to IIJ? <Link href="/onboarding">Create an account</Link>
+          New to IIJ? <Link href="/signup">Create an account</Link>
         </p>
       </section>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <ClerkProvider>
+      <LoginForm />
+    </ClerkProvider>
   );
 }

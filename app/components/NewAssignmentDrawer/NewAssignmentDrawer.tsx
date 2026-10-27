@@ -1,0 +1,111 @@
+'use client';
+
+import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import styles from './NewAssignmentDrawer.module.css';
+import type { NewAssignmentDraft, RosterMember } from '../../types/dashboard.types';
+import { EMPTY_DRAFT } from './constants';
+import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
+import InviteList from '../InviteList/InviteList';
+
+type NewAssignmentDrawerProps = {
+  /** Where to go when the drawer closes, e.g. "/dashboard" */
+  closeHref: string;
+  /** Freelancers who can be invited */
+  roster: RosterMember[];
+};
+
+export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignmentDrawerProps) {
+  const router = useRouter();
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // everything typed into the form; the drawer keeps it so "Send invites" can use it later
+  const [draft, setDraft] = useState<NewAssignmentDraft>(EMPTY_DRAFT);
+  const updateDraft = (patch: Partial<NewAssignmentDraft>) => setDraft((d) => ({ ...d, ...patch }));
+
+  // ids of the freelancers who are ticked
+  const [invited, setInvited] = useState<string[]>([]);
+  const toggleInvite = (id: string) =>
+    setInvited((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const n = invited.length;
+  const footNote = n === 0 ? 'Will post as open call' : `Will invite ${n} freelancer${n === 1 ? '' : 's'}`;
+
+  useEffect(() => {
+    // move keyboard focus into the drawer when it opens
+    panelRef.current?.focus();
+
+    // Escape closes the drawer
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') router.push(closeHref, { scroll: false });
+    };
+    document.addEventListener('keydown', onKey);
+
+    // stop the page behind from scrolling while the drawer is open
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', onKey);
+      document.body.style.overflow = '';
+    };
+  }, [router, closeHref]);
+
+  return (
+    <>
+      {/* dimmed background; clicking it closes the drawer */}
+      <button
+        type="button"
+        className={styles.backdrop}
+        aria-label="Close new assignment"
+        tabIndex={-1}
+        onClick={() => router.push(closeHref, { scroll: false })}
+      />
+
+      <div
+        ref={panelRef}
+        className={styles.panel}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-assignment-title"
+        tabIndex={-1}
+      >
+        <div className={styles.head}>
+          <div>
+            <h2 id="new-assignment-title" className={styles.title}>
+              New Assignment
+            </h2>
+            <p className={styles.subtitle}>Describe the work, then pick freelancers to invite.</p>
+          </div>
+          <Link href={closeHref} scroll={false} className={styles.close} aria-label="Close">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden="true"
+            >
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </Link>
+        </div>
+
+        <div className={styles.body}>
+          <NewAssignmentForm draft={draft} onChange={updateDraft} />
+          <InviteList members={roster} selected={invited} onToggle={toggleInvite} />
+        </div>
+
+        <div className={styles.foot}>
+          <p className={styles.footNote}>{footNote}</p>
+          {/* TODO: submit (next PR) */}
+          <button type="button" className={styles.send} disabled>
+            Send invites
+          </button>
+        </div>
+      </div>
+    </>
+  );
+}

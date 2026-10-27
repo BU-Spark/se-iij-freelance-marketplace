@@ -10,6 +10,8 @@ const marcus: RosterMember = {
   status: 'available',
   openHours: [{ start: 12, end: 18 }],
   note: 'Available 12:00 PM to 6:00 PM today',
+  weekDays: [true, true, false, true, true, false, false],
+  monthDays: Array.from({ length: 30 }, (_, i) => i % 2 === 0),
 };
 
 describe('RosterCard', () => {
@@ -34,5 +36,25 @@ describe('RosterCard', () => {
     render(<RosterCard member={{ ...marcus, status: 'busy', openHours: [] }} />);
     expect(screen.getByText('Busy')).toBeInTheDocument();
     expect(screen.queryAllByText('free')).toHaveLength(0);
+  });
+  it('shows the week view with free days marked', () => {
+    render(<RosterCard member={marcus} view="week" />);
+    const week = screen.getByRole('list', { name: /free days this week/i });
+    // Marcus is free Mon, Tue, Thu, Fri
+    expect(within(week).getByText('Monday free')).toBeInTheDocument();
+    expect(within(week).getByText('Wednesday busy')).toBeInTheDocument();
+    expect(within(week).getAllByText(/ free$/)).toHaveLength(4);
+  });
+
+  it('shows the month view with one box per day', () => {
+    render(<RosterCard member={marcus} view="month" />);
+    const month = screen.getByRole('list', { name: /free days this month/i });
+    expect(within(month).getAllByRole('listitem')).toHaveLength(30);
+    expect(within(month).getAllByText(/ free$/)).toHaveLength(15);
+  });
+
+  it('only shows the note in the day view', () => {
+    render(<RosterCard member={marcus} view="week" />);
+    expect(screen.queryByText(marcus.note)).not.toBeInTheDocument();
   });
 });

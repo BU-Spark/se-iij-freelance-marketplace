@@ -1,0 +1,131 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 22px;
+  background: #fff;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -16px rgba(15, 23, 42, 0.18);
+}
+
+/* top row: category, pills, deadline */
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.category {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5468;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 3px;
+}
+.deadline {
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* status pills */
+.pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.urgent {
+  background: #fdecec;
+  color: #a8231a;
+}
+.open {
+  background: #eef2fd;
+  color: #1e3a9e;
+}
+.invited {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+.assigned {
+  background: #e8f6ee;
+  color: #17663a;
+}
+
+/* title + contact */
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--navy-deep);
+}
+.contact {
+  margin: 2px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* grey box with Location / Length / Type / Rate */
+.details {
+  display: grid;
+  /* Location, Length, Type share the space; Rate gets the width it needs */
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  gap: 12px;
+  margin: 0;
+  padding: 12px 14px;
+  background: #f7f8fa;
+  border-radius: 12px;
+}
+
+/* phones: two per row */
+@media (max-width: 600px) {
+  .details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.details dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.details dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.interest {
+  margin: 0;
+  font-size: 14px;
+  color: #4a5468;
+}
+/* interest line + "Review candidates →" */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.review {
+  padding: 8px 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-blue);
+  cursor: pointer;
+}
+.review:hover {
+  text-decoration: underline;
+}

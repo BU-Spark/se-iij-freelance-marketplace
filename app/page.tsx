@@ -36,7 +36,7 @@ export default function Home() {
           two minutes.
         </p>
 
-        <Link href="/onboarding" className={styles.cta}>
+        <Link href="/signup" className={styles.cta}>
           <span>Let&apos;s get started</span>
           <span className={styles.arrow} aria-hidden="true">
             →

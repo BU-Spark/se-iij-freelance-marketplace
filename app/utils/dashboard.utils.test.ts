@@ -2,12 +2,15 @@ import { ASSIGNMENTS, ROSTER } from '../dashboard/constants';
 import {
   countByStatus,
   countOnRoster,
+  filterAssignments,
   formatDeadline,
   formatDeskDate,
   formatRate,
   hourSlots,
   initials,
   slotLabel,
+  candidatesFor,
+  timeAgo,
 } from './dashboard.utils';
 
 describe('dashboard utils', () => {
@@ -64,6 +67,17 @@ describe('dashboard utils', () => {
       expect(formatDeadline(new Date(2025, 5, 20, 17, 0), now)).toBe('Jun 20, 5:00 PM');
     });
   });
+  describe('filterAssignments', () => {
+    it('keeps everything for "all"', () => {
+      expect(filterAssignments(ASSIGNMENTS, 'all')).toHaveLength(ASSIGNMENTS.length);
+    });
+
+    it('keeps only the chosen status', () => {
+      const open = filterAssignments(ASSIGNMENTS, 'open');
+      expect(open.length).toBeGreaterThan(0);
+      expect(open.every((a) => a.status === 'open')).toBe(true);
+    });
+  });
 
   it('counts assignments by status', () => {
     expect(countByStatus(ASSIGNMENTS)).toEqual({ open: 2, invited: 1, assigned: 1 });
@@ -71,5 +85,47 @@ describe('dashboard utils', () => {
 
   it('counts everyone not marked off as on the roster', () => {
     expect(countOnRoster(ROSTER)).toBe(ROSTER.length - 1);
+  });
+  describe('candidatesFor', () => {
+    const byId = (id: string) => ASSIGNMENTS.find((a) => a.id === id)!;
+
+    it('lists everyone invited or interested, interested first', () => {
+      const list = candidatesFor(byId('election-d4'), ROSTER);
+      expect(list.map((c) => c.member.id)).toEqual(['marcus', 'satoshi', 'amara', 'jonah']);
+      expect(list.map((c) => c.interested)).toEqual([true, true, true, false]);
+    });
+
+    it('shows invited people who have not answered yet', () => {
+      const list = candidatesFor(byId('port-oped'), ROSTER);
+      expect(list).toEqual([{ member: ROSTER.find((m) => m.id === 'elena'), interested: false }]);
+    });
+
+    it('includes interested people even if they were not invited', () => {
+      const list = candidatesFor(byId('harbor-market'), ROSTER);
+      expect(list.map((c) => c.member.id)).toEqual(['amara']);
+    });
+
+    it('skips ids that are not on the roster', () => {
+      const list = candidatesFor({ ...byId('port-oped'), invitedIds: ['nobody'] }, ROSTER);
+      expect(list).toEqual([]);
+    });
+  });
+});
+describe('timeAgo', () => {
+  const now = new Date(2026, 9, 26, 12, 0); // Oct 26, 12:00
+  const minutesBefore = (m: number) => new Date(now.getTime() - m * 60000);
+
+  it('says "just now" for less than a minute', () => {
+    expect(timeAgo(minutesBefore(0), now)).toBe('just now');
+  });
+
+  it('uses minutes, hours and days', () => {
+    expect(timeAgo(minutesBefore(15), now)).toBe('15m ago');
+    expect(timeAgo(minutesBefore(3 * 60), now)).toBe('3h ago');
+    expect(timeAgo(minutesBefore(2 * 24 * 60), now)).toBe('2d ago');
+  });
+
+  it('shows the date for anything older than a week', () => {
+    expect(timeAgo(minutesBefore(10 * 24 * 60), now)).toBe('Oct 16');
   });
 });
