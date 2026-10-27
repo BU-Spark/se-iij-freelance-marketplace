@@ -75,6 +75,16 @@
   color: var(--muted);
 }
 
+.formError {
+  margin: 0 0 18px;
+  padding: 12px 14px;
+  border: 1px solid rgba(229, 57, 91, 0.35);
+  border-radius: 10px;
+  background: rgba(229, 57, 91, 0.08);
+  color: var(--c-red);
+  font-size: 14px;
+}
+
 /* footer with the send button */
 .foot {
   display: flex;
