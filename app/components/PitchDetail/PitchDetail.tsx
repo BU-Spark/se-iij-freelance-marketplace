@@ -3,29 +3,13 @@ import type { Pitch } from '../../types/dashboard.types';
 import { categoryColor } from '../../utils/category.utils';
 import { timeAgo } from '../../utils/dashboard.utils';
 import styles from './PitchDetail.module.css';
+import { PITCH_FACTS, PITCH_SECTIONS } from './pitchFields';
 
 type PitchDetailProps = {
   pitch: Pitch;
 };
 
 export default function PitchDetail({ pitch }: PitchDetailProps) {
-  // the four quick facts in a row
-  const facts = [
-    { label: 'Location', value: pitch.location },
-    { label: 'Length', value: pitch.length },
-    { label: 'Deadline', value: pitch.deadline },
-    { label: 'Rate', value: pitch.rate },
-  ];
-
-  // the longer answers the freelancer gave, shown one under another
-  const sections = [
-    { label: 'Potential sources', value: pitch.sources },
-    { label: 'Audience', value: pitch.audience },
-    { label: 'Assets', value: pitch.assets },
-    { label: "Why it's a fit for the publication", value: pitch.whyFit },
-    { label: "Why they're the right person", value: pitch.whyMe },
-  ];
-
   return (
     <article className={styles.detail}>
       <header className={styles.head}>
@@ -55,19 +39,19 @@ export default function PitchDetail({ pitch }: PitchDetailProps) {
       <p className={styles.summary}>{pitch.summary}</p>
 
       <dl className={styles.facts}>
-        {facts.map((f) => (
-          <div key={f.label}>
+        {PITCH_FACTS.map((f) => (
+          <div key={f.key}>
             <dt>{f.label}</dt>
-            <dd>{f.value}</dd>
+            <dd>{String(pitch[f.key])}</dd>
           </div>
         ))}
       </dl>
 
       <dl className={styles.sections}>
-        {sections.map((s) => (
-          <div key={s.label}>
+        {PITCH_SECTIONS.map((s) => (
+          <div key={s.key}>
             <dt>{s.label}</dt>
-            <dd>{s.value}</dd>
+            <dd>{String(pitch[s.key])}</dd>
           </div>
         ))}
       </dl>
