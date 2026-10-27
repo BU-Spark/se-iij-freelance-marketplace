@@ -4,8 +4,9 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './NewAssignmentDrawer.module.css';
-import type { NewAssignmentDraft, RosterMember } from '../../types/dashboard.types';
-import { EMPTY_DRAFT } from './constants';
+import type { NewAssignment } from '../../types/assignments.types';
+import type { RosterMember } from '../../types/dashboard.types';
+import { EMPTY_ASSIGNMENT, hasErrors, validateAssignment, type AssignmentErrors } from '../../utils/assignment.utils';
 import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
 import InviteList from '../InviteList/InviteList';
 
@@ -16,13 +17,18 @@ type NewAssignmentDrawerProps = {
   roster: RosterMember[];
 };
 
+type CreateAssignmentResponse = { error?: string; errors?: AssignmentErrors; code?: string };
+
 export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // everything typed into the form; the drawer keeps it so "Send invites" can use it later
-  const [draft, setDraft] = useState<NewAssignmentDraft>(EMPTY_DRAFT);
-  const updateDraft = (patch: Partial<NewAssignmentDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  // everything typed into the form, kept here so the submit button can post it
+  const [draft, setDraft] = useState<NewAssignment>(EMPTY_ASSIGNMENT);
+  const [errors, setErrors] = useState<AssignmentErrors>({});
+  const [formError, setFormError] = useState('');
+  const [onboardingRequired, setOnboardingRequired] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   // ids of the freelancers who are ticked
   const [invited, setInvited] = useState<string[]>([]);
@@ -31,6 +37,57 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
 
   const n = invited.length;
   const footNote = n === 0 ? 'Will post as open call' : `Will invite ${n} freelancer${n === 1 ? '' : 's'}`;
+
+  const updateDraft = (patch: Partial<NewAssignment>) => {
+    setDraft((d) => ({ ...d, ...patch }));
+    setFormError('');
+
+    // drop the error for any field the editor just touched
+    setErrors((current) => {
+      const touched = Object.keys(patch) as Array<keyof NewAssignment>;
+      if (!touched.some((field) => current[field])) return current;
+      const next = { ...current };
+      touched.forEach((field) => delete next[field]);
+      return next;
+    });
+  };
+
+  const submitAssignment = async () => {
+    const nextErrors = validateAssignment(draft);
+    setErrors(nextErrors);
+    if (hasErrors(nextErrors)) return;
+
+    setSubmitting(true);
+    setFormError('');
+    setOnboardingRequired(false);
+
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...draft,
+          // datetime-local values have no timezone; send an absolute instant
+          deadline: draft.deadline ? new Date(draft.deadline).toISOString() : '',
+        }),
+      });
+      const payload = (await response.json().catch(() => null)) as CreateAssignmentResponse | null;
+
+      if (!response.ok) {
+        setFormError(payload?.error ?? 'Unable to create the assignment. Please try again.');
+        setOnboardingRequired(payload?.code === 'onboarding_required');
+        if (payload?.errors) setErrors(payload.errors);
+        return;
+      }
+
+      router.push(closeHref, { scroll: false });
+      router.refresh();
+    } catch {
+      setFormError('Unable to create the assignment. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     // move keyboard focus into the drawer when it opens
@@ -94,15 +151,25 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
         </div>
 
         <div className={styles.body}>
-          <NewAssignmentForm draft={draft} onChange={updateDraft} />
+          {formError && (
+            <p role="alert" className={styles.formError}>
+              {formError}{' '}
+              {onboardingRequired && (
+                <Link href="/onboarding" className={styles.formErrorLink}>
+                  Finish onboarding →
+                </Link>
+              )}
+            </p>
+          )}
+          <NewAssignmentForm draft={draft} onChange={updateDraft} errors={errors} />
           <InviteList members={roster} selected={invited} onToggle={toggleInvite} />
         </div>
 
         <div className={styles.foot}>
           <p className={styles.footNote}>{footNote}</p>
-          {/* TODO: submit (next PR) */}
-          <button type="button" className={styles.send} disabled>
-            Send invites
+          {/* TODO: persist the invite selection once the invites table exists */}
+          <button type="button" className={styles.send} onClick={submitAssignment} disabled={submitting}>
+            {submitting ? 'Posting…' : n === 0 ? 'Post assignment' : 'Send invites'}
           </button>
         </div>
       </div>
