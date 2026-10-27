@@ -9,6 +9,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 // A tiny roster: one person who can be invited, one who is off
+// A tiny roster: one person who can be invited, one who is off
 const roster: RosterMember[] = [
   {
     id: 'marcus',
@@ -18,8 +19,20 @@ const roster: RosterMember[] = [
     status: 'available',
     openHours: [],
     note: '',
+    weekDays: [true, true, false, true, true, false, false],
+    monthDays: Array(30).fill(true),
   },
-  { id: 'jonah', name: 'Jonah Weiss', specialty: 'Reporting', city: 'Berlin', status: 'off', openHours: [], note: '' },
+  {
+    id: 'jonah',
+    name: 'Jonah Weiss',
+    specialty: 'Reporting',
+    city: 'Berlin',
+    status: 'off',
+    openHours: [],
+    note: '',
+    weekDays: Array(7).fill(false),
+    monthDays: Array(30).fill(false),
+  },
 ];
 
 describe('NewAssignmentDrawer', () => {
