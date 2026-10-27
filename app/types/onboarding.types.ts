@@ -35,3 +35,8 @@ export type Step = 'role' | 'profile' | 'done';
 export type NewUser = Pick<User, 'email' | 'firstName' | 'lastName' | 'shortBio' | 'roles'>;
 export type NewEditor = Omit<Editor, 'user'> & { user: NewUser };
 export type NewFreelancer = Omit<Freelancer, 'user'> & { user: NewUser };
+
+export type OnboardingPayload = {
+  role: OnboardingRole;
+  profile: NewEditor | NewFreelancer;
+};

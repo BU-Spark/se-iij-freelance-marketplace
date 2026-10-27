@@ -1,30 +1,18 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { Header } from '../components/header/Header';
-import SegmentedControl, { type SegmentOption } from './components/SegmentedControl';
+import AvailabilityColumn from './components/AvailabilityColumn';
+import AssignmentsColumn from './components/AssignmentsColumn';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
-import { AssignmentCard, NewAssignmentFromUrl, RosterCard } from '../components';
-import { countByStatus, countOnRoster, formatDeskDate } from '../utils/dashboard.utils';
-import type { DeskFilter, RosterView } from '../types/dashboard.types';
+import { NewAssignmentFromUrl } from '../components';
+import { countByStatus, formatDeskDate } from '../utils/dashboard.utils';
 
 /*
- * Dashboard: roster and assignments use RosterCard and AssignmentCard.
+ * Dashboard: availability (day / week / month) on the left,
+ * assignments (All / Open / Invited / Assigned) on the right.
  * The New Assignment drawer opens when the URL has ?new=assignment.
  */
-
-const VIEWS: SegmentOption<RosterView>[] = [
-  { value: 'day', label: 'day' },
-  { value: 'week', label: 'week' },
-  { value: 'month', label: 'month' },
-];
-
-const FILTERS: SegmentOption<DeskFilter>[] = [
-  { value: 'all', label: 'All' },
-  { value: 'open', label: 'Open' },
-  { value: 'invited', label: 'Invited' },
-  { value: 'assigned', label: 'Assigned' },
-];
 
 export default function Dashboard() {
   const counts = countByStatus(ASSIGNMENTS);
@@ -50,50 +38,15 @@ export default function Dashboard() {
 
       <main className={styles.columns}>
         {/* ---- Left column: who is available ---- */}
-        <section aria-labelledby="availability-heading">
-          <div className={styles.sectionHead}>
-            <div>
-              <h2 id="availability-heading" className={styles.sectionTitle}>
-                Availability
-              </h2>
-              <p className={styles.sectionSub}>
-                {countOnRoster(ROSTER)} of {ROSTER.length} on roster
-              </p>
-            </div>
-            <SegmentedControl label="Availability range" options={VIEWS} value="day" />
-          </div>
-
-          <ul className={styles.list}>
-            {ROSTER.map((m) => (
-              <li key={m.id}>
-                <RosterCard member={m} />
-              </li>
-            ))}
-          </ul>
-        </section>
+        <AvailabilityColumn roster={ROSTER} />
 
         {/* ---- Right column: assignments ---- */}
-        <section aria-labelledby="assignments-heading">
-          <div className={styles.sectionHead}>
-            <h2 id="assignments-heading" className={styles.sectionTitle}>
-              Assignments
-            </h2>
-            <SegmentedControl label="Filter assignments" options={FILTERS} value="all" />
-          </div>
-
-          <ul className={styles.list}>
-            {ASSIGNMENTS.map((a) => (
-              <li key={a.id}>
-                <AssignmentCard assignment={a} />
-              </li>
-            ))}
-          </ul>
-        </section>
+        <AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />
       </main>
 
       {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
       <Suspense fallback={null}>
-        <NewAssignmentFromUrl closeHref="/dashboard" />
+        <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
       </Suspense>
     </div>
   );

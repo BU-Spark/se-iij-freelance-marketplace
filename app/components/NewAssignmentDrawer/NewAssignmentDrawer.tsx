@@ -4,22 +4,33 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import styles from './NewAssignmentDrawer.module.css';
-import type { NewAssignmentDraft } from '../../types/dashboard.types';
+import type { NewAssignmentDraft, RosterMember } from '../../types/dashboard.types';
 import { EMPTY_DRAFT } from './constants';
 import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
+import InviteList from '../InviteList/InviteList';
 
 type NewAssignmentDrawerProps = {
   /** Where to go when the drawer closes, e.g. "/dashboard" */
   closeHref: string;
+  /** Freelancers who can be invited */
+  roster: RosterMember[];
 };
 
-export default function NewAssignmentDrawer({ closeHref }: NewAssignmentDrawerProps) {
+export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
 
   // everything typed into the form; the drawer keeps it so "Send invites" can use it later
   const [draft, setDraft] = useState<NewAssignmentDraft>(EMPTY_DRAFT);
   const updateDraft = (patch: Partial<NewAssignmentDraft>) => setDraft((d) => ({ ...d, ...patch }));
+
+  // ids of the freelancers who are ticked
+  const [invited, setInvited] = useState<string[]>([]);
+  const toggleInvite = (id: string) =>
+    setInvited((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+
+  const n = invited.length;
+  const footNote = n === 0 ? 'Will post as open call' : `Will invite ${n} freelancer${n === 1 ? '' : 's'}`;
 
   useEffect(() => {
     // move keyboard focus into the drawer when it opens
@@ -84,11 +95,12 @@ export default function NewAssignmentDrawer({ closeHref }: NewAssignmentDrawerPr
 
         <div className={styles.body}>
           <NewAssignmentForm draft={draft} onChange={updateDraft} />
-          {/* TODO: invite list (next PR) */}
+          <InviteList members={roster} selected={invited} onToggle={toggleInvite} />
         </div>
 
         <div className={styles.foot}>
-          <p className={styles.footNote}>Will post as open call</p>
+          <p className={styles.footNote}>{footNote}</p>
+          {/* TODO: submit (next PR) */}
           <button type="button" className={styles.send} disabled>
             Send invites
           </button>

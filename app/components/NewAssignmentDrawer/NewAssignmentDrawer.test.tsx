@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import NewAssignmentDrawer from './NewAssignmentDrawer';
+import type { RosterMember } from '../../types/dashboard.types';
 
 // The drawer uses Next's router to close itself; replace it with a fake we can check
 const mockPush = jest.fn();
@@ -7,10 +8,37 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
+// A tiny roster: one person who can be invited, one who is off
+// A tiny roster: one person who can be invited, one who is off
+const roster: RosterMember[] = [
+  {
+    id: 'marcus',
+    name: 'Marcus Thorne',
+    specialty: 'Reporting',
+    city: 'London',
+    status: 'available',
+    openHours: [],
+    note: '',
+    weekDays: [true, true, false, true, true, false, false],
+    monthDays: Array(30).fill(true),
+  },
+  {
+    id: 'jonah',
+    name: 'Jonah Weiss',
+    specialty: 'Reporting',
+    city: 'Berlin',
+    status: 'off',
+    openHours: [],
+    note: '',
+    weekDays: Array(7).fill(false),
+    monthDays: Array(30).fill(false),
+  },
+];
+
 describe('NewAssignmentDrawer', () => {
   beforeEach(() => {
     mockPush.mockClear();
-    render(<NewAssignmentDrawer closeHref="/dashboard" />);
+    render(<NewAssignmentDrawer closeHref="/dashboard" roster={roster} />);
   });
 
   it('opens as a dialog with a title', () => {
@@ -29,5 +57,26 @@ describe('NewAssignmentDrawer', () => {
   it('closes when the dark background is clicked', () => {
     fireEvent.click(screen.getByRole('button', { name: /close new assignment/i }));
     expect(mockPush).toHaveBeenCalledWith('/dashboard', { scroll: false });
+  });
+
+  it('keeps what you type in the form', () => {
+    const slug = screen.getByLabelText('Slug');
+    fireEvent.change(slug, { target: { value: 'city-council' } });
+    expect(slug).toHaveValue('city-council');
+  });
+
+  it('starts as an open call with nobody selected', () => {
+    expect(screen.getByText('0 selected')).toBeInTheDocument();
+    expect(screen.getByText('Will post as open call')).toBeInTheDocument();
+  });
+
+  it('updates the count and footer when someone is ticked', () => {
+    fireEvent.click(screen.getByRole('checkbox', { name: /marcus thorne/i }));
+    expect(screen.getByText('1 selected')).toBeInTheDocument();
+    expect(screen.getByText('Will invite 1 freelancer')).toBeInTheDocument();
+  });
+
+  it('does not let you invite someone who is off', () => {
+    expect(screen.getByRole('checkbox', { name: /jonah weiss/i })).toBeDisabled();
   });
 });

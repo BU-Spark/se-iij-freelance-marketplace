@@ -10,6 +10,7 @@ import { validateProfile } from '../utils/validation.utils';
 import RoleStep from './steps/RoleStep';
 import ProfileStep, { type Touched } from './steps/ProfileStep';
 import DoneStep from './steps/DoneStep';
+import { toProfile } from '../utils/profile.utils';
 
 const STEP_META: Record<Step, { progress: number; label: string }> = {
   role: { progress: 33, label: 'Step 1 of 2 — Who are you?' },
@@ -27,6 +28,7 @@ export default function OnboardingPage() {
   const [touched, setTouched] = useState<Touched>({});
   const [shake, setShake] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const errors = useMemo(() => (role ? validateProfile(role, data) : {}), [role, data]);
 
@@ -51,13 +53,33 @@ export default function OnboardingPage() {
       setTimeout(() => setShake(false), 500);
       return;
     }
+    if (!role) return;
 
     setSubmitting(true);
-    // TODO: replace with the real API call, sending toProfile(role, data) from utils/profile.utils
-    await new Promise((r) => setTimeout(r, 900));
-    setSubmitting(false);
-    setStep('done');
-    scrollTop();
+    setSubmitError(null);
+    try {
+      const response = await fetch('/api/onboarding', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role, profile: toProfile(role, data) }),
+      });
+
+      if (!response.ok) {
+        const result: unknown = await response.json().catch(() => null);
+        const message =
+          result && typeof result === 'object' && 'error' in result && typeof result.error === 'string'
+            ? result.error
+            : 'Unable to save your profile right now.';
+        throw new Error(message);
+      }
+
+      setStep('done');
+      scrollTop();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'Unable to save your profile right now.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const { progress, label } = STEP_META[step];
@@ -99,6 +121,7 @@ export default function OnboardingPage() {
             }}
             onBack={() => setStep('role')}
             onSubmit={handleSubmit}
+            submitError={submitError}
           />
         )}
 
