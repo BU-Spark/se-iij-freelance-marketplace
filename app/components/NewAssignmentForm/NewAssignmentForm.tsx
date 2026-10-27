@@ -1,15 +1,17 @@
 import ChipGroup from '../ChipGroup/ChipGroup';
 import Field from '../Field/Field';
-import type { NewAssignmentDraft } from '../../types/dashboard.types';
+import type { NewAssignment } from '../../types/assignments.types';
+import type { AssignmentErrors } from '../../utils/assignment.utils';
 import { PROJECT_TYPES } from '../NewAssignmentDrawer/constants';
 import styles from './NewAssignmentForm.module.css';
 type NewAssignmentFormProps = {
-  draft: NewAssignmentDraft;
+  draft: NewAssignment;
   /** called with just the field(s) that changed, e.g. { slug: 'city-council' } */
-  onChange: (patch: Partial<NewAssignmentDraft>) => void;
+  onChange: (patch: Partial<NewAssignment>) => void;
+  errors?: AssignmentErrors;
 };
 
-export default function NewAssignmentForm({ draft, onChange }: NewAssignmentFormProps) {
+export default function NewAssignmentForm({ draft, onChange, errors }: NewAssignmentFormProps) {
   return (
     <div className={styles.form}>
       <fieldset className={styles.fieldset}>
@@ -20,9 +22,23 @@ export default function NewAssignmentForm({ draft, onChange }: NewAssignmentForm
           selected={draft.category ? [draft.category] : []}
           onToggle={(type) => onChange({ category: type })}
         />
+        {errors?.category && (
+          <p className={styles.error} role="alert">
+            {errors.category}
+          </p>
+        )}
       </fieldset>
 
-      <Field label="Slug">
+      <Field label="Title" error={errors?.title}>
+        <input
+          className={styles.input}
+          value={draft.title}
+          onChange={(e) => onChange({ title: e.target.value })}
+          placeholder="e.g. City council overnight vote"
+        />
+      </Field>
+
+      <Field label="Slug" error={errors?.slug}>
         <input
           className={styles.input}
           value={draft.slug}
@@ -59,12 +75,12 @@ export default function NewAssignmentForm({ draft, onChange }: NewAssignmentForm
             placeholder="e.g. 800 words / 4 hours"
           />
         </Field>
-        <Field label="Deadline">
+        <Field label="Deadline" error={errors?.deadline}>
           <input
+            type="datetime-local"
             className={styles.input}
             value={draft.deadline}
             onChange={(e) => onChange({ deadline: e.target.value })}
-            placeholder="e.g. Tonight, 11 PM"
           />
         </Field>
       </div>
