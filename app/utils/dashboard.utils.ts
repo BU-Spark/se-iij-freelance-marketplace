@@ -102,3 +102,14 @@ export function candidatesFor(assignment: DeskAssignment, roster: RosterMember[]
       .sort((a, b) => Number(b.interested) - Number(a.interested))
   );
 }
+/** "just now", "15m ago", "3h ago", "2d ago", or "Jun 3" for anything older than a week */
+export function timeAgo(date: Date, now: Date = new Date()): string {
+  const minutes = Math.floor((now.getTime() - date.getTime()) / 60000);
+  if (minutes < 1) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
