@@ -2,6 +2,7 @@ import { ASSIGNMENTS, ROSTER } from '../dashboard/constants';
 import {
   countByStatus,
   countOnRoster,
+  filterAssignments,
   formatDeadline,
   formatDeskDate,
   formatRate,
@@ -62,6 +63,17 @@ describe('dashboard utils', () => {
       expect(formatDeadline(new Date(2025, 5, 4, 10, 0), now)).toBe('Tomorrow, 10:00 AM');
       expect(formatDeadline(new Date(2025, 5, 5, 17, 0), now)).toBe('Thu, 5:00 PM');
       expect(formatDeadline(new Date(2025, 5, 20, 17, 0), now)).toBe('Jun 20, 5:00 PM');
+    });
+  });
+  describe('filterAssignments', () => {
+    it('keeps everything for "all"', () => {
+      expect(filterAssignments(ASSIGNMENTS, 'all')).toHaveLength(ASSIGNMENTS.length);
+    });
+
+    it('keeps only the chosen status', () => {
+      const open = filterAssignments(ASSIGNMENTS, 'open');
+      expect(open.length).toBeGreaterThan(0);
+      expect(open.every((a) => a.status === 'open')).toBe(true);
     });
   });
 

@@ -1,5 +1,11 @@
-import type { AssignmentStatus, DeskAssignment, HourWindow, Rate, RosterMember } from '../types/dashboard.types';
-
+import type {
+  AssignmentStatus,
+  DeskAssignment,
+  DeskFilter,
+  HourWindow,
+  Rate,
+  RosterMember,
+} from '../types/dashboard.types';
 /** The availability bar shows six 2-hour slots: 8a, 10a, 12p, 2p, 4p, 6p */
 export const SLOT_STARTS = [8, 10, 12, 14, 16, 18];
 
@@ -69,4 +75,8 @@ export function countByStatus(assignments: DeskAssignment[]): Record<AssignmentS
 /** Everyone on the roster who isn't marked off */
 export function countOnRoster(roster: RosterMember[]): number {
   return roster.filter((m) => m.status !== 'off').length;
+}
+/** The assignments that belong under a tab: "all" keeps everything */
+export function filterAssignments(assignments: DeskAssignment[], filter: DeskFilter): DeskAssignment[] {
+  return filter === 'all' ? assignments : assignments.filter((a) => a.status === filter);
 }
