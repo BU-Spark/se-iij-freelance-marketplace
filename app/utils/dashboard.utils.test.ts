@@ -9,6 +9,7 @@ import {
   hourSlots,
   initials,
   slotLabel,
+  candidatesFor,
 } from './dashboard.utils';
 
 describe('dashboard utils', () => {
@@ -83,5 +84,29 @@ describe('dashboard utils', () => {
 
   it('counts everyone not marked off as on the roster', () => {
     expect(countOnRoster(ROSTER)).toBe(ROSTER.length - 1);
+  });
+  describe('candidatesFor', () => {
+    const byId = (id: string) => ASSIGNMENTS.find((a) => a.id === id)!;
+
+    it('lists everyone invited or interested, interested first', () => {
+      const list = candidatesFor(byId('election-d4'), ROSTER);
+      expect(list.map((c) => c.member.id)).toEqual(['marcus', 'satoshi', 'amara', 'jonah']);
+      expect(list.map((c) => c.interested)).toEqual([true, true, true, false]);
+    });
+
+    it('shows invited people who have not answered yet', () => {
+      const list = candidatesFor(byId('port-oped'), ROSTER);
+      expect(list).toEqual([{ member: ROSTER.find((m) => m.id === 'elena'), interested: false }]);
+    });
+
+    it('includes interested people even if they were not invited', () => {
+      const list = candidatesFor(byId('harbor-market'), ROSTER);
+      expect(list.map((c) => c.member.id)).toEqual(['amara']);
+    });
+
+    it('skips ids that are not on the roster', () => {
+      const list = candidatesFor({ ...byId('port-oped'), invitedIds: ['nobody'] }, ROSTER);
+      expect(list).toEqual([]);
+    });
   });
 });

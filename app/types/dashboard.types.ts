@@ -46,8 +46,9 @@ export type DeskAssignment = {
   location: string;
   length: string;
   rate: Rate;
-  /** RosterMember ids of freelancers who raised their hand */
   interestedIds: string[];
+  invitedIds?: string[];
+  assignedToId?: string;
 };
 
 /** What the editor types into the New Assignment form (all text for now) */
