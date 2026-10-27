@@ -56,7 +56,9 @@
   color: #17663a;
 }
 
-button:disabled {
+.secondary:disabled,
+.primary:disabled,
+.done:disabled {
   cursor: default;
 }
 .secondary:disabled {
