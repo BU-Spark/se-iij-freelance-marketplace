@@ -15,10 +15,7 @@ import { countByStatus, formatDeskDate } from '../utils/dashboard.utils';
  */
 
 export default function Dashboard() {
-  const [view, setView] = useState<RosterView>('day');
-  const [filter, setFilter] = useState<DeskFilter>('all');
   const counts = countByStatus(ASSIGNMENTS);
-  const assignments = ASSIGNMENTS.filter((assignment) => filter === 'all' || assignment.status === filter);
 
   return (
     <div className={styles.shell}>
