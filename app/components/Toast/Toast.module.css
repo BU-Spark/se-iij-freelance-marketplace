@@ -1,0 +1,90 @@
+/* bottom-right corner, above everything else */
+.region {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, calc(100vw - 40px));
+  pointer-events: none; /* clicks pass through the empty area */
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 8px 12px 14px;
+  background: #fff;
+  border: 1px solid #eceef2;
+  border-left-width: 4px;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.35);
+  pointer-events: auto;
+  animation: slideUp 0.2s ease-out;
+}
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+.icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.message {
+  flex: 1;
+  margin: 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+}
+.close:hover {
+  background: #f0f2f5;
+}
+
+/* colours per type: left edge + icon */
+.success {
+  border-left-color: #23a05a;
+}
+.success .icon {
+  background: #23a05a;
+}
+.error {
+  border-left-color: #c8372d;
+}
+.error .icon {
+  background: #c8372d;
+}
+.info {
+  border-left-color: #2f55d4;
+}
+.info .icon {
+  background: #2f55d4;
+}

@@ -27,3 +27,4 @@ export { default as DetailList } from './DetailList/DetailList';
 export { default as ProfilePanel } from './Profile/ProfilePanel';
 export { default as ProfileFromUrl } from './Profile/ProfileFromUrl';
 export { default as ProfileButton } from './Profile/ProfileButton';
+export { ToastProvider, useToast } from './Toast/ToastProvider';
