@@ -172,3 +172,17 @@ describe('summarizeAvailability', () => {
     expect(summarizeAvailability(base)).toBeUndefined();
   });
 });
+import { fullName, missingRoles } from './profile.utils';
+import { MOCK_PROFILE } from '../components/Profile/constants';
+
+describe('profile helpers', () => {
+  it('joins first and last name', () => {
+    expect(fullName(MOCK_PROFILE)).toBe('Marcus Thorne');
+  });
+
+  it('lists the roles a person does not have yet', () => {
+    expect(missingRoles(MOCK_PROFILE, ['freelancer', 'editor'])).toEqual([]);
+    const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
+    expect(missingRoles(onlyFreelancer, ['freelancer', 'editor'])).toEqual(['editor']);
+  });
+});
