@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import { RosterCard } from '../../components';
 import { Header } from '../../components/header/Header';
@@ -5,7 +8,32 @@ import { ROSTER } from '../constants';
 import { countOnRoster } from '../../utils/dashboard.utils';
 import styles from './roster.module.css';
 
+const specialties = [...new Set(ROSTER.map((member) => member.specialty))].sort();
+const cities = [...new Set(ROSTER.map((member) => member.city))].sort();
+
 export default function RosterPage() {
+  const [query, setQuery] = useState('');
+  const [specialty, setSpecialty] = useState('');
+  const [city, setCity] = useState('');
+  const [status, setStatus] = useState('');
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const visibleRoster = ROSTER.filter(
+    (member) =>
+      member.name.toLowerCase().includes(normalizedQuery) &&
+      (!specialty || member.specialty === specialty) &&
+      (!city || member.city === city) &&
+      (!status || member.status === status)
+  );
+  const hasFilters = Boolean(query || specialty || city || status);
+
+  const clearFilters = () => {
+    setQuery('');
+    setSpecialty('');
+    setCity('');
+    setStatus('');
+  };
+
   return (
     <div className={styles.shell}>
       <Header />
@@ -23,8 +51,57 @@ export default function RosterPage() {
             <strong>{countOnRoster(ROSTER)}</strong> available or busy <span>·</span> {ROSTER.length} total
           </p>
         </div>
+        <section className={styles.filters} aria-label="Filter freelancers">
+          <label className={styles.filterField}>
+            Name
+            <input
+              type="search"
+              placeholder="Search by name"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+          <label className={styles.filterField}>
+            Specialty
+            <select value={specialty} onChange={(event) => setSpecialty(event.target.value)}>
+              <option value="">All specialties</option>
+              {specialties.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.filterField}>
+            Location
+            <select value={city} onChange={(event) => setCity(event.target.value)}>
+              <option value="">All locations</option>
+              {cities.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.filterField}>
+            Availability
+            <select value={status} onChange={(event) => setStatus(event.target.value)}>
+              <option value="">All statuses</option>
+              <option value="available">Available</option>
+              <option value="busy">Busy</option>
+              <option value="off">Off today</option>
+            </select>
+          </label>
+          <button type="button" className={styles.clearButton} onClick={clearFilters} disabled={!hasFilters}>
+            Clear filters
+          </button>
+        </section>
+        <p className={styles.results} role="status">
+          Showing {visibleRoster.length} of {ROSTER.length} freelancers
+          {visibleRoster.length === 0 && '. No matches. Try changing or clearing your filters.'}
+        </p>
         <ul className={styles.grid}>
-          {ROSTER.map((member) => (
+          {visibleRoster.map((member) => (
             <li key={member.id}>
               <RosterCard member={member} />
             </li>

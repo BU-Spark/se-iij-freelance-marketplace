@@ -61,6 +61,66 @@
   padding: 0 5px;
 }
 
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filterField {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filterField input,
+.filterField select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+
+.filterField input:focus-visible,
+.filterField select:focus-visible,
+.clearButton:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.clearButton {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--c-blue);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-blue);
+  font: inherit;
+  cursor: pointer;
+}
+
+.clearButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.results {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
