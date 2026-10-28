@@ -5,7 +5,7 @@
  * means every form enforces (and words) the same constraints.
  */
 
-export const MIN_PASSWORD_LENGTH = 8;
+export const MIN_PASSWORD_LENGTH = 15;
 
 export function validatePassword(password: string): string | undefined {
   if (password.length < MIN_PASSWORD_LENGTH) {
