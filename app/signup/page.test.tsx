@@ -34,7 +34,7 @@ describe('Signup page', () => {
 
   it('requires the passwords to match', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'writer@example.com' } });
-    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct-horse' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct-horse-battery' } });
     fireEvent.change(screen.getByLabelText(/^confirm password$/i), { target: { value: 'different-horse' } });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
@@ -43,7 +43,7 @@ describe('Signup page', () => {
 
   it('requires the confirmation field to be filled in', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'writer@example.com' } });
-    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct-horse' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct-horse-battery' } });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
 
     expect(screen.getByText(/re-enter your password/i)).toBeInTheDocument();
@@ -51,12 +51,12 @@ describe('Signup page', () => {
 
   it('clears the mismatch error once the confirmation is corrected', () => {
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'writer@example.com' } });
-    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct-horse' } });
+    fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct-horse-battery' } });
     fireEvent.change(screen.getByLabelText(/^confirm password$/i), { target: { value: 'wrong-horse' } });
     fireEvent.click(screen.getByRole('button', { name: /create account/i }));
     expect(screen.getByText(/passwords do not match/i)).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/^confirm password$/i), { target: { value: 'correct-horse' } });
+    fireEvent.change(screen.getByLabelText(/^confirm password$/i), { target: { value: 'correct-horse-battery' } });
 
     expect(screen.queryByText(/passwords do not match/i)).not.toBeInTheDocument();
   });
