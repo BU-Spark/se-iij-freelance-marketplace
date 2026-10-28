@@ -110,6 +110,24 @@
   accent-color: var(--navy);
 }
 
+/* looks like a link, behaves like a button (e.g. "Use a different email") */
+.linkButton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--c-yellow);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.linkButton:hover {
+  color: var(--c-blue);
+}
+
 .submit {
   display: inline-flex;
   align-items: center;

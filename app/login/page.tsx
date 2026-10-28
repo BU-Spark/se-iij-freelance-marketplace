@@ -96,7 +96,7 @@ function LoginForm() {
               <input type="checkbox" name="remember" />
               <span>Remember me</span>
             </label>
-            <a href="mailto:support@iij.example?subject=Password%20reset">Forgot password?</a>
+            <Link href="/forgot-password">Forgot password?</Link>
           </div>
 
           <button type="submit" className={styles.submit} disabled={submitting}>
