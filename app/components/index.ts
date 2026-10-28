@@ -24,3 +24,5 @@ export { default as NewAssignmentFromUrl } from './NewAssignmentDrawer/NewAssign
 export { default as SidePanel } from './SidePanel/SidePanel';
 export { default as InfoCard } from './InfoCard/InfoCard';
 export { default as DetailList } from './DetailList/DetailList';
+export { default as ProfilePanel } from './Profile/ProfilePanel';
+export { default as ProfileFromUrl } from './Profile/ProfileFromUrl';
