@@ -1,6 +1,6 @@
-import { ROLE_CONFIG } from './roleConfig';
-import type { ProfileRole } from '../../types/profile.types';
-import styles from './Profile.module.css';
+import { ROLE_CONFIG } from '../config/roleConfig';
+import type { ProfileRole } from '../../../types/profile.types';
+import styles from '../Profile.module.css';
 
 type AddRoleButtonProps = {
   role: ProfileRole;

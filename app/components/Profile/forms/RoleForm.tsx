@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import InfoCard from '../InfoCard/InfoCard';
-import Field from '../Field/Field';
+import InfoCard from '../../InfoCard/InfoCard';
+import Field from '../../Field/Field';
 import FormActions from './FormActions';
-import { ROLE_CONFIG } from './roleConfig';
-import type { RoleDetails } from '../../types/profile.types';
-import styles from './Profile.module.css';
+import { ROLE_CONFIG } from '../config/roleConfig';
+import type { RoleDetails } from '../../../types/profile.types';
+import styles from '../Profile.module.css';
 
 type RoleFormProps = {
   details: RoleDetails;

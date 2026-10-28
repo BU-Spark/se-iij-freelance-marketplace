@@ -1,9 +1,9 @@
-import Avatar from '../Avatar/Avatar';
-import InfoCard from '../InfoCard/InfoCard';
-import DetailList from '../DetailList/DetailList';
-import EditButton from './EditButton';
-import type { BasicInfo } from '../../types/profile.types';
-import styles from './Profile.module.css';
+import Avatar from '../../Avatar/Avatar';
+import InfoCard from '../../InfoCard/InfoCard';
+import DetailList from '../../DetailList/DetailList';
+import EditButton from '../cards/EditButton';
+import type { BasicInfo } from '../../../types/profile.types';
+import styles from '../Profile.module.css';
 
 type BasicInfoCardProps = {
   basic: BasicInfo;

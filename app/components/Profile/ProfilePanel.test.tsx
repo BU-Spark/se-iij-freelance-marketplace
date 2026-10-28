@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import ProfilePanel from './ProfilePanel';
-import { MOCK_PROFILE } from './constants';
+import { MOCK_PROFILE } from './config/constants';
 
 const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
 

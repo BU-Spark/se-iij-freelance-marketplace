@@ -1,4 +1,4 @@
-import styles from './Profile.module.css';
+import styles from '../Profile.module.css';
 
 type EditButtonProps = {
   /** what screen readers hear, e.g. "Edit basic info" */

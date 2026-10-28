@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ProfilePanel from './ProfilePanel';
-import { MOCK_PROFILE } from './constants';
+import { MOCK_PROFILE } from './config/constants';
 import type { BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
 import { useToast } from '../Toast/ToastProvider';
 type ProfileFromUrlProps = {
