@@ -7,9 +7,10 @@ import { CHIP_COLORS } from '../../onboarding/constants';
 type TagInputProps = {
   tags: string[];
   onChange: (t: string[]) => void;
+  placeholder?: string;
 };
 
-export default function TagInput({ tags, onChange }: TagInputProps) {
+export default function TagInput({ tags, onChange, placeholder }: TagInputProps) {
   const [value, setValue] = useState('');
 
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -36,7 +37,7 @@ export default function TagInput({ tags, onChange }: TagInputProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         onKeyDown={onKey}
-        placeholder={tags.length ? '' : 'Premiere Pro, Datawrapper, Lightroom…'}
+        placeholder={tags.length ? '' : (placeholder ?? 'Premiere Pro, Datawrapper, Lightroom…')}
       />
     </div>
   );

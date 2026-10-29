@@ -71,6 +71,29 @@
   color: #9aa3b2;
 }
 
+.previewFacts {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  text-align: left;
+}
+.previewFacts dt {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 10px;
+  align-self: center;
+  color: var(--muted);
+}
+.previewFacts dd {
+  color: var(--ink);
+  word-break: break-word;
+}
+
 @keyframes pop {
   50% {
     transform: scale(1.08);
