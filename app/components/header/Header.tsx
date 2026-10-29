@@ -1,9 +1,7 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import type { OnboardingRole } from '../../types/onboarding.types';
+import { useWorkspace } from '../../hooks/useWorkspace';
 import IIJLogo from '../IIJLogo/IIJLogo';
 import { SearchBox } from '../search/SearchBox';
 import { NAV_ITEMS, ROLE_OPTIONS } from './constants';
@@ -14,8 +12,7 @@ function isNavItemActive(pathname: string, href: string) {
 }
 
 export function Header() {
-  const [role, setRole] = useState<OnboardingRole>('editor');
-  const pathname = usePathname();
+  const { role, switchRole, pathname } = useWorkspace();
 
   return (
     <header className={styles.headerBox}>
@@ -23,7 +20,7 @@ export function Header() {
         <IIJLogo size={40} animated={false} showText={false} />
       </div>
       <nav className={styles.navigation} aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS[role].map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <Link
@@ -41,14 +38,13 @@ export function Header() {
 
       <SearchBox className={styles.search} compact placeholder="Search..." shortcut="⌘K" />
 
-      {/* To do: Refactor this to be a dynamic resuable component */}
       <div className={styles.roleSwitcher} aria-label="Choose workspace role">
         {ROLE_OPTIONS.map(({ id, label, Icon }) => (
           <button
             className={`${styles.roleButton} ${role === id ? styles.selected : ''}`}
             key={id}
             type="button"
-            onClick={() => setRole(id)}
+            onClick={() => switchRole(id)}
             aria-pressed={role === id}
           >
             <Icon />
@@ -57,7 +53,6 @@ export function Header() {
         ))}
       </div>
 
-      {/* To do: Refactor this to be a dynamic resuable component */}
       {role === 'editor' ? (
         // Opens the New Assignment drawer on the dashboard (?new=assignment)
         <Link className={styles.newAssignment} href="/dashboard?new=assignment">
@@ -67,7 +62,7 @@ export function Header() {
           </div>
         </Link>
       ) : (
-        <button className={styles.newAssignment} type="button">
+        <button className={styles.newAssignment} type="button" disabled title="Pitch submission is not available yet">
           <div>
             {/* To Do: Replace ! with idea icon */}
             <span aria-hidden="true">!</span>

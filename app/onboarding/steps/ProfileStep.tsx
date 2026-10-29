@@ -9,6 +9,7 @@ type TextKey = 'firstName' | 'lastName' | 'email' | 'jobTitle' | 'location';
 type ChipKey = 'desks' | 'reportingBeats' | 'workMediums';
 
 type ProfileStepProps = {
+  mode?: 'create' | 'edit';
   role: OnboardingRole;
   data: ProfileData;
   orgs: OrgOption[];
@@ -26,6 +27,7 @@ type ProfileStepProps = {
 
 export default function ProfileStep(p: ProfileStepProps) {
   const { role, data, errors, touched, update, touch } = p;
+  const isEditing = p.mode === 'edit';
   const isEditor = role === 'editor';
   const err = (k: keyof ProfileData) => (touched[k] ? errors[k] : undefined);
 
@@ -55,12 +57,12 @@ export default function ProfileStep(p: ProfileStepProps) {
     <div className={`${styles.profileLayout} ${shared.fadeIn}`}>
       <section className={styles.formCol}>
         <button className={styles.back} onClick={p.onBack}>
-          ← Change role
+          {isEditing ? '← Back to my profile' : '← Change role'}
         </button>
         <p className={styles.roleTag} data-role={role}>
           {isEditor ? 'Editor' : 'Freelancer'}
         </p>
-        <h1 className={shared.h1}>Build your profile</h1>
+        <h1 className={shared.h1}>{isEditing ? 'Edit your profile' : 'Build your profile'}</h1>
         <p className={shared.lead}>
           {isEditor
             ? "Freelancers see this when they're deciding whether to pitch you."
@@ -170,10 +172,10 @@ export default function ProfileStep(p: ProfileStepProps) {
 
         <div className={`${shared.actions} ${p.shake ? styles.shake : ''}`}>
           <button className={shared.secondaryBtn} onClick={p.onBack}>
-            Back
+            {isEditing ? 'Cancel' : 'Back'}
           </button>
           <button className={shared.primaryBtn} onClick={p.onSubmit} disabled={p.submitting}>
-            {p.submitting ? <span className={styles.spinner} /> : 'Create profile →'}
+            {p.submitting ? <span className={styles.spinner} /> : isEditing ? 'Save profile' : 'Create profile →'}
           </button>
         </div>
         {p.submitError && <p role="alert">{p.submitError}</p>}

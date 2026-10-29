@@ -13,6 +13,7 @@ export const NAV_ITEMS: Record<OnboardingRole, NavItem[]> = {
   ],
   freelancer: [
     { label: 'Assignments', href: '/dashboard/assignments' },
+    { label: 'My profile', href: '/dashboard/profile' },
     { label: 'My availability', href: '/dashboard/availability' },
   ],
 };

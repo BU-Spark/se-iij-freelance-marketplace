@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import AssignmentCard from '../../components/AssignmentCard/AssignmentCard';
 import { Header } from '../../components/header/Header';
 import { ASSIGNMENTS } from '../constants';
@@ -35,9 +34,6 @@ export default function AssignmentsPage() {
     <div className={styles.shell}>
       <Header />
       <main className={styles.main}>
-        <Link href="/dashboard" className={styles.backLink}>
-          ← Back to dashboard
-        </Link>
         <div className={styles.heading}>
           <p className={styles.eyebrow}>Find your next assignment</p>
           <h1>Assignments</h1>
