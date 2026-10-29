@@ -1,4 +1,13 @@
-import { createSlug, EMPTY_ASSIGNMENT, hasErrors, makeSeed, slugify, validateAssignment } from './assignment.utils';
+import {
+  cleanAmount,
+  createSlug,
+  EMPTY_ASSIGNMENT,
+  hasErrors,
+  makeSeed,
+  slugify,
+  validateAssignment,
+  validateCompensation,
+} from './assignment.utils';
 
 const validAssignment = {
   ...EMPTY_ASSIGNMENT,
@@ -78,5 +87,29 @@ describe('createSlug', () => {
 
   it('passes the existing slug validation', () => {
     expect(validateAssignment({ ...validAssignment, slug: createSlug('City Council Vote') }).slug).toBeUndefined();
+  });
+});
+
+describe('cleanAmount', () => {
+  it('keeps only digits and one dot', () => {
+    expect(cleanAmount('$1,2a50')).toBe('1250');
+  });
+
+  it('allows at most 2 decimals', () => {
+    expect(cleanAmount('12.345')).toBe('12.34');
+  });
+
+  it('keeps only the first dot', () => {
+    expect(cleanAmount('1.2.3')).toBe('1.23');
+  });
+});
+
+describe('validateCompensation', () => {
+  it.each(['', '0', '0.00', '.'])('rejects %p', (value) => {
+    expect(validateCompensation(value)).toBe('Enter an amount greater than $0.');
+  });
+
+  it('accepts a positive amount', () => {
+    expect(validateCompensation('750')).toBeUndefined();
   });
 });

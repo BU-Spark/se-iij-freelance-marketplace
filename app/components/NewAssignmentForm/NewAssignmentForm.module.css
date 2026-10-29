@@ -75,3 +75,32 @@ textarea.input {
 .slugEmpty {
   color: #8a93a6;
 }
+/* $ … USD money box; reuses .input, adds room for the $ and USD */
+.money {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.moneyInput {
+  width: 100%;
+  padding-left: 30px;
+  padding-right: 56px;
+}
+
+.currency,
+.unit {
+  position: absolute;
+  color: #4a5468;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.currency {
+  left: 14px;
+}
+
+.unit {
+  right: 14px;
+  font-size: 13px;
+}

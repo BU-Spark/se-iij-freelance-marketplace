@@ -53,4 +53,10 @@ describe('NewAssignmentForm', () => {
     expect(screen.getByText('Give the assignment a title.')).toBeInTheDocument();
     expect(screen.getByText('Pick a project type.')).toBeInTheDocument();
   });
+  it('only lets numbers into compensation', () => {
+    const onChange = jest.fn();
+    render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={onChange} />);
+    fireEvent.change(screen.getByLabelText('Compensation'), { target: { value: '$7a50.505' } });
+    expect(onChange).toHaveBeenCalledWith({ compensation: '750.50' });
+  });
 });
