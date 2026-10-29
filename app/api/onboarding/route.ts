@@ -40,17 +40,28 @@ export async function POST(request: Request) {
     const connection = client;
     await connection.query('BEGIN');
     const userResult = await connection.query<{ id: string }>(
-      `INSERT INTO users (clerk_id, email, first_name, last_name, short_bio, role)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO users (clerk_id, email, first_name, last_name, short_bio, long_bio, preferences, role)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (clerk_id) DO UPDATE SET
          email = EXCLUDED.email,
          first_name = EXCLUDED.first_name,
          last_name = EXCLUDED.last_name,
          short_bio = EXCLUDED.short_bio,
+         long_bio = EXCLUDED.long_bio,
+         preferences = EXCLUDED.preferences,
          role = EXCLUDED.role,
          updated_at = NOW()
        RETURNING id`,
-      [userId, user.email, user.firstName ?? '', user.lastName ?? '', user.shortBio ?? null, body.role]
+      [
+        userId,
+        user.email,
+        user.firstName ?? '',
+        user.lastName ?? '',
+        user.shortBio ?? null,
+        user.longBio ?? null,
+        JSON.stringify(user.preferences ?? {}),
+        body.role,
+      ]
     );
     const databaseUserId = userResult.rows[0]?.id;
 
@@ -61,14 +72,17 @@ export async function POST(request: Request) {
     if (body.role === 'editor') {
       const editor = profile as NewEditor;
       await connection.query(
-        `INSERT INTO editors (user_id, organization_id, desks, job_title, years_at_desk, pitch_preferences)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO editors
+           (user_id, organization_id, desks, job_title, years_at_desk, location, pitch_preferences, availability)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (user_id) DO UPDATE SET
            organization_id = EXCLUDED.organization_id,
            desks = EXCLUDED.desks,
            job_title = EXCLUDED.job_title,
            years_at_desk = EXCLUDED.years_at_desk,
+           location = EXCLUDED.location,
            pitch_preferences = EXCLUDED.pitch_preferences,
+           availability = EXCLUDED.availability,
            updated_at = NOW()`,
         [
           databaseUserId,
@@ -76,28 +90,39 @@ export async function POST(request: Request) {
           editor.desks,
           editor.jobTitle,
           editor.yearsAtDesk,
+          editor.location ?? null,
           JSON.stringify(editor.pitchPreferences),
+          editor.availability ? JSON.stringify(editor.availability) : null,
         ]
       );
     } else {
       const freelancer = profile as NewFreelancer;
       await connection.query(
-        `INSERT INTO freelancers (user_id, location, reporting_beats, work_mediums, tools, portfolio)
-         VALUES ($1, $2, $3, $4, $5, $6)
+        `INSERT INTO freelancers
+           (user_id, location, rate, community_covered, reporting_beats, beat_tags, work_mediums, tools, portfolio, availability)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
          ON CONFLICT (user_id) DO UPDATE SET
            location = EXCLUDED.location,
+           rate = EXCLUDED.rate,
+           community_covered = EXCLUDED.community_covered,
            reporting_beats = EXCLUDED.reporting_beats,
+           beat_tags = EXCLUDED.beat_tags,
            work_mediums = EXCLUDED.work_mediums,
            tools = EXCLUDED.tools,
            portfolio = EXCLUDED.portfolio,
+           availability = EXCLUDED.availability,
            updated_at = NOW()`,
         [
           databaseUserId,
           freelancer.location ?? null,
+          freelancer.rate ?? null,
+          freelancer.communityCovered ?? null,
           freelancer.reportingBeats ?? [],
+          freelancer.beatTags ?? [],
           freelancer.workMediums ?? [],
           freelancer.tools ?? [],
           JSON.stringify(freelancer.portfolio ?? []),
+          freelancer.availability ? JSON.stringify(freelancer.availability) : null,
         ]
       );
     }
