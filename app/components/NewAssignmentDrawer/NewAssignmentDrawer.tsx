@@ -6,7 +6,13 @@ import { useRouter } from 'next/navigation';
 import styles from './NewAssignmentDrawer.module.css';
 import type { NewAssignment } from '../../types/assignments.types';
 import type { RosterMember } from '../../types/dashboard.types';
-import { EMPTY_ASSIGNMENT, hasErrors, validateAssignment, type AssignmentErrors } from '../../utils/assignment.utils';
+import {
+  createSlug, // ← changed
+  EMPTY_ASSIGNMENT,
+  hasErrors,
+  validateAssignment,
+  type AssignmentErrors,
+} from '../../utils/assignment.utils';
 import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
 import InviteList from '../InviteList/InviteList';
 
@@ -53,7 +59,10 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
   };
 
   const submitAssignment = async () => {
-    const nextErrors = validateAssignment(draft);
+    // ← changed: slug = title + random code, made fresh on every submit
+    const toSave: NewAssignment = { ...draft, slug: createSlug(draft.title) };
+
+    const nextErrors = validateAssignment(toSave); // ← changed
     setErrors(nextErrors);
     if (hasErrors(nextErrors)) return;
 
@@ -66,9 +75,9 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...draft,
+          ...toSave, // ← changed
           // datetime-local values have no timezone; send an absolute instant
-          deadline: draft.deadline ? new Date(draft.deadline).toISOString() : '',
+          deadline: toSave.deadline ? new Date(toSave.deadline).toISOString() : '',
         }),
       });
       const payload = (await response.json().catch(() => null)) as CreateAssignmentResponse | null;
