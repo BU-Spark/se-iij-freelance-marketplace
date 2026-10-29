@@ -82,9 +82,10 @@ textarea.input {
   align-items: center;
 }
 
-.moneyInput {
+/* .money .moneyInput is more specific than .input, so this padding wins */
+.money .moneyInput {
   width: 100%;
-  padding-left: 30px;
+  padding-left: 32px;
   padding-right: 56px;
 }
 
