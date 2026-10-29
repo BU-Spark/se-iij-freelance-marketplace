@@ -127,7 +127,7 @@ export default function FreelancerDashboard({
           </a>
         </li>
       </ul>
-      <section aria-labelledby="active-heading" className={styles.section}>
+      <section id="active-assignments" aria-labelledby="active-heading" className={styles.section}>
         <h2 id="active-heading">In progress</h2>
         <p>Your assigned work, ordered by deadline. This section stays visible while you filter the task feed.</p>
         {active.length ? (

@@ -1,4 +1,4 @@
-import { Header } from '../../components/header/Header';
+import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import { ASSIGNMENTS } from '../constants';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import FreelancerDashboard from './FreelancerDashboard';
@@ -28,14 +28,13 @@ const DEMO_ASSIGNMENTS: DeskAssignment[] = [
 
 export default function FreelancerPage() {
   return (
-    <div className={styles.shell}>
-      <Header />
+    <FreelancerWorkspace>
       <main className={styles.main}>
         <p className={styles.eyebrow}>Freelancer workspace</p>
         <h1>Your assignment desk</h1>
         <p>Discover opportunities and keep your current work in view.</p>
         <FreelancerDashboard assignments={DEMO_ASSIGNMENTS} freelancerId={DEMO_FREELANCER_ID} />
       </main>
-    </div>
+    </FreelancerWorkspace>
   );
 }
