@@ -38,7 +38,7 @@ it('shows freelancer navigation on direct loads of freelancer pages', () => {
     mockPathname = path;
     view.rerender(<Header />);
     expect(screen.getByRole('button', { name: 'Freelancer' })).toHaveAttribute('aria-pressed', 'true');
-    expect(navigation().getByRole('link', { name: 'Assignments' })).toBeInTheDocument();
+    expect(navigation().getByRole('link', { name: 'Dashboard' })).toBeInTheDocument();
     expect(navigation().getByRole('link', { name: 'My availability' })).toBeInTheDocument();
     expect(navigation().getByRole('link', { name: 'My profile' })).toBeInTheDocument();
     expect(navigation().queryByRole('link', { name: 'Roster' })).not.toBeInTheDocument();
@@ -51,10 +51,10 @@ it('shows freelancer navigation on direct loads of freelancer pages', () => {
 it('navigates on switching roles and follows route changes in either direction', () => {
   const view = render(<Header />);
   fireEvent.click(screen.getByRole('button', { name: 'Freelancer' }));
-  expect(mockPush).toHaveBeenLastCalledWith('/dashboard/assignments');
-  mockPathname = '/dashboard/assignments';
+  expect(mockPush).toHaveBeenLastCalledWith('/dashboard/freelancer');
+  mockPathname = '/dashboard/freelancer';
   view.rerender(<Header />);
-  expect(navigation().getByRole('link', { name: 'Assignments' })).toHaveAttribute('aria-current', 'page');
+  expect(navigation().getByRole('link', { name: 'Dashboard' })).toHaveAttribute('aria-current', 'page');
   fireEvent.click(screen.getByRole('button', { name: 'Freelancer' }));
   expect(mockPush).toHaveBeenCalledTimes(1);
   fireEvent.click(screen.getByRole('button', { name: 'Editor' }));

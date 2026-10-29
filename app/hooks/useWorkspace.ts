@@ -5,10 +5,15 @@ import type { OnboardingRole } from '../types/onboarding.types';
 
 export const WORKSPACE_HOME: Record<OnboardingRole, string> = {
   editor: '/dashboard',
-  freelancer: '/dashboard/assignments',
+  freelancer: '/dashboard/freelancer',
 };
 
-const FREELANCER_ROUTES = ['/dashboard/assignments', '/dashboard/availability', '/dashboard/profile'];
+const FREELANCER_ROUTES = [
+  '/dashboard/freelancer',
+  '/dashboard/assignments',
+  '/dashboard/availability',
+  '/dashboard/profile',
+];
 
 /** The URL is shared workspace state, including reloads and browser history. */
 export function useWorkspace() {
