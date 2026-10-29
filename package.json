@@ -58,5 +58,11 @@
       "eslint --fix",
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "next": {
+      "postcss": "8.5.23",
+      "sharp": "0.35.5"
+    }
   }
 }
