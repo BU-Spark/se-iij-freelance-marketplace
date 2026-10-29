@@ -141,7 +141,6 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
             <h2 id="new-assignment-title" className={styles.title}>
               New Assignment
             </h2>
-            <p className={styles.subtitle}>Describe the work, then pick freelancers to invite.</p>
           </div>
           <Link href={closeHref} scroll={false} className={styles.close} aria-label="Close">
             <svg

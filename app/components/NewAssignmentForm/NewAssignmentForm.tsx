@@ -49,7 +49,6 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
             {slugBase ? `${slugBase}-······` : 'Fills in from the title'}
           </output>
         </Field>
-        <p className={styles.hint}>Made from the title. A short random code is added when you post.</p>
       </div>
 
       <div className={styles.row}>
