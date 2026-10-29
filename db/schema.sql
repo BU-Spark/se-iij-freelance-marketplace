@@ -8,6 +8,9 @@ CREATE TABLE IF NOT EXISTS users (
   last_name TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('editor', 'freelancer')),
   short_bio TEXT,
+  long_bio TEXT,
+  -- Notification + display preferences collected during onboarding
+  preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -18,6 +21,7 @@ CREATE TABLE IF NOT EXISTS editors (
   desks TEXT[] NOT NULL DEFAULT '{}',
   job_title TEXT NOT NULL,
   years_at_desk INTEGER NOT NULL DEFAULT 0 CHECK (years_at_desk >= 0),
+  location TEXT,
   pitch_preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   availability JSONB,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -62,3 +66,8 @@ CREATE TABLE IF NOT EXISTS assignments (
 CREATE UNIQUE INDEX IF NOT EXISTS assignments_org_slug_key ON assignments (COALESCE(organization_id, ''), slug);
 CREATE INDEX IF NOT EXISTS assignments_created_by_idx ON assignments (created_by_user_id);
 CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (status, deadline);
+
+-- Columns added after the initial release; CREATE TABLE IF NOT EXISTS skips existing tables
+ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;

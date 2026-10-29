@@ -23,6 +23,8 @@ export interface User {
   updatedAt: Date;
   verified: boolean;
   shortBio?: string;
+  longBio?: string;
+  preferences?: UserPreferences;
 }
 
 export enum Role {
@@ -33,7 +35,7 @@ export enum Role {
 
 export interface Editor {
   user: User;
-  longBio?: string;
+  location?: string;
   organizationId?: string;
   availability?: Availability;
   desks: string[];

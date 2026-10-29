@@ -31,7 +31,20 @@ function validateFreelancer(d: ProfileData): ProfileErrors {
   return e;
 }
 
+/** Everything on the preferences step is optional, but provided values still have to make sense */
+function validatePreferences(d: ProfileData): ProfileErrors {
+  const e: ProfileErrors = {};
+  const rate = d.rateAmount.trim();
+
+  if (rate && !(Number.isFinite(Number(rate)) && Number(rate) >= 0)) e.rateAmount = 'Enter a number, e.g. 0.75';
+  if (d.averageResponseTime < 0) e.averageResponseTime = "Response time can't be negative";
+  if (d.availableDays.length > 0 && d.workdayStart && d.workdayEnd && d.workdayStart >= d.workdayEnd) {
+    e.workdayEnd = 'End time must be after the start time';
+  }
+  return e;
+}
+
 export function validateProfile(role: OnboardingRole, d: ProfileData): ProfileErrors {
   const roleErrors = role === 'editor' ? validateEditor(d) : validateFreelancer(d);
-  return { ...validateBasics(d), ...roleErrors };
+  return { ...validateBasics(d), ...roleErrors, ...validatePreferences(d) };
 }

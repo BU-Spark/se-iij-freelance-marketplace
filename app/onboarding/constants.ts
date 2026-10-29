@@ -1,4 +1,7 @@
+import type { Weekday } from '../types/availability.types';
+import type { RateUnit } from '../types/dashboard.types';
 import type { OrgOption, ProfileData } from '../types/onboarding.types';
+import type { UserPreferences } from '../types/user.types';
 
 /* ------------------------------------------------------------------ */
 /*  Temporary static data for onboarding                               */
@@ -27,6 +30,49 @@ export const TOPICS = [
 
 export const MEDIUMS = ['Text', 'Photo', 'Video', 'Audio', 'Data', 'Illustration'];
 
+/** How an editor likes to receive pitches */
+export const PITCH_FORMATS = ['Email pitch', 'Pitch form', 'Shared doc', 'Any format'];
+
+export const THEMES: { id: UserPreferences['theme']; label: string }[] = [
+  { id: 'system', label: 'System' },
+  { id: 'light', label: 'Light' },
+  { id: 'dark', label: 'Dark' },
+];
+
+export const LANGUAGES = ['English', 'Spanish', 'French', 'Portuguese', 'German', 'Mandarin', 'Arabic', 'Other'];
+
+export const RATE_UNITS: { id: RateUnit; label: string }[] = [
+  { id: 'word', label: 'Per word' },
+  { id: 'hour', label: 'Per hour' },
+  { id: 'flat', label: 'Flat rate' },
+];
+
+export const WEEKDAYS: { id: Weekday; label: string; short: string }[] = [
+  { id: 'monday', label: 'Monday', short: 'Mon' },
+  { id: 'tuesday', label: 'Tuesday', short: 'Tue' },
+  { id: 'wednesday', label: 'Wednesday', short: 'Wed' },
+  { id: 'thursday', label: 'Thursday', short: 'Thu' },
+  { id: 'friday', label: 'Friday', short: 'Fri' },
+  { id: 'saturday', label: 'Saturday', short: 'Sat' },
+  { id: 'sunday', label: 'Sunday', short: 'Sun' },
+];
+
+/** Fields edited on the profile step; used to send the user back when submitting from step 3 */
+export const PROFILE_STEP_FIELDS: (keyof ProfileData)[] = [
+  'firstName',
+  'lastName',
+  'email',
+  'jobTitle',
+  'yearsAtDesk',
+  'organizationId',
+  'desks',
+  'location',
+  'reportingBeats',
+  'workMediums',
+  'tools',
+  'portfolio',
+];
+
 // Each chip gets a logo color, cycling through the fan
 export const CHIP_COLORS = [
   'var(--c-green)',
@@ -46,13 +92,31 @@ export const EMPTY: ProfileData = {
   lastName: '',
   email: '',
   shortBio: '',
+  longBio: '',
+  theme: 'system',
+  emailNotifications: true,
+  pushNotifications: false,
+  language: 'English',
   jobTitle: '',
   yearsAtDesk: 0,
   organizationId: 'meridian',
   desks: [],
+  preferredPitchFormat: '',
+  averageResponseTime: 0,
+  interestedTopics: [],
+  editorialPreferences: [],
+  lookingFor: [],
   location: '',
   reportingBeats: [],
   workMediums: [],
   tools: [],
   portfolio: [],
+  rateAmount: '',
+  rateUnit: 'word',
+  communityCovered: '',
+  beatTags: [],
+  availableDays: [],
+  workdayStart: '09:00',
+  workdayEnd: '17:00',
+  timezone: '',
 };
