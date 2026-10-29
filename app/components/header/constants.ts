@@ -7,6 +7,7 @@ export type NavItem = { label: string; href: string; badge?: number };
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Desk', href: '/dashboard' },
+  { label: 'Assignments', href: '/dashboard/assignments' },
   { label: 'Roster', href: '/dashboard/roster' },
   { label: 'Pitches', href: '/dashboard/pitches', badge: 2 },
 ];

@@ -1,0 +1,121 @@
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px clamp(16px, 4vw, 64px) 80px;
+}
+
+.backLink {
+  color: var(--c-blue);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
+.heading {
+  margin: 32px 0 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--c-blue);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.heading h1 {
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 400;
+}
+
+.description {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.filterField {
+  display: flex;
+  flex: 1 1 180px;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filterField input,
+.filterField select {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+}
+
+.filterField input:focus-visible,
+.filterField select:focus-visible,
+.clearButton:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.clearButton {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 1px solid var(--c-blue);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--c-blue);
+  font: inherit;
+  cursor: pointer;
+}
+
+.clearButton:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.results {
+  margin: 0 0 16px;
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
