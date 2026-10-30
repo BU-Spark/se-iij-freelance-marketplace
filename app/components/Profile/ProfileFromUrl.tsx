@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ProfilePanel from './ProfilePanel';
 import { MOCK_PROFILE } from './config/constants';
-import type { BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
+import type { EditableBasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
 import { useToast } from '../Toast/ToastProvider';
 type ProfileFromUrlProps = {
   closeHref: string;
@@ -26,8 +26,8 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
     setProfile((p) => ({ ...p, roles: [...p.roles, { role, bio: '', facts: {} }] }));
     showToast(`${role === 'editor' ? 'Editor' : 'Freelancer'} role added`);
   };
-  const saveBasic = (basic: BasicInfo) => {
-    setProfile((p) => ({ ...p, basic }));
+  const saveBasic = (basic: EditableBasicInfo) => {
+    setProfile((p) => ({ ...p, basic: { ...p.basic, ...basic } }));
     showToast('Profile saved');
   };
   const saveRole = (details: RoleDetails) => {

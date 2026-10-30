@@ -54,9 +54,20 @@ describe('ProfilePanel', () => {
     fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Manchester, UK' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(onSaveBasic).toHaveBeenCalledWith({ ...MOCK_PROFILE.basic, location: 'Manchester, UK' });
+    const { email, ...editable } = MOCK_PROFILE.basic;
+    expect(onSaveBasic).toHaveBeenCalledWith({ ...editable, location: 'Manchester, UK' });
     // back to the normal card
     expect(screen.getByRole('button', { name: 'Edit basic info' })).toBeInTheDocument();
+    expect(screen.getByText(email)).toBeInTheDocument();
+  });
+
+  it('does not let the email be edited, since Clerk owns it', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={jest.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
+
+    expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/can be changed in account settings/i)).toBeInTheDocument();
   });
 
   it('does not save basic info without a first name', () => {

@@ -25,6 +25,12 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+/* small note under a form, e.g. where to change the login email */
+.hint {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
 .bio {
   margin: 4px 0 0;
   font-size: 14px;

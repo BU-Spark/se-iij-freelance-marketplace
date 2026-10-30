@@ -11,6 +11,9 @@ export type BasicInfo = {
   photoUrl?: string;
 };
 
+/** The basic info a person can change. Email is left out: Clerk owns the login email. */
+export type EditableBasicInfo = Omit<BasicInfo, 'email'>;
+
 /** What a person fills in for one of their roles */
 export type RoleDetails = {
   role: ProfileRole;

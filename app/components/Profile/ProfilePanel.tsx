@@ -9,7 +9,7 @@ import RoleForm from './forms/RoleForm';
 import AddRoleButton from './cards/AddRoleButton';
 import { ALL_ROLES } from './config/roleConfig';
 import { missingRoles } from '../../utils/profile.utils';
-import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
+import type { AccountProfile, EditableBasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
 import styles from './Profile.module.css';
 
 type ProfilePanelProps = {
@@ -17,8 +17,8 @@ type ProfilePanelProps = {
   onClose: () => void;
   /** if given, shows "Add the … role" for each role the person doesn't have */
   onAddRole?: (role: ProfileRole) => void;
-  /** if given, basic info gets an Edit button */
-  onSaveBasic?: (basic: BasicInfo) => void;
+  /** if given, basic info gets an Edit button (email stays read-only; Clerk owns it) */
+  onSaveBasic?: (basic: EditableBasicInfo) => void;
   /** if given, each role card gets an Edit button */
   onSaveRole?: (details: RoleDetails) => void;
 };

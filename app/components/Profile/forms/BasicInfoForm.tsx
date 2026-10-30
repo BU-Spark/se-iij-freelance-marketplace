@@ -4,31 +4,35 @@ import { useState, type ChangeEvent, type FormEvent } from 'react';
 import InfoCard from '../../InfoCard/InfoCard';
 import Field from '../../Field/Field';
 import FormActions from './FormActions';
-import type { BasicInfo } from '../../../types/profile.types';
+import type { BasicInfo, EditableBasicInfo } from '../../../types/profile.types';
 import styles from '../Profile.module.css';
 
 type BasicInfoFormProps = {
   basic: BasicInfo;
-  onSave: (basic: BasicInfo) => void;
+  onSave: (basic: EditableBasicInfo) => void;
   onCancel: () => void;
 };
 
-type Errors = Partial<Record<keyof BasicInfo, string>>;
+type Errors = Partial<Record<keyof EditableBasicInfo, string>>;
 
 export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoFormProps) {
   // a copy to type into; the real profile only changes on Save
-  const [draft, setDraft] = useState(basic);
+  const [draft, setDraft] = useState<EditableBasicInfo>({
+    firstName: basic.firstName,
+    lastName: basic.lastName,
+    location: basic.location,
+    photoUrl: basic.photoUrl,
+  });
   const [errors, setErrors] = useState<Errors>({});
 
-  // one change handler for every field, e.g. update('email')
-  const update = (key: keyof BasicInfo) => (e: ChangeEvent<HTMLInputElement>) =>
+  // one change handler for every field, e.g. update('location')
+  const update = (key: keyof EditableBasicInfo) => (e: ChangeEvent<HTMLInputElement>) =>
     setDraft((d) => ({ ...d, [key]: e.target.value }));
 
   const submit = (e: FormEvent) => {
     e.preventDefault(); // stop the browser reloading the page
     const next: Errors = {};
     if (!draft.firstName.trim()) next.firstName = 'Add your first name.';
-    if (!/^\S+@\S+\.\S+$/.test(draft.email.trim())) next.email = 'Enter a valid email address.';
     setErrors(next);
     if (Object.keys(next).length > 0) return;
 
@@ -36,7 +40,6 @@ export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoForm
       ...draft,
       firstName: draft.firstName.trim(),
       lastName: draft.lastName.trim(),
-      email: draft.email.trim(),
       location: draft.location.trim(),
     });
   };
@@ -62,15 +65,6 @@ export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoForm
             />
           </Field>
         </div>
-        <Field label="Email" error={errors.email}>
-          <input
-            className={styles.input}
-            type="email"
-            value={draft.email}
-            onChange={update('email')}
-            autoComplete="email"
-          />
-        </Field>
         <Field label="Location">
           <input
             className={styles.input}
@@ -79,6 +73,8 @@ export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoForm
             placeholder="City, country"
           />
         </Field>
+        {/* the login email lives in Clerk, so it isn't edited here */}
+        <p className={styles.hint}>Your email ({basic.email}) is your login and can be changed in account settings.</p>
         <FormActions onCancel={onCancel} />
       </form>
     </InfoCard>
