@@ -46,6 +46,26 @@ const config = [
       'react/react-in-jsx-scope': 'off',
     },
   },
+  {
+    // Personal data (profiles, availability) saves through the API, never in browser storage
+    files: ['app/**/*.{js,jsx,ts,tsx}'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        { name: 'localStorage', message: 'Save user data through the API, not localStorage.' },
+        { name: 'sessionStorage', message: 'Save user data through the API, not sessionStorage.' },
+      ],
+      'no-restricted-properties': [
+        'error',
+        { object: 'window', property: 'localStorage', message: 'Save user data through the API, not localStorage.' },
+        {
+          object: 'window',
+          property: 'sessionStorage',
+          message: 'Save user data through the API, not sessionStorage.',
+        },
+      ],
+    },
+  },
   // This will load rules from 'eslint-config-next'
   ...fixupConfigRules(compat.extends('next/core-web-vitals')),
 
