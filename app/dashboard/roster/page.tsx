@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { RosterCard } from '../../components';
-import { Header } from '../../components/header/Header';
+import { EditorHeader } from '../../components/header/EditorHeader';
 import { ROSTER } from '../constants';
 import { countOnRoster } from '../../utils/dashboard.utils';
 import styles from './roster.module.css';
@@ -36,7 +36,7 @@ export default function RosterPage() {
 
   return (
     <div className={styles.shell}>
-      <Header />
+      <EditorHeader />
       <main className={styles.main}>
         <Link href="/dashboard" className={styles.backLink}>
           ← Back to dashboard

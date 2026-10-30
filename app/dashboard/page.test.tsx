@@ -2,9 +2,9 @@ import { render, screen, within } from '@testing-library/react';
 import Dashboard from './page';
 import { ASSIGNMENTS, ROSTER } from './constants';
 
-// Joey's Header has its own tests; swap it for a simple stand-in so these tests only check the dashboard
-jest.mock('../components/header/Header', () => ({
-  Header: () => <header>Header</header>,
+// EditorHeader has its own tests; swap it for a simple stand-in so these tests only check the dashboard
+jest.mock('../components/header/EditorHeader', () => ({
+  EditorHeader: () => <header>Header</header>,
 }));
 
 // No real browser URL in tests; pretend there's no "?new=assignment"

@@ -3,59 +3,78 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useClerk } from '@clerk/nextjs';
-import type { ProfileRole } from '../../types';
-import HamburgerMenu from '../NavMenu/HamburgerMenu';
-import ProfileButton from '../Profile/ProfileButton';
-import { MOCK_PROFILE } from '../Profile/config/constants';
-import { fullName } from '../../utils/profile.utils';
+import type { OnboardingRole } from '../../types/onboarding.types';
+import IIJLogo from '../IIJLogo/IIJLogo';
+import { SearchBox } from '../search/SearchBox';
+import { NAV_ITEMS, ROLE_OPTIONS } from './constants';
 import styles from './header.module.css';
 
-// To do: replace MOCK_PROFILE with the signed-in user's profile from the API
-const MY_NAME = fullName(MOCK_PROFILE);
-const MY_ROLES: ProfileRole[] = MOCK_PROFILE.roles.map((r) => r.role);
-const DEFAULT_ROLE: ProfileRole = MY_ROLES.includes('editor') ? 'editor' : MY_ROLES[0];
-
-// To do: replace with the real count of new pitches
-const BADGES = { pitches: 2 };
+function isNavItemActive(pathname: string, href: string) {
+  return href === '/dashboard' ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+}
 
 export function Header() {
+  const [role, setRole] = useState<OnboardingRole>('editor');
   const pathname = usePathname();
-  const { signOut } = useClerk();
-  const [role, setRole] = useState<ProfileRole>(DEFAULT_ROLE);
 
   return (
     <header className={styles.headerBox}>
-      {/* ☰ opens the navigation menu on the left */}
-      <HamburgerMenu
-        name={MY_NAME}
-        roles={MY_ROLES}
-        activeRole={role}
-        onRoleChange={setRole}
-        currentPath={pathname}
-        profileHref={`${pathname}?panel=profile`}
-        badges={BADGES}
-        onSignOut={() => signOut({ redirectUrl: '/' })}
-      />
+      <div className={styles.logo}>
+        <IIJLogo size={40} animated={false} showText={false} />
+      </div>
+      <nav className={styles.navigation} aria-label="Main navigation">
+        {NAV_ITEMS.map((item) => {
+          const active = isNavItemActive(pathname, item.href);
+          return (
+            <Link
+              className={`${styles.navItem} ${active ? styles.active : ''}`}
+              href={item.href}
+              key={item.label}
+              aria-current={active ? 'page' : undefined}
+            >
+              {item.label}
+              {item.badge && <span className={styles.badge}>{item.badge}</span>}
+            </Link>
+          );
+        })}
+      </nav>
 
-      <div className={styles.actions}>
-        {role === 'editor' ? (
-          // Opens the New Assignment drawer on the dashboard (?new=assignment)
-          <Link className={styles.newAssignment} href="/dashboard?new=assignment">
+      <SearchBox className={styles.search} compact placeholder="Search..." shortcut="⌘K" />
+
+      {/* To do: Refactor this to be a dynamic resuable component */}
+      <div className={styles.roleSwitcher} aria-label="Choose workspace role">
+        {ROLE_OPTIONS.map(({ id, label, Icon }) => (
+          <button
+            className={`${styles.roleButton} ${role === id ? styles.selected : ''}`}
+            key={id}
+            type="button"
+            onClick={() => setRole(id)}
+            aria-pressed={role === id}
+          >
+            <Icon />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* To do: Refactor this to be a dynamic resuable component */}
+      {role === 'editor' ? (
+        // Opens the New Assignment drawer on the dashboard (?new=assignment)
+        <Link className={styles.newAssignment} href="/dashboard?new=assignment">
+          <div>
             <span aria-hidden="true">+</span>
-            New Assignment
-          </Link>
-        ) : (
-          <button className={styles.newAssignment} type="button">
+            <p>New Assignment</p>
+          </div>
+        </Link>
+      ) : (
+        <button className={styles.newAssignment} type="button">
+          <div>
             {/* To Do: Replace ! with idea icon */}
             <span aria-hidden="true">!</span>
-            Make a Pitch
-          </button>
-        )}
-
-        {/* avatar that opens My profile (?panel=profile) */}
-        <ProfileButton name={MY_NAME} />
-      </div>
+            <p>Make a Pitch</p>
+          </div>
+        </button>
+      )}
     </header>
   );
 }

@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { Header } from '../components/header/Header';
+import { EditorHeader } from '../components/header/EditorHeader';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
 import styles from './dashboard.module.css';
@@ -19,7 +19,7 @@ export default function Dashboard() {
 
   return (
     <div className={styles.shell}>
-      <Header />
+      <EditorHeader />
 
       {/* ---- Status bar ---- */}
       <div className={styles.statusBar}>

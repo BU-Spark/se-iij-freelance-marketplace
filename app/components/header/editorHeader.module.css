@@ -1,0 +1,71 @@
+.headerBox {
+  --control-height: 30px;
+  --action-font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 58px;
+  min-height: 58px;
+  padding: 0 20px;
+  border-bottom: 1px solid #dfe4ec;
+  background: var(--white);
+  box-sizing: border-box;
+  white-space: nowrap;
+}
+
+/* ☰ button */
+
+/* right side: action button + avatar */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.newAssignment {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: var(--control-height);
+  padding: 0 14px;
+  border: none;
+  border-radius: 3px;
+  background: #111a31;
+  color: var(--white);
+  font-size: var(--action-font-size);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.newAssignment:hover {
+  background: #1b2a4d;
+  transform: translateY(-1px);
+}
+
+.newAssignment span {
+  font-size: 21px;
+  font-weight: 300;
+  line-height: 1;
+}
+
+@media (max-width: 650px) {
+  .headerBox {
+    --action-font-size: 12px;
+    padding: 0 10px;
+  }
+
+  .actions {
+    gap: 10px;
+  }
+
+  .newAssignment {
+    gap: 4px;
+    padding: 0 9px;
+  }
+}

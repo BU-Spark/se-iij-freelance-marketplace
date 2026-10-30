@@ -1,26 +1,129 @@
 .headerBox {
+  --header-gap: 28px;
+  --logo-size: 40px;
+  --nav-gap: 27px;
+  --nav-font-size: 14px;
+  --search-min-width: 150px;
   --control-height: 30px;
+  --control-font-size: 12px;
   --action-font-size: 14px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   width: 100%;
   height: 58px;
   min-height: 58px;
+  max-height: 58px;
   padding: 0 20px;
+  gap: var(--header-gap);
+  overflow: hidden;
   border-bottom: 1px solid #dfe4ec;
   background: var(--white);
   box-sizing: border-box;
   white-space: nowrap;
 }
 
-/* ☰ button */
-
-/* right side: action button + avatar */
-.actions {
+.logo {
   display: flex;
+  flex: 0 0 var(--logo-size);
   align-items: center;
-  gap: 16px;
+  justify-content: center;
+}
+
+.logo svg {
+  display: block;
+  width: var(--logo-size);
+  height: var(--logo-size);
+}
+
+.navigation {
+  display: flex;
+  align-self: stretch;
+  align-items: center;
+  gap: var(--nav-gap);
+}
+
+.navItem {
+  position: relative;
+  display: inline-flex;
+  height: 100%;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  color: #718096;
+  font-size: var(--nav-font-size);
+  font-weight: 650;
+  transition: color 0.2s ease;
+}
+
+.navItem:hover,
+.navItem.active {
+  color: #2563eb;
+}
+
+.navItem.active::after {
+  position: absolute;
+  right: 0;
+  bottom: 4px;
+  left: 0;
+  height: 2px;
+  background: #2563eb;
+  content: '';
+}
+
+.badge {
+  display: inline-grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  border-radius: 50%;
+  background: #2563eb;
+  color: var(--white);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.search {
+  flex: 0 1 192px;
+  min-width: var(--search-min-width);
+  margin-left: auto;
+}
+
+.roleSwitcher {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 3px;
+  background: #f1f3f6;
+}
+
+.roleButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--control-height);
+  padding: 0 9px;
+  border-radius: 2px;
+  color: #718096;
+  font-size: var(--control-font-size);
+  font-weight: 650;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease;
+}
+
+.roleButton:hover,
+.roleButton.selected {
+  color: #172033;
+}
+
+.roleButton.selected {
+  background: var(--white);
+  box-shadow: 0 1px 3px rgba(15, 35, 71, 0.08);
+}
+
+.roleButton svg {
+  width: 16px;
+  height: 16px;
 }
 
 .newAssignment {
@@ -31,13 +134,11 @@
   gap: 8px;
   min-height: var(--control-height);
   padding: 0 14px;
-  border: none;
   border-radius: 3px;
   background: #111a31;
   color: var(--white);
   font-size: var(--action-font-size);
   font-weight: 700;
-  cursor: pointer;
   transition:
     background 0.2s ease,
     transform 0.2s ease;
@@ -54,18 +155,51 @@
   line-height: 1;
 }
 
+@media (max-width: 900px) {
+  .headerBox {
+    --header-gap: 16px;
+    --logo-size: 36px;
+    --nav-gap: 16px;
+    --search-min-width: 110px;
+    --action-font-size: 12px;
+    gap: var(--header-gap);
+    padding: 0 14px;
+  }
+
+  .roleButton {
+    padding: 0 5px;
+  }
+
+  .newAssignment {
+    padding: 0 9px;
+  }
+}
+
 @media (max-width: 650px) {
   .headerBox {
-    --action-font-size: 12px;
+    --header-gap: 8px;
+    --logo-size: 32px;
+    --nav-gap: 10px;
+    --nav-font-size: 12px;
+    --search-min-width: 84px;
+    --control-font-size: 10px;
+    --action-font-size: 11px;
+    gap: var(--header-gap);
     padding: 0 10px;
   }
 
-  .actions {
-    gap: 10px;
+  .roleButton {
+    gap: 3px;
+    padding: 0 4px;
+  }
+
+  .roleButton svg {
+    width: 13px;
+    height: 13px;
   }
 
   .newAssignment {
     gap: 4px;
-    padding: 0 9px;
+    padding: 0 7px;
   }
 }
