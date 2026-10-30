@@ -26,3 +26,4 @@ export { default as InfoCard } from './InfoCard/InfoCard';
 export { default as DetailList } from './DetailList/DetailList';
 export { default as ProfilePanel } from './Profile/ProfilePanel';
 export { default as ProfileFromUrl } from './Profile/ProfileFromUrl';
+export { default as ProfileButton } from './Profile/ProfileButton';
