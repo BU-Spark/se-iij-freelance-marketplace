@@ -91,3 +91,33 @@
 .roleCard:hover .arrow {
   transform: translateX(6px);
 }
+
+/* Selected state: the cards are toggles now, not one-shot picks */
+.roleCard[data-active='true'] {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);
+}
+.roleCard[data-active='true']::before {
+  transform: scaleX(1);
+}
+.roleCard[data-active='true'] .roleLink {
+  color: var(--accent);
+}
+
+.error {
+  margin-top: 16px;
+  font-size: 13px;
+  color: var(--c-red);
+  animation: fadeUp 0.25s ease both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

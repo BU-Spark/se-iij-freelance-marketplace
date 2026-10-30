@@ -50,9 +50,20 @@ export interface ProfileData {
   timezone: string;
 }
 
-export type ProfileErrors = Partial<Record<keyof ProfileData, string>>;
+export type ProfileErrors = Partial<Record<keyof ProfileData, string>> & { roles?: string };
 export type Touched = Partial<Record<keyof ProfileData, boolean>>;
-export type Step = 'role' | 'profile' | 'preferences' | 'done';
+
+/**
+ * Steps are per role, so the flow is built from the roles the user picked:
+ * role -> editor-profile -> editor-preferences -> freelancer-profile -> ... -> done
+ */
+export type Step =
+  | 'role'
+  | 'editor-profile'
+  | 'editor-preferences'
+  | 'freelancer-profile'
+  | 'freelancer-preferences'
+  | 'done';
 
 /** `update` handler passed down to every step component */
 export type ProfileUpdate = <K extends keyof ProfileData>(key: K, value: ProfileData[K]) => void;
@@ -62,10 +73,13 @@ export type FieldError = (key: keyof ProfileData) => string | undefined;
 
 /** The User fields onboarding collects; id, username, timestamps etc. are set by the backend */
 export type NewUser = Pick<User, 'email' | 'firstName' | 'lastName' | 'shortBio' | 'longBio' | 'preferences' | 'roles'>;
-export type NewEditor = Omit<Editor, 'user'> & { user: NewUser };
-export type NewFreelancer = Omit<Freelancer, 'user'> & { user: NewUser };
+export type NewEditor = Omit<Editor, 'user'>;
+export type NewFreelancer = Omit<Freelancer, 'user'>;
 
+/** `user` is shared, so each selected role contributes only its own record */
 export type OnboardingPayload = {
-  role: OnboardingRole;
-  profile: NewEditor | NewFreelancer;
+  user: NewUser;
+  roles: OnboardingRole[];
+  editor?: NewEditor;
+  freelancer?: NewFreelancer;
 };

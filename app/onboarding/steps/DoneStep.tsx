@@ -6,14 +6,20 @@ import { CHIP_COLORS } from '../constants';
 import type { OnboardingRole, OrgOption, ProfileData } from '../../types/onboarding.types';
 
 type DoneStepProps = {
-  role: OnboardingRole;
+  roles: OnboardingRole[];
   data: ProfileData;
   org?: OrgOption;
   onEdit: () => void;
 };
 
-export default function DoneStep({ role, data, org, onEdit }: DoneStepProps) {
-  const isEditor = role === 'editor';
+export default function DoneStep({ roles, data, org, onEdit }: DoneStepProps) {
+  const isEditor = roles.includes('editor');
+  const lead =
+    roles.length > 1
+      ? 'Both profiles are live — you can commission work as an editor and pitch your own as a freelancer.'
+      : isEditor
+        ? 'Your editor profile is live. Freelancers can now find you and start pitching.'
+        : 'Your freelancer profile is live. Editors can now see your beats and availability.';
 
   return (
     <section className={`${shared.narrow} ${styles.done}`}>
@@ -37,20 +43,21 @@ export default function DoneStep({ role, data, org, onEdit }: DoneStepProps) {
       </div>
 
       <h1 className={shared.h1}>You&apos;re all set, {data.firstName.trim()}!</h1>
-      <p className={`${shared.lead} ${styles.centerLead}`}>
-        {isEditor
-          ? 'Your editor profile is live. Freelancers can now find you and start pitching.'
-          : 'Your freelancer profile is live. Editors can now see your beats and availability.'}
-      </p>
+      <p className={`${shared.lead} ${styles.centerLead}`}>{lead}</p>
 
-      <div className={styles.doneCard}>
-        <PreviewCard role={role} data={data} org={org} />
+      <div className={styles.doneCards}>
+        {roles.map((role) => (
+          <div key={role} className={styles.doneCard}>
+            <PreviewCard role={role} data={data} org={org} />
+          </div>
+        ))}
       </div>
 
       <div className={shared.actions} style={{ justifyContent: 'center' }}>
         <button className={shared.secondaryBtn} onClick={onEdit}>
           Edit profile
         </button>
+        {/* TODO: send freelancers to their own page once it exists */}
         <Link href={isEditor ? '/dashboard' : '/dashboard/assignments'} className={shared.primaryBtn}>
           {isEditor ? 'Post first assignment →' : 'Browse assignments →'}
         </Link>

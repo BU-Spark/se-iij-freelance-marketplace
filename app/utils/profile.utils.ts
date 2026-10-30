@@ -1,13 +1,19 @@
 import { Role } from '../types/user.types';
 import type { Availability, Weekday } from '../types/availability.types';
 import type { RateUnit } from '../types/dashboard.types';
-import type { NewEditor, NewFreelancer, NewUser, OnboardingRole, ProfileData } from '../types/onboarding.types';
+import type {
+  NewEditor,
+  NewFreelancer,
+  NewUser,
+  OnboardingPayload,
+  OnboardingRole,
+  ProfileData,
+} from '../types/onboarding.types';
 import type { UserPreferences } from '../types/user.types';
 
 const ROLE_FOR: Record<OnboardingRole, Role> = {
   editor: Role.EDITOR,
-  // TODO: confirm with data design, there's no FREELANCER role yet
-  freelancer: Role.USER,
+  freelancer: Role.FREELANCER,
 };
 
 const FALLBACK_TIMEZONE = 'UTC';
@@ -67,18 +73,17 @@ const toPreferences = (d: ProfileData): UserPreferences => ({
   },
 });
 
-const toUser = (role: OnboardingRole, d: ProfileData): NewUser => ({
+const toUser = (roles: OnboardingRole[], d: ProfileData): NewUser => ({
   email: d.email.trim(),
   firstName: d.firstName.trim(),
   lastName: d.lastName.trim(),
   shortBio: d.shortBio.trim() || undefined,
   longBio: d.longBio.trim() || undefined,
   preferences: toPreferences(d),
-  roles: [ROLE_FOR[role]],
+  roles: roles.map((role) => ROLE_FOR[role]),
 });
 
 export const toEditor = (d: ProfileData): NewEditor => ({
-  user: toUser('editor', d),
   location: d.location.trim() || undefined,
   organizationId: d.organizationId || undefined,
   desks: d.desks,
@@ -95,7 +100,6 @@ export const toEditor = (d: ProfileData): NewEditor => ({
 });
 
 export const toFreelancer = (d: ProfileData): NewFreelancer => ({
-  user: toUser('freelancer', d),
   location: d.location.trim() || undefined,
   rate: formatRate(d.rateAmount, d.rateUnit),
   communityCovered: d.communityCovered.trim() || undefined,
@@ -107,5 +111,10 @@ export const toFreelancer = (d: ProfileData): NewFreelancer => ({
   availability: toAvailability(d),
 });
 
-/** Builds the payload to send to the API on submit */
-export const toProfile = (role: OnboardingRole, d: ProfileData) => (role === 'editor' ? toEditor(d) : toFreelancer(d));
+/** Builds the payload to send to the API on submit, with a record per selected role */
+export const toProfile = (roles: OnboardingRole[], d: ProfileData): OnboardingPayload => ({
+  user: toUser(roles, d),
+  roles,
+  ...(roles.includes('editor') ? { editor: toEditor(d) } : {}),
+  ...(roles.includes('freelancer') ? { freelancer: toFreelancer(d) } : {}),
+});

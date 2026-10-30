@@ -27,6 +27,8 @@ type FreelancerPreferencesStepProps = {
   onBack: () => void;
   onSubmit: () => void;
   submitError: string | null;
+  /** The final step creates the profile; earlier steps just continue */
+  submitLabel?: string;
 };
 
 /** Freelancer step 3: what they charge, when they're free, and their settings */
@@ -45,7 +47,7 @@ export default function FreelancerPreferencesStep(p: FreelancerPreferencesStepPr
       data={data}
       orgs={p.orgs}
       shake={p.shake}
-      submitLabel="Create profile →"
+      submitLabel={p.submitLabel ?? 'Create profile →'}
       onSubmit={p.onSubmit}
       submitting={p.submitting}
       submitError={p.submitError}

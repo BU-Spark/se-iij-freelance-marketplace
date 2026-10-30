@@ -4,9 +4,9 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { IIJLogo } from '../components';
 import styles from './onboarding.module.css';
-import { DEFAULT_ORGS, EMPTY, PROFILE_STEP_FIELDS } from './constants';
-import type { OnboardingRole, OrgOption, ProfileData, Step, Touched } from '../types/onboarding.types';
-import { validateProfile } from '../utils/validation.utils';
+import { DEFAULT_ORGS, EMPTY } from './constants';
+import type { OnboardingRole, OrgOption, ProfileData, ProfileErrors, Step, Touched } from '../types/onboarding.types';
+import { validateProfile, validateStep } from '../utils/validation.utils';
 import RoleStep from './steps/RoleStep';
 import DoneStep from './steps/DoneStep';
 import EditorProfileStep from './steps/editor/EditorProfileStep';
@@ -15,34 +15,45 @@ import FreelancerProfileStep from './steps/freelancer/FreelancerProfileStep';
 import FreelancerPreferencesStep from './steps/freelancer/FreelancerPreferencesStep';
 import { detectTimezone, toProfile } from '../utils/profile.utils';
 
-const PROGRESS: Record<Step, number> = { role: 25, profile: 50, preferences: 75, done: 100 };
+/** Canonical order, so the flow always runs editor steps before freelancer steps */
+const ALL_ROLES: OnboardingRole[] = ['editor', 'freelancer'];
 
-/** Each role names its own steps, so the header reads like the flow the user is actually in */
-const STEP_LABELS: Record<OnboardingRole, Record<'profile' | 'preferences', string>> = {
-  editor: {
-    profile: 'Step 2 of 3 — Your newsroom',
-    preferences: 'Step 3 of 3 — How you work',
-  },
-  freelancer: {
-    profile: 'Step 2 of 3 — Your reporting',
-    preferences: 'Step 3 of 3 — Rates & availability',
-  },
+const STEP_TITLES: Record<OnboardingRole, Record<'profile' | 'preferences', string>> = {
+  editor: { profile: 'Your newsroom', preferences: 'How you work' },
+  freelancer: { profile: 'Your reporting', preferences: 'Rates & availability' },
 };
 
-const stepLabel = (step: Step, role: OnboardingRole | null) => {
-  if (step === 'role') return 'Step 1 of 3 — Who are you?';
+/** role -> a profile and preferences step per selected role -> done */
+const buildSequence = (roles: OnboardingRole[]): Step[] => [
+  'role',
+  ...roles.flatMap((role): Step[] => [`${role}-profile`, `${role}-preferences`]),
+  'done',
+];
+
+const stepRole = (step: Step): OnboardingRole | null => {
+  if (step.startsWith('editor')) return 'editor';
+  if (step.startsWith('freelancer')) return 'freelancer';
+  return null;
+};
+
+const stepTitle = (step: Step): string => {
+  if (step === 'role') return 'Who are you?';
   if (step === 'done') return 'All done';
-  return STEP_LABELS[role ?? 'editor'][step];
+
+  const role = stepRole(step) as OnboardingRole;
+  const phase = step.endsWith('-profile') ? 'profile' : 'preferences';
+  return STEP_TITLES[role][phase];
 };
 
 const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
 export default function OnboardingPage() {
-  const [step, setStep] = useState<Step>('role');
-  const [role, setRole] = useState<OnboardingRole | null>(null);
+  const [roles, setRoles] = useState<OnboardingRole[]>([]);
+  const [index, setIndex] = useState(0);
   const [data, setData] = useState<ProfileData>(EMPTY);
   const [orgs, setOrgs] = useState<OrgOption[]>(DEFAULT_ORGS);
   const [touched, setTouched] = useState<Touched>({});
+  const [roleError, setRoleError] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -52,7 +63,9 @@ export default function OnboardingPage() {
     setData((d) => (d.timezone ? d : { ...d, timezone: detectTimezone() }));
   }, []);
 
-  const errors = useMemo(() => (role ? validateProfile(role, data) : {}), [role, data]);
+  const sequence = useMemo(() => buildSequence(roles), [roles]);
+  const step = sequence[Math.min(index, sequence.length - 1)];
+  const errors = useMemo(() => validateStep(step, roles, data), [step, roles, data]);
 
   const update = <K extends keyof ProfileData>(key: K, value: ProfileData[K]) =>
     setData((d) => ({ ...d, [key]: value }));
@@ -64,46 +77,75 @@ export default function OnboardingPage() {
     setTimeout(() => setShake(false), 500);
   };
 
-  const revealErrors = () => {
-    setTouched((t) => Object.keys(errors).reduce((acc, k) => ({ ...acc, [k]: true }), t));
-    return Object.keys(errors).length === 0;
+  const markTouched = (keys: string[]) => setTouched((t) => keys.reduce((acc, key) => ({ ...acc, [key]: true }), t));
+
+  /** Roles are only rebuildable from the picker, so keep them in canonical order */
+  const toggleRole = (role: OnboardingRole) => {
+    setRoleError(null);
+    setRoles((list) =>
+      ALL_ROLES.filter((candidate) => (candidate === role ? !list.includes(role) : list.includes(candidate)))
+    );
   };
 
-  const pickRole = (r: OnboardingRole) => {
-    setRole(r);
-    setTouched({});
-    setStep('profile');
-    scrollTop();
-  };
-
-  const goToPreferences = () => {
-    if (!revealErrors()) {
+  const goNext = () => {
+    if (step === 'role') {
+      const problem = validateStep('role', roles, data).roles;
+      if (problem) {
+        setRoleError(problem);
+        reject();
+        return;
+      }
+      setRoleError(null);
+    } else if (Object.keys(errors).length > 0) {
+      markTouched(Object.keys(errors));
       reject();
       return;
     }
-    setStep('preferences');
-    scrollTop();
-  };
 
-  const backToProfile = () => {
     setTouched({});
-    setStep('profile');
+    setIndex((i) => Math.min(i + 1, sequence.length - 1));
     scrollTop();
   };
 
-  const handleSubmit = async () => {
-    const invalid = Object.keys(errors) as (keyof ProfileData)[];
+  const goBack = () => {
+    setTouched({});
+    setRoleError(null);
+    setIndex((i) => Math.max(i - 1, 0));
+    scrollTop();
+  };
 
-    if (!revealErrors()) {
-      reject();
-      // Profile fields only render on step 2, so take the user back to see them
-      if (invalid.some((key) => PROFILE_STEP_FIELDS.includes(key))) {
-        setStep('profile');
+  /** Submit validates everything, so surface the step that is actually blocking */
+  const focusFirstProblem = (problems: ProfileErrors) => {
+    if (problems.roles) {
+      setRoleError(problems.roles);
+      if (index !== 0) {
+        setIndex(0);
         scrollTop();
       }
       return;
     }
-    if (!role) return;
+
+    const blocking = sequence.findIndex(
+      (candidate, position) =>
+        position > 0 && candidate !== 'done' && Object.keys(validateStep(candidate, roles, data)).length > 0
+    );
+    if (blocking < 0) return;
+
+    markTouched(Object.keys(validateStep(sequence[blocking], roles, data)));
+    if (blocking !== index) {
+      setIndex(blocking);
+      scrollTop();
+    }
+  };
+
+  const handleSubmit = async () => {
+    const problems = validateProfile(roles, data);
+
+    if (Object.keys(problems).length > 0) {
+      reject();
+      focusFirstProblem(problems);
+      return;
+    }
 
     setSubmitting(true);
     setSubmitError(null);
@@ -111,7 +153,7 @@ export default function OnboardingPage() {
       const response = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ role, profile: toProfile(role, data) }),
+        body: JSON.stringify(toProfile(roles, data)),
       });
 
       if (!response.ok) {
@@ -123,7 +165,7 @@ export default function OnboardingPage() {
         throw new Error(message);
       }
 
-      setStep('done');
+      setIndex(sequence.length - 1);
       scrollTop();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Unable to save your profile right now.');
@@ -132,9 +174,32 @@ export default function OnboardingPage() {
     }
   };
 
-  const progress = PROGRESS[step];
-  const label = stepLabel(step, role);
+  // `done` is not a step the user fills in, so it sits outside the counter
+  const total = sequence.length - 1;
+  const progress = total > 0 ? Math.round((index / total) * 100) : 0;
+  const label =
+    step === 'done' ? 'All done' : total > 1 ? `Step ${index + 1} of ${total} — ${stepTitle(step)}` : 'Who are you?';
   const selectedOrg = orgs.find((o) => o.id === data.organizationId);
+
+  // With two roles the first preferences step must continue, not create the profile
+  const isFinalStep = index === sequence.length - 2;
+  const preferencesActions = {
+    submitting: isFinalStep && submitting,
+    onSubmit: isFinalStep ? handleSubmit : goNext,
+    submitError: isFinalStep ? submitError : null,
+    submitLabel: isFinalStep ? 'Create profile →' : 'Continue →',
+  };
+
+  const stepProps = {
+    data,
+    orgs,
+    errors,
+    touched,
+    shake,
+    update,
+    touch,
+    onBack: goBack,
+  };
 
   return (
     <div className={styles.shell}>
@@ -153,74 +218,40 @@ export default function OnboardingPage() {
       </header>
 
       <main className={styles.main}>
-        {step === 'role' && <RoleStep onPick={pickRole} />}
+        {step === 'role' && (
+          <RoleStep selected={roles} onToggle={toggleRole} onNext={goNext} error={roleError ?? undefined} />
+        )}
 
-        {step === 'profile' && role === 'editor' && (
+        {step === 'editor-profile' && (
           <EditorProfileStep
-            data={data}
-            orgs={orgs}
-            errors={errors}
-            touched={touched}
-            shake={shake}
-            update={update}
-            touch={touch}
+            {...stepProps}
+            showBasics={index === 1}
             addOrg={(org) => {
               setOrgs((list) => [...list, org]);
               update('organizationId', org.id);
             }}
-            onBack={() => setStep('role')}
-            onNext={goToPreferences}
+            onNext={goNext}
           />
         )}
 
-        {step === 'profile' && role === 'freelancer' && (
-          <FreelancerProfileStep
+        {step === 'editor-preferences' && <EditorPreferencesStep {...stepProps} {...preferencesActions} />}
+
+        {step === 'freelancer-profile' && (
+          <FreelancerProfileStep {...stepProps} showBasics={index === 1} onNext={goNext} />
+        )}
+
+        {step === 'freelancer-preferences' && <FreelancerPreferencesStep {...stepProps} {...preferencesActions} />}
+
+        {step === 'done' && (
+          <DoneStep
+            roles={roles}
             data={data}
-            orgs={orgs}
-            errors={errors}
-            touched={touched}
-            shake={shake}
-            update={update}
-            touch={touch}
-            onBack={() => setStep('role')}
-            onNext={goToPreferences}
+            org={selectedOrg}
+            onEdit={() => {
+              setIndex(1);
+              scrollTop();
+            }}
           />
-        )}
-
-        {step === 'preferences' && role === 'editor' && (
-          <EditorPreferencesStep
-            data={data}
-            orgs={orgs}
-            errors={errors}
-            touched={touched}
-            shake={shake}
-            submitting={submitting}
-            update={update}
-            touch={touch}
-            onBack={backToProfile}
-            onSubmit={handleSubmit}
-            submitError={submitError}
-          />
-        )}
-
-        {step === 'preferences' && role === 'freelancer' && (
-          <FreelancerPreferencesStep
-            data={data}
-            orgs={orgs}
-            errors={errors}
-            touched={touched}
-            shake={shake}
-            submitting={submitting}
-            update={update}
-            touch={touch}
-            onBack={backToProfile}
-            onSubmit={handleSubmit}
-            submitError={submitError}
-          />
-        )}
-
-        {step === 'done' && role && (
-          <DoneStep role={role} data={data} org={selectedOrg} onEdit={() => setStep('preferences')} />
         )}
       </main>
     </div>

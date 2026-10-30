@@ -15,15 +15,6 @@ describe('profile mappers', () => {
   it('maps editor form data onto the Editor type', () => {
     const editor = toEditor({ ...base, jobTitle: 'News Editor', yearsAtDesk: 4, desks: ['Politics'] });
 
-    expect(editor.user).toEqual({
-      email: 'sarah@newsroom.example',
-      firstName: 'Sarah',
-      lastName: 'Jenkins',
-      shortBio: undefined,
-      longBio: undefined,
-      preferences,
-      roles: [Role.EDITOR],
-    });
     expect(editor).toMatchObject({
       organizationId: 'meridian',
       jobTitle: 'News Editor',
@@ -38,24 +29,52 @@ describe('profile mappers', () => {
     const portfolio = [{ id: 'portfolio-link', type: 'article' as const, title: 'Portfolio', url: 'https://a.co' }];
     const freelancer = toFreelancer({
       ...base,
-      shortBio: 'Climate reporter',
       reportingBeats: ['Climate'],
       workMediums: ['Photo'],
       portfolio,
     });
 
-    expect(freelancer.user.roles).toEqual([Role.USER]);
-    expect(freelancer.user.shortBio).toBe('Climate reporter');
-    expect(freelancer.user.preferences).toEqual(preferences);
     expect(freelancer).toMatchObject({ reportingBeats: ['Climate'], workMediums: ['Photo'], portfolio });
     expect(freelancer.location).toBeUndefined();
     expect(freelancer.rate).toBeUndefined();
     expect(freelancer.communityCovered).toBeUndefined();
   });
 
-  it('picks the mapper for the chosen role', () => {
-    expect(toProfile('editor', base)).toHaveProperty('jobTitle');
-    expect(toProfile('freelancer', base)).toHaveProperty('reportingBeats');
+  it('sends only the record for the selected role', () => {
+    const editorOnly = toProfile(['editor'], base);
+
+    expect(editorOnly.roles).toEqual(['editor']);
+    expect(editorOnly.editor).toBeDefined();
+    expect(editorOnly.freelancer).toBeUndefined();
+
+    const freelancerOnly = toProfile(['freelancer'], base);
+
+    expect(freelancerOnly.roles).toEqual(['freelancer']);
+    expect(freelancerOnly.editor).toBeUndefined();
+    expect(freelancerOnly.freelancer).toBeDefined();
+  });
+
+  it('sends both records when the user works both sides', () => {
+    const both = toProfile(['editor', 'freelancer'], base);
+
+    expect(both.roles).toEqual(['editor', 'freelancer']);
+    expect(both.editor).toBeDefined();
+    expect(both.freelancer).toBeDefined();
+    expect(both.user.roles).toEqual([Role.EDITOR, Role.FREELANCER]);
+  });
+
+  it('keeps the shared user fields on a single record', () => {
+    const { user } = toProfile(['editor', 'freelancer'], { ...base, shortBio: ' Climate reporter ' });
+
+    expect(user).toEqual({
+      email: 'sarah@newsroom.example',
+      firstName: 'Sarah',
+      lastName: 'Jenkins',
+      shortBio: 'Climate reporter',
+      longBio: undefined,
+      preferences,
+      roles: [Role.EDITOR, Role.FREELANCER],
+    });
   });
 
   it('collects the editor pitch preferences and availability', () => {
@@ -74,7 +93,6 @@ describe('profile mappers', () => {
       location: ' Chicago, IL ',
     });
 
-    expect(editor.user.longBio).toBe('I commission accountability work.');
     expect(editor.location).toBe('Chicago, IL');
     expect(editor.pitchPreferences).toEqual({
       preferredPitchFormat: 'Email pitch',
@@ -106,13 +124,13 @@ describe('profile mappers', () => {
   });
 
   it('stores the notification and display preferences on the user', () => {
-    const user = toProfile('freelancer', {
+    const { user } = toProfile(['freelancer'], {
       ...base,
       theme: 'dark',
       language: 'Spanish',
       emailNotifications: false,
       pushNotifications: true,
-    }).user;
+    });
 
     expect(user.preferences).toEqual({
       theme: 'dark',

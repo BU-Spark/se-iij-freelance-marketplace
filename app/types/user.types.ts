@@ -31,6 +31,7 @@ export enum Role {
   ADMIN = 'ADMIN',
   USER = 'USER',
   EDITOR = 'EDITOR',
+  FREELANCER = 'FREELANCER',
 }
 
 export interface Editor {
