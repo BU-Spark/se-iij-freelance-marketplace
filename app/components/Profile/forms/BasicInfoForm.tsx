@@ -3,7 +3,7 @@
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import InfoCard from '../../InfoCard/InfoCard';
 import Field from '../../Field/Field';
-import FormActions from '../forms/FormActions';
+import FormActions from './FormActions';
 import type { BasicInfo } from '../../../types/profile.types';
 import styles from '../Profile.module.css';
 

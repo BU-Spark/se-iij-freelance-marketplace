@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import SidePanel from '../SidePanel/SidePanel';
-import BasicInfoCard from './forms/BasicInfoCard';
-import BasicInfoForm from './cards/BasicInfoForm';
+import BasicInfoCard from './cards/BasicInfoCard';
+import BasicInfoForm from './forms/BasicInfoForm';
 import RoleCard from './cards/RoleCard';
 import RoleForm from './forms/RoleForm';
 import AddRoleButton from './cards/AddRoleButton';
