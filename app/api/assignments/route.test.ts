@@ -15,7 +15,7 @@ type FakeClient = { query: jest.Mock; release: jest.Mock };
 
 type FakeClientOptions = {
   /** Row returned by the users/editors lookup, or undefined when onboarding is incomplete */
-  author?: { id: string; role: string; organization_id: string | null };
+  author?: { id: string; roles: string[]; organization_id: string | null };
   /** Error thrown by the INSERT, e.g. a unique violation */
   insertError?: unknown;
 };
@@ -52,7 +52,7 @@ const post = (body: unknown) =>
     body: JSON.stringify(body),
   });
 
-const editor = { id: 'user-1', role: 'editor', organization_id: 'org-1' };
+const editor = { id: 'user-1', roles: ['editor'], organization_id: 'org-1' };
 
 describe('POST /api/assignments', () => {
   beforeEach(() => {
@@ -95,7 +95,7 @@ describe('POST /api/assignments', () => {
 
   it('only lets editors create assignments', async () => {
     authMock.mockResolvedValue({ userId: 'clerk-1' });
-    const client = makeClient({ author: { id: 'user-2', role: 'freelancer', organization_id: null } });
+    const client = makeClient({ author: { id: 'user-2', roles: ['freelancer'], organization_id: null } });
     connectMock.mockResolvedValue(client);
 
     const response = await POST(post(validAssignment));

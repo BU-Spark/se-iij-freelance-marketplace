@@ -6,13 +6,15 @@ CREATE TABLE IF NOT EXISTS users (
   email TEXT NOT NULL,
   first_name TEXT NOT NULL,
   last_name TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('editor', 'freelancer')),
+  -- A person can work both sides of the desk, so roles is a set, not a single value
+  roles TEXT[] NOT NULL DEFAULT '{}',
   short_bio TEXT,
   long_bio TEXT,
   -- Notification + display preferences collected during onboarding
   preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT users_roles_allowed CHECK (roles <@ ARRAY['editor', 'freelancer']::TEXT[])
 );
 
 CREATE TABLE IF NOT EXISTS editors (
@@ -71,3 +73,31 @@ CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (statu
 ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;
+
+-- users.role (single value) became users.roles (array) so one person can be both
+ALTER TABLE users ADD COLUMN IF NOT EXISTS roles TEXT[] NOT NULL DEFAULT '{}';
+
+DO $$
+BEGIN
+  -- Carry the old single role over, then retire the column
+  IF EXISTS (
+    SELECT 1
+      FROM information_schema.columns
+     WHERE table_schema = current_schema()
+       AND table_name = 'users'
+       AND column_name = 'role'
+  ) THEN
+    UPDATE users
+       SET roles = ARRAY[role]::TEXT[]
+     WHERE roles = '{}'::TEXT[];
+
+    ALTER TABLE users DROP COLUMN role;
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'users_roles_allowed'
+  ) THEN
+    ALTER TABLE users
+      ADD CONSTRAINT users_roles_allowed CHECK (roles <@ ARRAY['editor', 'freelancer']::TEXT[]);
+  END IF;
+END $$;

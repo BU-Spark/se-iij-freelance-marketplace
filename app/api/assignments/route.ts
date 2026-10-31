@@ -59,8 +59,8 @@ export async function POST(request: Request) {
     await connection.query('BEGIN');
 
     // The author and their organization come from the session, never from the request body.
-    const authorResult = await connection.query<{ id: string; role: string; organization_id: string | null }>(
-      `SELECT u.id, u.role, e.organization_id
+    const authorResult = await connection.query<{ id: string; roles: string[]; organization_id: string | null }>(
+      `SELECT u.id, u.roles, e.organization_id
          FROM users u
          LEFT JOIN editors e ON e.user_id = u.id
         WHERE u.clerk_id = $1`,
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (author.role !== 'editor') {
+    if (!author.roles?.includes('editor')) {
       await connection.query('ROLLBACK');
       return NextResponse.json({ error: 'Only editors can create assignments.' }, { status: 403 });
     }
