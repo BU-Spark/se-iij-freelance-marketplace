@@ -1,5 +1,6 @@
 import styles from './PreviewCard.module.css';
 import { CHIP_COLORS } from '../../onboarding/constants';
+import { formatRate, summarizeAvailability } from '../../utils/profile.utils';
 import type { OnboardingRole, OrgOption, ProfileData } from '../../types/onboarding.types';
 type PreviewCardProps = {
   role: OnboardingRole;
@@ -16,6 +17,8 @@ export default function PreviewCard({ role, data, org }: PreviewCardProps) {
       .join('') || '?';
 
   const tags = role === 'editor' ? data.desks : [...data.reportingBeats, ...data.workMediums];
+  const rate = role === 'freelancer' ? formatRate(data.rateAmount, data.rateUnit) : undefined;
+  const availability = summarizeAvailability(data);
 
   return (
     <div className={styles.preview}>
@@ -41,6 +44,23 @@ export default function PreviewCard({ role, data, org }: PreviewCardProps) {
           <em>{role === 'editor' ? 'Desks appear here' : 'Beats & mediums appear here'}</em>
         )}
       </div>
+
+      {(rate || availability) && (
+        <dl className={styles.previewFacts}>
+          {rate && (
+            <>
+              <dt>Rate</dt>
+              <dd>{rate}</dd>
+            </>
+          )}
+          {availability && (
+            <>
+              <dt>Availability</dt>
+              <dd>{availability}</dd>
+            </>
+          )}
+        </dl>
+      )}
     </div>
   );
 }

@@ -1,8 +1,15 @@
 import { EMPTY } from '../onboarding/constants';
+import type { ProfileData } from '../types/onboarding.types';
 import { Role } from '../types/user.types';
-import { toEditor, toFreelancer, toProfile } from './profile.utils';
+import { formatRate, summarizeAvailability, toEditor, toFreelancer, toProfile } from './profile.utils';
 
-const base = { ...EMPTY, firstName: ' Sarah ', lastName: 'Jenkins', email: 'sarah@newsroom.example' };
+const base: ProfileData = { ...EMPTY, firstName: ' Sarah ', lastName: 'Jenkins', email: 'sarah@newsroom.example' };
+
+const preferences = {
+  theme: 'system',
+  language: 'English',
+  notifications: { email: true, push: false },
+};
 
 describe('profile mappers', () => {
   it('maps editor form data onto the Editor type', () => {
@@ -13,6 +20,8 @@ describe('profile mappers', () => {
       firstName: 'Sarah',
       lastName: 'Jenkins',
       shortBio: undefined,
+      longBio: undefined,
+      preferences,
       roles: [Role.EDITOR],
     });
     expect(editor).toMatchObject({
@@ -21,6 +30,8 @@ describe('profile mappers', () => {
       yearsAtDesk: 4,
       desks: ['Politics'],
     });
+    expect(editor.location).toBeUndefined();
+    expect(editor.availability).toBeUndefined();
   });
 
   it('maps freelancer form data onto the Freelancer type', () => {
@@ -35,12 +46,111 @@ describe('profile mappers', () => {
 
     expect(freelancer.user.roles).toEqual([Role.USER]);
     expect(freelancer.user.shortBio).toBe('Climate reporter');
+    expect(freelancer.user.preferences).toEqual(preferences);
     expect(freelancer).toMatchObject({ reportingBeats: ['Climate'], workMediums: ['Photo'], portfolio });
     expect(freelancer.location).toBeUndefined();
+    expect(freelancer.rate).toBeUndefined();
+    expect(freelancer.communityCovered).toBeUndefined();
   });
 
   it('picks the mapper for the chosen role', () => {
     expect(toProfile('editor', base)).toHaveProperty('jobTitle');
     expect(toProfile('freelancer', base)).toHaveProperty('reportingBeats');
+  });
+
+  it('collects the editor pitch preferences and availability', () => {
+    const editor = toEditor({
+      ...base,
+      longBio: ' I commission accountability work. ',
+      preferredPitchFormat: 'Email pitch',
+      averageResponseTime: 4,
+      interestedTopics: ['Investigations'],
+      editorialPreferences: ['Long-form only'],
+      lookingFor: ['Accountability reporting'],
+      availableDays: ['monday', 'friday'],
+      workdayStart: '10:00',
+      workdayEnd: '18:00',
+      timezone: 'America/New_York',
+      location: ' Chicago, IL ',
+    });
+
+    expect(editor.user.longBio).toBe('I commission accountability work.');
+    expect(editor.location).toBe('Chicago, IL');
+    expect(editor.pitchPreferences).toEqual({
+      preferredPitchFormat: 'Email pitch',
+      averageResponseTime: 4,
+      interestedTopics: ['Investigations'],
+      editorialPreferences: ['Long-form only'],
+      lookingFor: ['Accountability reporting'],
+    });
+    expect(editor.availability).toMatchObject({
+      source: 'manual',
+      timezone: 'America/New_York',
+      days: ['monday', 'friday'],
+      typicalWorkingWindow: { startsAt: '10:00', endsAt: '18:00' },
+    });
+  });
+
+  it('collects the freelancer rate, coverage and beat tags', () => {
+    const freelancer = toFreelancer({
+      ...base,
+      rateAmount: '0.75',
+      rateUnit: 'word',
+      communityCovered: ' South Texas ',
+      beatTags: ['Housing'],
+    });
+
+    expect(freelancer.rate).toBe('$0.75 / word');
+    expect(freelancer.communityCovered).toBe('South Texas');
+    expect(freelancer.beatTags).toEqual(['Housing']);
+  });
+
+  it('stores the notification and display preferences on the user', () => {
+    const user = toProfile('freelancer', {
+      ...base,
+      theme: 'dark',
+      language: 'Spanish',
+      emailNotifications: false,
+      pushNotifications: true,
+    }).user;
+
+    expect(user.preferences).toEqual({
+      theme: 'dark',
+      language: 'Spanish',
+      notifications: { email: false, push: true },
+    });
+  });
+});
+
+describe('formatRate', () => {
+  it('formats word, hour and flat rates', () => {
+    expect(formatRate('0.75', 'word')).toBe('$0.75 / word');
+    expect(formatRate('85', 'hour')).toBe('$85 / hour');
+    expect(formatRate('1200', 'flat')).toBe('$1,200 flat');
+  });
+
+  it('ignores blank and non-numeric amounts', () => {
+    expect(formatRate('', 'word')).toBeUndefined();
+    expect(formatRate('   ', 'hour')).toBeUndefined();
+    expect(formatRate('lots', 'flat')).toBeUndefined();
+  });
+});
+
+describe('summarizeAvailability', () => {
+  it('collapses a Monday–Friday week', () => {
+    expect(
+      summarizeAvailability({
+        ...base,
+        availableDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      })
+    ).toBe('Mon–Fri · 09:00–17:00');
+  });
+
+  it('lists scattered days in week order', () => {
+    expect(summarizeAvailability({ ...base, availableDays: ['friday', 'monday'] })).toBe('Mon, Fri · 09:00–17:00');
+  });
+
+  it('returns nothing when no days are picked', () => {
+    expect(summarizeAvailability(base)).toBeUndefined();
   });
 });
