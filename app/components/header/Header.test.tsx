@@ -44,7 +44,10 @@ it('shows freelancer navigation on direct loads of freelancer pages', () => {
     expect(navigation().queryByRole('link', { name: 'Roster' })).not.toBeInTheDocument();
     expect(navigation().queryByRole('link', { name: /Pitches/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /New Assignment/ })).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Make a Pitch/ })).toBeDisabled();
+    expect(screen.getByRole('link', { name: /Make a Pitch/ })).toHaveAttribute(
+      'href',
+      '/dashboard/freelancer/make-a-pitch'
+    );
   }
 });
 

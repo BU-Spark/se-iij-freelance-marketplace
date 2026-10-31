@@ -62,13 +62,12 @@ export function Header() {
           </div>
         </Link>
       ) : (
-        <button className={styles.newAssignment} type="button" disabled title="Pitch submission is not available yet">
+        <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
           <div>
-            {/* To Do: Replace ! with idea icon */}
-            <span aria-hidden="true">!</span>
+            <span aria-hidden="true">+</span>
             <p>Make a Pitch</p>
           </div>
-        </button>
+        </Link>
       )}
     </header>
   );

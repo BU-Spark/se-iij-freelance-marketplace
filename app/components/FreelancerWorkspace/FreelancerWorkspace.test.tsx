@@ -20,7 +20,10 @@ it('toggles the menu, links personal tasks and profile, and switches workspace',
     '/dashboard/freelancer#active-assignments'
   );
   expect(screen.getByRole('link', { name: /My profile/ })).toHaveAttribute('href', '/dashboard/profile');
-  expect(screen.getByRole('button', { name: /Make a pitch/ })).toBeDisabled();
+  expect(screen.getByRole('link', { name: /Make a pitch/ })).toHaveAttribute(
+    'href',
+    '/dashboard/freelancer/make-a-pitch'
+  );
   fireEvent.click(toggle);
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
   expect(screen.queryByRole('navigation', { name: 'Freelancer menu' })).not.toBeInTheDocument();
