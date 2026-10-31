@@ -23,7 +23,7 @@ export function Header() {
         <IIJLogo size={40} animated={false} showText={false} />
       </div>
       <nav className={styles.navigation} aria-label="Main navigation">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS[role].map((item) => {
           const active = isNavItemActive(pathname, item.href);
           return (
             <Link
