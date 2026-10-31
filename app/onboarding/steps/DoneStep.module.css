@@ -69,6 +69,15 @@
   animation: fadeUp 0.6s 0.3s both;
 }
 
+/* One card per role the user picked */
+.doneCards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+  width: 100%;
+  justify-items: center;
+}
+
 .confetti {
   position: absolute;
   inset: -40px 0 auto 0;

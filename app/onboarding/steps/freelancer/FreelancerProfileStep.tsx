@@ -23,6 +23,8 @@ type FreelancerProfileStepProps = {
   touch: ProfileTouch;
   onBack: () => void;
   onNext: () => void;
+  /** Name, email and location belong to the account, so only the first profile step collects them */
+  showBasics?: boolean;
 };
 
 /** Freelancer step 2: who they are and what they report on */
@@ -53,20 +55,22 @@ export default function FreelancerProfileStep(p: FreelancerProfileStepProps) {
       submitLabel="Continue →"
       onSubmit={p.onNext}
     >
-      <Section title="Basics" color="var(--c-green)">
-        <div className={shared.grid2}>
-          <Field label="First name" error={err('firstName')}>
-            {text('firstName', 'Alex')}
-          </Field>
-          <Field label="Last name" error={err('lastName')}>
-            {text('lastName', 'Rivera')}
-          </Field>
-          <Field label="Email" error={err('email')}>
-            {text('email', 'you@example.com')}
-          </Field>
-          <Field label="Based in">{text('location', 'Boston, MA')}</Field>
-        </div>
-      </Section>
+      {p.showBasics !== false && (
+        <Section title="Basics" color="var(--c-green)">
+          <div className={shared.grid2}>
+            <Field label="First name" error={err('firstName')}>
+              {text('firstName', 'Alex')}
+            </Field>
+            <Field label="Last name" error={err('lastName')}>
+              {text('lastName', 'Rivera')}
+            </Field>
+            <Field label="Email" error={err('email')}>
+              {text('email', 'you@example.com')}
+            </Field>
+            <Field label="Based in">{text('location', 'Boston, MA')}</Field>
+          </div>
+        </Section>
+      )}
 
       <Section title="Beats" hint="What do you cover?" color="var(--c-amber)" error={err('reportingBeats')}>
         <ChipGroup

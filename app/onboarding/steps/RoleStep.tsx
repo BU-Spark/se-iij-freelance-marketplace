@@ -30,34 +30,58 @@ const ROLES: {
   },
 ];
 
-export default function RoleStep({ onPick }: { onPick: (r: OnboardingRole) => void }) {
+type RoleStepProps = {
+  selected: OnboardingRole[];
+  onToggle: (role: OnboardingRole) => void;
+  onNext: () => void;
+  error?: string;
+};
+
+export default function RoleStep({ selected, onToggle, onNext, error }: RoleStepProps) {
   return (
     <section className={`${shared.narrow} ${shared.fadeIn}`}>
       <h1 className={shared.h1}>Welcome aboard</h1>
       <p className={shared.lead}>
-        The assignment desk that connects newsroom editors with the independent journalists who can take the work. Tell
-        us which side you&apos;re on and we&apos;ll build your profile.
+        The assignment desk that connects newsroom editors with the independent journalists who can take the work. Pick
+        the roles you work in — you can choose both.
       </p>
 
       <div className={styles.roleGrid}>
-        {ROLES.map(({ id, title, accent, Icon, desc, cta }) => (
-          <button
-            key={id}
-            className={styles.roleCard}
-            style={{ ['--accent' as string]: accent }}
-            onClick={() => onPick(id)}
-          >
-            <span className={styles.roleIcon}>
-              <Icon />
-            </span>
-            <h2>{title}</h2>
-            <p>{desc}</p>
-            <span className={styles.roleLink}>
-              {cta} <span className={styles.arrow}>→</span>
-            </span>
-          </button>
-        ))}
+        {ROLES.map(({ id, title, accent, Icon, desc, cta }) => {
+          const active = selected.includes(id);
+
+          return (
+            <button
+              key={id}
+              className={styles.roleCard}
+              style={{ ['--accent' as string]: accent }}
+              data-active={active}
+              aria-pressed={active}
+              onClick={() => onToggle(id)}
+            >
+              <span className={styles.roleIcon}>
+                <Icon />
+              </span>
+              <h2>{title}</h2>
+              <p>{desc}</p>
+              <span className={styles.roleLink}>
+                {active ? 'Selected' : cta} <span className={styles.arrow}>{active ? '✓' : '→'}</span>
+              </span>
+            </button>
+          );
+        })}
       </div>
+
+      <div className={shared.actions}>
+        <button className={shared.primaryBtn} onClick={onNext}>
+          Continue →
+        </button>
+      </div>
+      {error && (
+        <p role="alert" className={styles.error}>
+          {error}
+        </p>
+      )}
     </section>
   );
 }

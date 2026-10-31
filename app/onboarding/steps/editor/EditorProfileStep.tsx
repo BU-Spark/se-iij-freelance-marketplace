@@ -24,6 +24,8 @@ type EditorProfileStepProps = {
   addOrg: (org: OrgOption) => void;
   onBack: () => void;
   onNext: () => void;
+  /** Name, email and location belong to the account, so only the first profile step collects them */
+  showBasics?: boolean;
 };
 
 /** Editor step 2: who they are and which newsroom they commission for */
@@ -54,18 +56,25 @@ export default function EditorProfileStep(p: EditorProfileStepProps) {
       submitLabel="Continue →"
       onSubmit={p.onNext}
     >
-      <Section title="Basics" color="var(--c-green)">
+      {p.showBasics !== false && (
+        <Section title="Basics" color="var(--c-green)">
+          <div className={shared.grid2}>
+            <Field label="First name" error={err('firstName')}>
+              {text('firstName', 'Sarah')}
+            </Field>
+            <Field label="Last name" error={err('lastName')}>
+              {text('lastName', 'Jenkins')}
+            </Field>
+            <Field label="Work email" error={err('email')}>
+              {text('email', 'you@newsroom.example')}
+            </Field>
+            <Field label="Based in">{text('location', 'Boston, MA')}</Field>
+          </div>
+        </Section>
+      )}
+
+      <Section title="Your desk" color="var(--c-blue)">
         <div className={shared.grid2}>
-          <Field label="First name" error={err('firstName')}>
-            {text('firstName', 'Sarah')}
-          </Field>
-          <Field label="Last name" error={err('lastName')}>
-            {text('lastName', 'Jenkins')}
-          </Field>
-          <Field label="Work email" error={err('email')}>
-            {text('email', 'you@newsroom.example')}
-          </Field>
-          <Field label="Based in">{text('location', 'Boston, MA')}</Field>
           <Field label="Position / title" error={err('jobTitle')}>
             {text('jobTitle', 'News Editor')}
           </Field>

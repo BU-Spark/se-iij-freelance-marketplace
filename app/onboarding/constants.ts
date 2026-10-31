@@ -57,22 +57,6 @@ export const WEEKDAYS: { id: Weekday; label: string; short: string }[] = [
   { id: 'sunday', label: 'Sunday', short: 'Sun' },
 ];
 
-/** Fields edited on the profile step; used to send the user back when submitting from step 3 */
-export const PROFILE_STEP_FIELDS: (keyof ProfileData)[] = [
-  'firstName',
-  'lastName',
-  'email',
-  'jobTitle',
-  'yearsAtDesk',
-  'organizationId',
-  'desks',
-  'location',
-  'reportingBeats',
-  'workMediums',
-  'tools',
-  'portfolio',
-];
-
 // Each chip gets a logo color, cycling through the fan
 export const CHIP_COLORS = [
   'var(--c-green)',

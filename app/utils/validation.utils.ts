@@ -1,4 +1,4 @@
-import type { OnboardingRole, ProfileData, ProfileErrors } from '../types/onboarding.types';
+import type { OnboardingRole, ProfileData, ProfileErrors, Step } from '../types/onboarding.types';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_PATTERN = /^https?:\/\/\S+\.\S+/;
@@ -44,7 +44,35 @@ function validatePreferences(d: ProfileData): ProfileErrors {
   return e;
 }
 
-export function validateProfile(role: OnboardingRole, d: ProfileData): ProfileErrors {
-  const roleErrors = role === 'editor' ? validateEditor(d) : validateFreelancer(d);
-  return { ...validateBasics(d), ...roleErrors, ...validatePreferences(d) };
+export const ROLE_REQUIRED = 'Pick at least one role';
+
+export function validateRoleSelection(roles: OnboardingRole[]): ProfileErrors {
+  return roles.length > 0 ? {} : { roles: ROLE_REQUIRED };
+}
+
+/** Every rule that applies to the roles the user picked; used on the final submit */
+export function validateProfile(roles: OnboardingRole[], d: ProfileData): ProfileErrors {
+  return {
+    ...validateBasics(d),
+    ...(roles.includes('editor') ? validateEditor(d) : {}),
+    ...(roles.includes('freelancer') ? validateFreelancer(d) : {}),
+    ...validatePreferences(d),
+  };
+}
+
+/** Only what the current step renders, so Continue is never blocked by another role's blanks */
+export function validateStep(step: Step, roles: OnboardingRole[], d: ProfileData): ProfileErrors {
+  switch (step) {
+    case 'role':
+      return validateRoleSelection(roles);
+    case 'editor-profile':
+      return { ...validateBasics(d), ...validateEditor(d) };
+    case 'freelancer-profile':
+      return { ...validateBasics(d), ...validateFreelancer(d) };
+    case 'editor-preferences':
+    case 'freelancer-preferences':
+      return validatePreferences(d);
+    case 'done':
+      return {};
+  }
 }

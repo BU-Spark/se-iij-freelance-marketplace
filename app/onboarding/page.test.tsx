@@ -9,7 +9,7 @@ beforeAll(() => {
 beforeEach(() => {
   global.fetch = jest.fn().mockResolvedValue({
     ok: true,
-    json: async () => ({ saved: true }),
+    json: async () => ({ saved: true, roles: ['editor'] }),
   });
 });
 
@@ -21,8 +21,38 @@ const type = (label: RegExp, value: string) => {
   fireEvent.blur(input);
 };
 
+const pickRole = (label: RegExp) => fireEvent.click(screen.getByRole('button', { name: label }));
 const next = () => fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 const submit = () => fireEvent.click(screen.getByRole('button', { name: /create profile/i }));
+
+/** Picks roles on step 1 and moves on to the first profile step */
+const startAs = (...labels: RegExp[]) => {
+  labels.forEach(pickRole);
+  next();
+};
+
+/** The first profile step also collects the shared account fields */
+const fillEditorStep = () => {
+  type(/first name/i, 'Sarah');
+  type(/last name/i, 'Jenkins');
+  type(/work email/i, 'sarah@newsroom.example');
+  type(/position \/ title/i, 'News Editor');
+  fireEvent.click(chip('Politics'));
+};
+
+const fillFreelancerStep = () => {
+  type(/first name/i, 'Alex');
+  type(/last name/i, 'Rivera');
+  type(/^email/i, 'alex@example.com');
+  fireEvent.click(chip('Climate'));
+  fireEvent.click(chip('Photo'));
+};
+
+/** On the second profile step the shared account fields are already collected */
+const fillFreelancerRoleOnly = () => {
+  fireEvent.click(chip('Climate'));
+  fireEvent.click(chip('Photo'));
+};
 
 /** The JSON body posted to /api/onboarding by the most recent submit */
 const postedPayload = () => {
@@ -40,17 +70,35 @@ describe('Onboarding page', () => {
       expect(screen.getByRole('heading', { level: 1, name: /welcome aboard/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /i'm an editor/i })).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /i'm a freelancer/i })).toBeInTheDocument();
-      expect(screen.getByText(/step 1 of 3/i)).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: /continue/i })).toBeInTheDocument();
     });
 
-    it('moves to the editor profile form after picking a role', () => {
-      fireEvent.click(screen.getByRole('button', { name: /i'm an editor/i }));
+    it('requires at least one role before continuing', () => {
+      next();
+      expect(screen.getByRole('alert')).toHaveTextContent(/pick at least one role/i);
+      expect(screen.getByRole('heading', { level: 1, name: /welcome aboard/i })).toBeInTheDocument();
+    });
+
+    it('lets the user tick both roles', () => {
+      pickRole(/i'm an editor/i);
+      pickRole(/i'm a freelancer/i);
+
+      expect(screen.getByRole('button', { name: /i'm an editor/i })).toHaveAttribute('aria-pressed', 'true');
+      expect(screen.getByRole('button', { name: /i'm a freelancer/i })).toHaveAttribute('aria-pressed', 'true');
+      // one role -> 3 steps, both roles -> 5 steps
+      expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument();
+    });
+
+    it('moves to the editor profile form when only the editor role is picked', () => {
+      startAs(/i'm an editor/i);
+
       expect(screen.getByRole('heading', { level: 1, name: /your newsroom/i })).toBeInTheDocument();
       expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument();
     });
 
-    it('moves to the freelancer profile form after picking a role', () => {
-      fireEvent.click(screen.getByRole('button', { name: /i'm a freelancer/i }));
+    it('moves to the freelancer profile form when only the freelancer role is picked', () => {
+      startAs(/i'm a freelancer/i);
+
       expect(screen.getByRole('heading', { level: 1, name: /your reporting/i })).toBeInTheDocument();
       expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument();
     });
@@ -58,7 +106,7 @@ describe('Onboarding page', () => {
 
   describe('Step 2: editor profile', () => {
     beforeEach(() => {
-      fireEvent.click(screen.getByRole('button', { name: /i'm an editor/i }));
+      startAs(/i'm an editor/i);
     });
 
     it('shows editor-only fields', () => {
@@ -95,7 +143,7 @@ describe('Onboarding page', () => {
       expect(screen.getByText(/news editor · the meridian post/i)).toBeInTheDocument();
     });
 
-    it('can go back to change role', () => {
+    it('can go back to the role picker', () => {
       fireEvent.click(screen.getByRole('button', { name: /change role/i }));
       expect(screen.getByRole('heading', { level: 1, name: /welcome aboard/i })).toBeInTheDocument();
     });
@@ -109,11 +157,7 @@ describe('Onboarding page', () => {
     });
 
     it('reaches the success screen with valid details', async () => {
-      type(/first name/i, 'Sarah');
-      type(/last name/i, 'Jenkins');
-      type(/work email/i, 'sarah@newsroom.example');
-      type(/position \/ title/i, 'News Editor');
-      fireEvent.click(chip('Politics'));
+      fillEditorStep();
       next();
       submit();
 
@@ -127,7 +171,7 @@ describe('Onboarding page', () => {
 
   describe('Step 2: freelancer profile', () => {
     beforeEach(() => {
-      fireEvent.click(screen.getByRole('button', { name: /i'm a freelancer/i }));
+      startAs(/i'm a freelancer/i);
     });
 
     it('shows freelancer-only fields', () => {
@@ -151,11 +195,7 @@ describe('Onboarding page', () => {
     });
 
     it('reaches the success screen with valid details', async () => {
-      type(/first name/i, 'Alex');
-      type(/last name/i, 'Rivera');
-      type(/^email/i, 'alex@example.com');
-      fireEvent.click(chip('Climate'));
-      fireEvent.click(chip('Photo'));
+      fillFreelancerStep();
       next();
       submit();
 
@@ -173,12 +213,8 @@ describe('Onboarding page', () => {
   describe('Step 3: preferences', () => {
     describe('editor', () => {
       beforeEach(() => {
-        fireEvent.click(screen.getByRole('button', { name: /i'm an editor/i }));
-        type(/first name/i, 'Sarah');
-        type(/last name/i, 'Jenkins');
-        type(/work email/i, 'sarah@newsroom.example');
-        type(/position \/ title/i, 'News Editor');
-        fireEvent.click(chip('Politics'));
+        startAs(/i'm an editor/i);
+        fillEditorStep();
         next();
       });
 
@@ -201,18 +237,20 @@ describe('Onboarding page', () => {
         await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
 
         const body = postedPayload();
-        expect(body.role).toBe('editor');
-        expect(body.profile.user.longBio).toBe('I commission accountability work.');
-        expect(body.profile.user.preferences).toEqual({
+        expect(body.roles).toEqual(['editor']);
+        expect(body.freelancer).toBeUndefined();
+        expect(body.user.roles).toEqual(['EDITOR']);
+        expect(body.user.longBio).toBe('I commission accountability work.');
+        expect(body.user.preferences).toEqual({
           theme: 'system',
           language: 'English',
           notifications: { email: true, push: false },
         });
-        expect(body.profile.pitchPreferences).toMatchObject({
+        expect(body.editor.pitchPreferences).toMatchObject({
           preferredPitchFormat: 'Email pitch',
           averageResponseTime: 3,
         });
-        expect(body.profile.availability).toMatchObject({
+        expect(body.editor.availability).toMatchObject({
           source: 'manual',
           days: ['monday'],
           typicalWorkingWindow: { startsAt: '09:00', endsAt: '17:00' },
@@ -227,12 +265,8 @@ describe('Onboarding page', () => {
 
     describe('freelancer', () => {
       beforeEach(() => {
-        fireEvent.click(screen.getByRole('button', { name: /i'm a freelancer/i }));
-        type(/first name/i, 'Alex');
-        type(/last name/i, 'Rivera');
-        type(/^email/i, 'alex@example.com');
-        fireEvent.click(chip('Climate'));
-        fireEvent.click(chip('Photo'));
+        startAs(/i'm a freelancer/i);
+        fillFreelancerStep();
         next();
       });
 
@@ -270,10 +304,69 @@ describe('Onboarding page', () => {
         await screen.findByRole('heading', { level: 1, name: /you're all set, alex/i }, { timeout: 2000 });
 
         const body = postedPayload();
-        expect(body.profile.rate).toBe('$0.75 / word');
-        expect(body.profile.communityCovered).toBe('South Texas');
-        expect(body.profile.availability).toMatchObject({ days: ['tuesday'] });
+        expect(body.roles).toEqual(['freelancer']);
+        expect(body.editor).toBeUndefined();
+        expect(body.freelancer.rate).toBe('$0.75 / word');
+        expect(body.freelancer.communityCovered).toBe('South Texas');
+        expect(body.freelancer.availability).toMatchObject({ days: ['tuesday'] });
       });
+    });
+  });
+
+  describe('both roles', () => {
+    let fetchMock: jest.Mock;
+
+    beforeEach(() => {
+      fetchMock = global.fetch as jest.Mock;
+      startAs(/i'm an editor/i, /i'm a freelancer/i);
+    });
+
+    it('walks the editor steps before the freelancer steps', () => {
+      expect(screen.getByText(/step 2 of 5 — your newsroom/i)).toBeInTheDocument();
+
+      fillEditorStep();
+      next();
+      expect(screen.getByText(/step 3 of 5 — how you work/i)).toBeInTheDocument();
+
+      next();
+      expect(screen.getByText(/step 4 of 5 — your reporting/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /your reporting/i })).toBeInTheDocument();
+      // the shared account fields belong to the first profile step only
+      expect(screen.queryByLabelText(/first name/i)).not.toBeInTheDocument();
+      expect(screen.queryByLabelText(/^email/i)).not.toBeInTheDocument();
+
+      fillFreelancerRoleOnly();
+      next();
+      expect(screen.getByText(/step 5 of 5 — rates & availability/i)).toBeInTheDocument();
+    });
+
+    it('submits both records with both roles', async () => {
+      fillEditorStep();
+      next();
+      next();
+      fillFreelancerRoleOnly();
+      next();
+      submit();
+
+      await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const body = postedPayload();
+      expect(body.roles).toEqual(['editor', 'freelancer']);
+      expect(body.user.roles).toEqual(['EDITOR', 'FREELANCER']);
+      // the second role must not overwrite the shared details
+      expect(body.user.firstName).toBe('Sarah');
+      expect(body.editor.jobTitle).toBe('News Editor');
+      expect(body.freelancer.reportingBeats).toEqual(['Climate']);
+      expect(screen.getByText(/both profiles are live/i)).toBeInTheDocument();
+    });
+
+    it('drops a role from the flow when it is unticked again', () => {
+      fireEvent.click(screen.getByRole('button', { name: /change role/i }));
+      pickRole(/i'm a freelancer/i);
+      next();
+
+      expect(screen.getByText(/step 2 of 3 — your newsroom/i)).toBeInTheDocument();
     });
   });
 });
