@@ -140,6 +140,14 @@ Clerk user and updates the profile if onboarding is submitted again. The onboard
 tables are `users`, `editors`, and `freelancers`, matching the domain models in
 `app/types/user.types.ts`.
 
+Onboarding lets a user pick one role or both. Each selected role gets a profile and
+a preferences step, so the flow is three steps for one role and five for both, and
+the shared account fields (name, email, location) are collected once on the first
+profile step. `users.roles` holds the set, with one row per role in `editors` and
+`freelancers`; a role that is unticked later keeps its row. `db/schema.sql` is
+idempotent, so re-running `npm run db:migrate` migrates a `users.role` column into
+`users.roles` on an existing database.
+
 From a Railway service shell, run:
 
 ```bash
