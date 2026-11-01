@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { ClerkProvider } from '@clerk/nextjs';
 import { DM_Serif_Display, Inter } from 'next/font/google';
 import './globals.css';
+import { ToastProvider } from './components/Toast/ToastProvider';
 
 const serif = DM_Serif_Display({
   subsets: ['latin'],
@@ -23,7 +24,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${serif.variable} ${sans.variable}`}>
       <body>
-        <ClerkProvider>{children}</ClerkProvider>
+        <ClerkProvider>
+          <ToastProvider>{children}</ToastProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

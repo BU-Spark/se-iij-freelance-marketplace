@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ProfilePanel from './ProfilePanel';
 import { MOCK_PROFILE } from './constants';
 import type { BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
+import { useToast } from '../Toast/ToastProvider';
 type ProfileFromUrlProps = {
   closeHref: string;
 };
@@ -13,17 +14,26 @@ type ProfileFromUrlProps = {
 export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
   const params = useSearchParams();
   const router = useRouter();
+  const { showToast } = useToast();
+
   // TODO: load the signed-in user's profile from the API, and save added roles
   const [profile, setProfile] = useState(MOCK_PROFILE);
 
   if (params.get('panel') !== 'profile') return null;
 
   // adds an empty card for the new role, to be filled in when editing exists
-  const addRole = (role: ProfileRole) =>
+  const addRole = (role: ProfileRole) => {
     setProfile((p) => ({ ...p, roles: [...p.roles, { role, bio: '', facts: {} }] }));
-  const saveBasic = (basic: BasicInfo) => setProfile((p) => ({ ...p, basic }));
-  const saveRole = (details: RoleDetails) =>
+    showToast(`${role === 'editor' ? 'Editor' : 'Freelancer'} role added`);
+  };
+  const saveBasic = (basic: BasicInfo) => {
+    setProfile((p) => ({ ...p, basic }));
+    showToast('Profile saved');
+  };
+  const saveRole = (details: RoleDetails) => {
     setProfile((p) => ({ ...p, roles: p.roles.map((r) => (r.role === details.role ? details : r)) }));
+    showToast('Role details saved');
+  };
 
   return (
     <ProfilePanel
