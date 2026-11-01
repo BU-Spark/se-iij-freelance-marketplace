@@ -21,3 +21,6 @@ export { default as RosterCard } from './RosterCard/RosterCard';
 export { default as AssignmentCard } from './AssignmentCard/AssignmentCard';
 export { default as NewAssignmentDrawer } from './NewAssignmentDrawer/NewAssignmentDrawer';
 export { default as NewAssignmentFromUrl } from './NewAssignmentDrawer/NewAssignmentFromUrl';
+export { default as SidePanel } from './SidePanel/SidePanel';
+export { default as InfoCard } from './InfoCard/InfoCard';
+export { default as DetailList } from './DetailList/DetailList';
