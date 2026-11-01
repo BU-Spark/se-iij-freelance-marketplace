@@ -161,9 +161,11 @@ computer.
 
 ## Profile photo uploads
 
-Profile photos live in the project's private S3 bucket. `lib/s3.ts` wraps the S3
-client, stores objects under `photos/<clerk user id>/`, and signs a short-lived GET
-URL whenever a photo is shown, so nothing in the bucket is publicly readable.
+Profile photos live in the project's private S3 bucket. The browser posts a file to
+`POST /api/uploads/photo`, which validates it (JPEG, PNG or WebP, 5 MB maximum, and
+the bytes must match the declared type). `lib/s3.ts` stores the object under
+`photos/<clerk user id>/` and signs a short-lived GET URL whenever a photo is shown,
+so nothing in the bucket is publicly readable.
 
 Photos are uploaded to a Railway bucket (`user-images`). Wire its S3-compatible
 credentials to the app service:
