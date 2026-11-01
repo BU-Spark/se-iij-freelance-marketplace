@@ -27,6 +27,11 @@ it('uses the team profile panel and toggles the freelancer menu', () => {
   fireEvent.click(screen.getByRole('button', { name: 'Toggle freelancer menu' }));
   expect(screen.queryByRole('navigation', { name: 'Freelancer menu' })).not.toBeInTheDocument();
   expect(screen.getByText('Task content')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Toggle freelancer menu' }));
+  expect(screen.getByRole('link', { name: 'Make a pitch' })).toHaveAttribute(
+    'href',
+    '/dashboard/freelancer/make-a-pitch'
+  );
   fireEvent.change(screen.getByLabelText('Workspace role'), { target: { value: 'editor' } });
   expect(mockPush).toHaveBeenCalledWith('/dashboard');
 });

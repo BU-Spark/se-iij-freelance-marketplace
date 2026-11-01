@@ -14,9 +14,9 @@ export function FreelancerSidebar({ id, onNavigate }: FreelancerSidebarProps) {
         <Link href="/dashboard/freelancer#active-assignments" onClick={onNavigate}>
           My assignments
         </Link>
-        <button type="button" disabled title="Pitch submission is not available yet">
-          Make a pitch <small>Coming soon</small>
-        </button>
+        <Link href="/dashboard/freelancer/make-a-pitch" onClick={onNavigate}>
+          Make a pitch
+        </Link>
       </nav>
       <div className={styles.profile}>
         <ProfileButton />

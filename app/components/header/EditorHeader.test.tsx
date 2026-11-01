@@ -43,7 +43,7 @@ describe('EditorHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
     await userEvent.click(screen.getByRole('radio', { name: /freelancer/i }));
 
-    expect(screen.getByRole('button', { name: /make a pitch/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /make a pitch/i })).toBeInTheDocument();
     expect(mockPush).toHaveBeenCalledWith('/dashboard/freelancer');
   });
 

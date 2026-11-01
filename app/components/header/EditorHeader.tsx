@@ -50,11 +50,9 @@ export function EditorHeader() {
             New Assignment
           </Link>
         ) : (
-          <button className={styles.newAssignment} type="button">
-            {/* To Do: Replace ! with idea icon */}
-            <span aria-hidden="true">!</span>
+          <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
             Make a Pitch
-          </button>
+          </Link>
         )}
 
         {/* avatar that opens My profile (?panel=profile) */}
