@@ -40,4 +40,59 @@ describe('ProfilePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close My profile' }));
     expect(onClose).toHaveBeenCalled();
   });
+
+  it('has no Edit buttons when it cannot save', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.queryByRole('button', { name: /^edit/i })).not.toBeInTheDocument();
+  });
+
+  it('edits and saves the basic info', () => {
+    const onSaveBasic = jest.fn();
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
+    fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Manchester, UK' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSaveBasic).toHaveBeenCalledWith({ ...MOCK_PROFILE.basic, location: 'Manchester, UK' });
+    // back to the normal card
+    expect(screen.getByRole('button', { name: 'Edit basic info' })).toBeInTheDocument();
+  });
+
+  it('does not save basic info without a first name', () => {
+    const onSaveBasic = jest.fn();
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
+    fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(screen.getByText('Add your first name.')).toBeInTheDocument();
+    expect(onSaveBasic).not.toHaveBeenCalled();
+  });
+
+  it('cancelling a role edit changes nothing', () => {
+    const onSaveRole = jest.fn();
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={onSaveRole} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Freelancer details' }));
+    fireEvent.change(screen.getByLabelText('Bio'), { target: { value: 'New bio' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(onSaveRole).not.toHaveBeenCalled();
+    expect(screen.getByText(MOCK_PROFILE.roles[0].bio)).toBeInTheDocument();
+  });
+
+  it('saves a role with its own fields', () => {
+    const onSaveRole = jest.fn();
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={onSaveRole} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
+    fireEvent.change(screen.getByLabelText('Desk'), { target: { value: 'Business' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    expect(onSaveRole).toHaveBeenCalledWith(
+      expect.objectContaining({ role: 'editor', facts: expect.objectContaining({ desk: 'Business' }) })
+    );
+  });
 });
