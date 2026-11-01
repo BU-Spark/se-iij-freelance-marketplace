@@ -2,3 +2,7 @@ export { TaskCard } from './TaskCard';
 export type { TaskCardProps } from './TaskCard';
 export { ActiveAssignments } from './ActiveAssignments';
 export type { ActiveAssignmentsProps } from './ActiveAssignments';
+export { TaskSummary } from './TaskSummary';
+export type { TaskSummaryProps } from './TaskSummary';
+export { TaskFilters } from './TaskFilters';
+export type { TaskFiltersProps } from './TaskFilters';
