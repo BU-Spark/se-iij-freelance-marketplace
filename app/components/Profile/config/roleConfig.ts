@@ -1,4 +1,4 @@
-import type { ProfileRole } from '../../types/profile.types';
+import type { ProfileRole } from '../../../types/profile.types';
 
 type RoleConfig = {
   label: string;

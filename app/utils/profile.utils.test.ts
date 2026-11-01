@@ -173,7 +173,7 @@ describe('summarizeAvailability', () => {
   });
 });
 import { fullName, missingRoles } from './profile.utils';
-import { MOCK_PROFILE } from '../components/Profile/constants';
+import { MOCK_PROFILE } from '../components/Profile/config/constants';
 
 describe('profile helpers', () => {
   it('joins first and last name', () => {

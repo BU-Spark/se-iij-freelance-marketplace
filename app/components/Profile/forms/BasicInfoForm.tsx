@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, type ChangeEvent, type FormEvent } from 'react';
-import InfoCard from '../InfoCard/InfoCard';
-import Field from '../Field/Field';
+import InfoCard from '../../InfoCard/InfoCard';
+import Field from '../../Field/Field';
 import FormActions from './FormActions';
-import type { BasicInfo } from '../../types/profile.types';
-import styles from './Profile.module.css';
+import type { BasicInfo } from '../../../types/profile.types';
+import styles from '../Profile.module.css';
 
 type BasicInfoFormProps = {
   basic: BasicInfo;

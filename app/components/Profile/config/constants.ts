@@ -1,4 +1,4 @@
-import type { AccountProfile } from '../../types/profile.types';
+import type { AccountProfile } from '../../../types/profile.types';
 
 // TODO: replace with the signed-in user's profile from the API
 export const MOCK_PROFILE: AccountProfile = {

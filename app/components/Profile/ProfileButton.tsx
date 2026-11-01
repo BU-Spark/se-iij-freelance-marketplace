@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Avatar from '../Avatar/Avatar';
 import ProfileFromUrl from './ProfileFromUrl';
-import { MOCK_PROFILE } from './constants';
+import { MOCK_PROFILE } from './config/constants';
 import { fullName } from '../../utils/profile.utils';
 import styles from './ProfileButton.module.css';
 

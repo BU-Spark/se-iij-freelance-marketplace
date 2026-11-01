@@ -1,9 +1,9 @@
-import InfoCard from '../InfoCard/InfoCard';
-import DetailList from '../DetailList/DetailList';
+import InfoCard from '../../InfoCard/InfoCard';
+import DetailList from '../../DetailList/DetailList';
 import EditButton from './EditButton';
-import { ROLE_CONFIG } from './roleConfig';
-import type { RoleDetails } from '../../types/profile.types';
-import styles from './Profile.module.css';
+import { ROLE_CONFIG } from '../config/roleConfig';
+import type { RoleDetails } from '../../../types/profile.types';
+import styles from '../Profile.module.css';
 
 type RoleCardProps = {
   details: RoleDetails;

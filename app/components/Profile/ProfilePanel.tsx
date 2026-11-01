@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import SidePanel from '../SidePanel/SidePanel';
-import BasicInfoCard from './BasicInfoCard';
-import BasicInfoForm from './BasicInfoForm';
-import RoleCard from './RoleCard';
-import RoleForm from './RoleForm';
-import AddRoleButton from './AddRoleButton';
-import { ALL_ROLES } from './roleConfig';
+import BasicInfoCard from './cards/BasicInfoCard';
+import BasicInfoForm from './forms/BasicInfoForm';
+import RoleCard from './cards/RoleCard';
+import RoleForm from './forms/RoleForm';
+import AddRoleButton from './cards/AddRoleButton';
+import { ALL_ROLES } from './config/roleConfig';
 import { missingRoles } from '../../utils/profile.utils';
 import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
 import styles from './Profile.module.css';
