@@ -1,4 +1,4 @@
-import { EMPTY_ASSIGNMENT, hasErrors, validateAssignment } from './assignment.utils';
+import { createSlug, EMPTY_ASSIGNMENT, hasErrors, makeSeed, slugify, validateAssignment } from './assignment.utils';
 
 const validAssignment = {
   ...EMPTY_ASSIGNMENT,
@@ -36,5 +36,47 @@ describe('validateAssignment', () => {
 
   it('allows an empty deadline', () => {
     expect(validateAssignment({ ...validAssignment, deadline: '' }).deadline).toBeUndefined();
+  });
+});
+
+describe('slugify', () => {
+  it('lowercases and joins words with dashes', () => {
+    expect(slugify('City Council Budget Vote')).toBe('city-council-budget-vote');
+  });
+
+  it('removes symbols and extra spaces', () => {
+    expect(slugify('  Vote: Yes / No?!  ')).toBe('vote-yes-no');
+  });
+
+  it('removes accents', () => {
+    expect(slugify('Café Owners Protest')).toBe('cafe-owners-protest');
+  });
+
+  it('keeps slugs short', () => {
+    expect(slugify('a'.repeat(100)).length).toBeLessThanOrEqual(60);
+  });
+});
+
+describe('makeSeed', () => {
+  it('makes a short lowercase code', () => {
+    expect(makeSeed()).toMatch(/^[a-z0-9]{6}$/);
+  });
+
+  it('is different each time', () => {
+    expect(makeSeed()).not.toBe(makeSeed());
+  });
+});
+
+describe('createSlug', () => {
+  it('adds the seed to the end', () => {
+    expect(createSlug('City Council Vote', 'abc123')).toBe('city-council-vote-abc123');
+  });
+
+  it('falls back when the title has no letters', () => {
+    expect(createSlug('!!!', 'abc123')).toBe('assignment-abc123');
+  });
+
+  it('passes the existing slug validation', () => {
+    expect(validateAssignment({ ...validAssignment, slug: createSlug('City Council Vote') }).slug).toBeUndefined();
   });
 });
