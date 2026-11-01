@@ -161,11 +161,11 @@ computer.
 
 ## Profile photo uploads
 
-Onboarding will collect an optional profile photo; the browser posts the file to
-`POST /api/uploads/photo`, which validates it (JPEG, PNG or WebP, 5 MB maximum, and
-the bytes must match the declared type) and stores it in the project's S3 bucket.
-Only the object key is saved, in `users.photo_key`; because the bucket is private,
-`lib/s3.ts` signs a short-lived GET URL whenever a photo is shown.
+Onboarding collects an optional profile photo on the first profile step. The browser
+posts the file to `POST /api/uploads/photo`, which validates it (JPEG, PNG or WebP,
+5 MB maximum, and the bytes must match the declared type) and stores it in the
+project's S3 bucket. Only the object key is saved, in `users.photo_key`; because the
+bucket is private, `lib/s3.ts` signs a short-lived GET URL whenever a photo is shown.
 
 Photos are uploaded to a Railway bucket (`user-images`). Wire its S3-compatible
 credentials to the app service:
