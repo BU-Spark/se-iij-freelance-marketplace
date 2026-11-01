@@ -1,8 +1,8 @@
 'use client';
 import { useState } from 'react';
 import type { DeskAssignment } from '../../types/dashboard.types';
-import { taskStatus, type FeedFilter } from './freelancer.utils';
-import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters } from './components';
+import { taskStatus, PAGE_SIZE, type FeedFilter } from './freelancer.utils';
+import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters, TaskPagination } from './components';
 import styles from './freelancer.module.css';
 
 export type FreelancerDashboardProps = { assignments: DeskAssignment[]; freelancerId: string };
@@ -10,6 +10,7 @@ export type FreelancerDashboardProps = { assignments: DeskAssignment[]; freelanc
 export default function FreelancerDashboard({ assignments, freelancerId }: FreelancerDashboardProps) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FeedFilter>('all');
+  const [page, setPage] = useState(1);
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
   // An invitation or assignment for another freelancer must not become a personal task.
@@ -36,11 +37,17 @@ export default function FreelancerDashboard({ assignments, freelancerId }: Freel
         )
     )
     .sort((a, b) => a.deadline.getTime() - b.deadline.getTime());
+  const pageCount = Math.max(1, Math.ceil(matching.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const visible = matching.slice(start, start + PAGE_SIZE);
+
   const showStatus = (status: FeedFilter) => {
     setFilter(status);
     setQuery('');
     setCategory('');
     setLocation('');
+    setPage(1);
   };
 
   return (
@@ -64,30 +71,35 @@ export default function FreelancerDashboard({ assignments, freelancerId }: Freel
           locations={locations}
           onQueryChange={(value) => {
             setQuery(value);
+            setPage(1);
           }}
           onFilterChange={(value) => {
             setFilter(value);
+            setPage(1);
           }}
           onCategoryChange={(value) => {
             setCategory(value);
+            setPage(1);
           }}
           onLocationChange={(value) => {
             setLocation(value);
+            setPage(1);
           }}
           onClear={() => showStatus('all')}
         />
         <p role="status">
           {matching.length
-            ? `Showing ${matching.length} tasks`
+            ? `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, matching.length)} of ${matching.length} tasks`
             : 'No matching tasks. Try changing or clearing your filters.'}
         </p>
         <ul className={styles.grid}>
-          {matching.map((task) => (
+          {visible.map((task) => (
             <li key={task.id}>
               <TaskCard task={task} freelancerId={freelancerId} />
             </li>
           ))}
         </ul>
+        <TaskPagination page={currentPage} pageCount={pageCount} onPageChange={setPage} />
       </section>
     </>
   );

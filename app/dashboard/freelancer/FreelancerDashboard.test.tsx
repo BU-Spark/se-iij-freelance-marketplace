@@ -29,6 +29,33 @@ it('shows only personal in-progress tasks and excludes other private tasks', () 
   expect(feed().getByText('My invitation')).toBeInTheDocument();
 });
 
+it('paginates and resets to the first page when search or status changes', () => {
+  render(<FreelancerDashboard assignments={tasks} freelancerId="me" />);
+  expect(feed().getAllByRole('article')).toHaveLength(4);
+  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+  fireEvent.change(screen.getByLabelText('Search tasks'), { target: { value: '  OPPORTUNITY  ' } });
+  expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+  expect(feed().getAllByRole('article')).toHaveLength(2);
+  fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'in-progress' } });
+  expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
+  fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+  expect(screen.getByLabelText('Search tasks')).toHaveValue('');
+  expect(feed().getAllByRole('article')).toHaveLength(4);
+});
+
+it('handles an empty feed with disabled pagination', () => {
+  render(<FreelancerDashboard assignments={[]} freelancerId="me" />);
+  expect(screen.getByText('No assignments in progress.')).toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
+  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
+});
+
 it('combines category, location, search, and status without hiding ongoing work', () => {
   render(<FreelancerDashboard assignments={tasks} freelancerId="me" />);
   fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Reporting/Writing' } });
