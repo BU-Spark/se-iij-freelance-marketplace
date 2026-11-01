@@ -15,7 +15,7 @@ export const NAV_ITEMS: Record<ProfileRole, NavItem[]> = {
     { key: 'pitches', label: 'Pitches', href: '/dashboard/pitches' },
   ],
   freelancer: [
-    { key: 'assignments', label: 'Available assignments', href: '/freelancer/assignments' },
+    { key: 'assignments', label: 'Available assignments', href: '/dashboard/freelancer' },
     { key: 'my-pitches', label: 'My pitches', href: '/freelancer/pitches' },
     { key: 'organizations', label: 'Organizations', href: '/freelancer/organizations' },
   ],

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
@@ -21,6 +21,7 @@ const BADGES = { pitches: 2 };
 
 export function EditorHeader() {
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useClerk();
   const [role, setRole] = useState<ProfileRole>(DEFAULT_ROLE);
 
@@ -31,7 +32,10 @@ export function EditorHeader() {
         name={MY_NAME}
         roles={MY_ROLES}
         activeRole={role}
-        onRoleChange={setRole}
+        onRoleChange={(nextRole) => {
+          setRole(nextRole);
+          if (nextRole === 'freelancer') router.push('/dashboard/freelancer');
+        }}
         currentPath={pathname}
         profileHref={`${pathname}?panel=profile`}
         badges={BADGES}
