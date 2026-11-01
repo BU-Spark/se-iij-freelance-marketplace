@@ -1,0 +1,151 @@
+.switchBlock {
+  margin-bottom: 20px;
+}
+
+.label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+.switch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #f1f2f5;
+}
+
+.option {
+  padding: 10px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font: inherit;
+  font-weight: 500;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.selected {
+  background: #fff;
+  color: #111827;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+.list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  color: #111827;
+  text-decoration: none;
+}
+
+.item:hover {
+  background: #f6f7f9;
+}
+
+.current {
+  background: #eef2fd;
+  color: #1e3a9e;
+  font-weight: 600;
+}
+
+.current:hover {
+  background: #eef2fd;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd0d8;
+}
+
+.current .dot {
+  background: #2f55d4;
+}
+
+.itemLabel {
+  flex: 1;
+}
+
+.badge {
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #2f55d4;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.footer {
+  display: grid;
+  gap: 4px;
+}
+
+.footerLink,
+.signOut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.footerLink {
+  color: #111827;
+}
+
+.signOut {
+  color: #9b2c1f;
+  font-weight: 500;
+}
+
+.footerLink:hover,
+.signOut:hover {
+  background: #f6f7f9;
+}
+/* the ☰ button that opens the menu */
+.menuButton {
+  display: inline-grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #172033;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.menuButton:hover {
+  background: #f1f3f6;
+}
+.menuButton:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
