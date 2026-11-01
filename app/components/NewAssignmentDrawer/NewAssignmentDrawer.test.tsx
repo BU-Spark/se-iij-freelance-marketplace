@@ -44,7 +44,6 @@ const roster: RosterMember[] = [
 const fillValidDraft = () => {
   fireEvent.click(screen.getByRole('button', { name: /editing/i }));
   fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'City council overnight vote' } });
-  fireEvent.change(screen.getByLabelText('Slug'), { target: { value: 'city-council-overnight' } });
 };
 
 describe('NewAssignmentDrawer', () => {
@@ -74,10 +73,11 @@ describe('NewAssignmentDrawer', () => {
     expect(mockPush).toHaveBeenCalledWith('/dashboard', { scroll: false });
   });
 
-  it('keeps what you type in the form', () => {
-    const slug = screen.getByLabelText('Slug');
-    fireEvent.change(slug, { target: { value: 'city-council' } });
-    expect(slug).toHaveValue('city-council');
+  it('keeps what you type and previews the slug', () => {
+    const title = screen.getByLabelText('Title');
+    fireEvent.change(title, { target: { value: 'City council' } });
+    expect(title).toHaveValue('City council');
+    expect(screen.getByLabelText('Slug')).toHaveTextContent('city-council-······');
   });
 
   it('starts as an open call with nobody selected', () => {
@@ -119,7 +119,7 @@ describe('NewAssignmentDrawer', () => {
     expect(body).toMatchObject({
       title: 'City council overnight vote',
       category: 'Editing',
-      slug: 'city-council-overnight',
+      slug: expect.stringMatching(/^city-council-overnight-vote-[a-z0-9]{6}$/),
     });
   });
 

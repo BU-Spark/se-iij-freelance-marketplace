@@ -57,3 +57,21 @@ textarea.input {
   font-size: 13px;
   color: var(--muted);
 }
+/* read-only slug preview */
+.slug {
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+  padding: 0 14px;
+  border: 1px dashed #dce1ea;
+  border-radius: 10px;
+  background: #f7f8fa;
+  color: #172033;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+
+.slugEmpty {
+  color: #8a93a6;
+}

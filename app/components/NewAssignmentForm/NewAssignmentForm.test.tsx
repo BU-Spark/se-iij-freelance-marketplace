@@ -28,8 +28,18 @@ describe('NewAssignmentForm', () => {
   it('reports typing in a field', () => {
     const onChange = jest.fn();
     render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={onChange} />);
-    fireEvent.change(screen.getByLabelText('Slug'), { target: { value: 'city-council' } });
-    expect(onChange).toHaveBeenCalledWith({ slug: 'city-council' });
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'City council' } });
+    expect(onChange).toHaveBeenCalledWith({ title: 'City council' });
+  });
+
+  it('previews the slug from the title', () => {
+    render(<NewAssignmentForm draft={{ ...EMPTY_ASSIGNMENT, title: 'City Council Vote!' }} onChange={jest.fn()} />);
+    expect(screen.getByLabelText('Slug')).toHaveTextContent('city-council-vote-······');
+  });
+
+  it('shows a hint in the slug box before there is a title', () => {
+    render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={jest.fn()} />);
+    expect(screen.getByLabelText('Slug')).toHaveTextContent('Fills in from the title');
   });
 
   it('shows validation errors next to their fields', () => {
