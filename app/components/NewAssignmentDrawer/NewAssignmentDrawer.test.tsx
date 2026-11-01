@@ -48,6 +48,9 @@ const fillValidDraft = () => {
   fireEvent.change(screen.getByLabelText('Compensation'), { target: { value: '750' } });
 };
 
+/** Opens the invite dropdown by focusing its search box */
+const openInviteSearch = () => fireEvent.focus(screen.getByRole('combobox'));
+
 describe('NewAssignmentDrawer', () => {
   beforeEach(() => {
     mockPush.mockClear();
@@ -87,14 +90,18 @@ describe('NewAssignmentDrawer', () => {
     expect(screen.getByText('Will post as open call')).toBeInTheDocument();
   });
 
-  it('updates the count and footer when someone is ticked', () => {
-    fireEvent.click(screen.getByRole('checkbox', { name: /marcus thorne/i }));
+  // ← PR 4: pick from the search dropdown instead of ticking a checkbox
+  it('updates the count and footer when someone is invited', () => {
+    openInviteSearch();
+    fireEvent.mouseDown(screen.getByRole('option', { name: /marcus thorne/i }));
     expect(screen.getByText('1 selected')).toBeInTheDocument();
     expect(screen.getByText('Will invite 1 freelancer')).toBeInTheDocument();
   });
 
+  // ← PR 4: people who are off are shown but disabled in the dropdown
   it('does not let you invite someone who is off', () => {
-    expect(screen.getByRole('checkbox', { name: /jonah weiss/i })).toBeDisabled();
+    openInviteSearch();
+    expect(screen.getByRole('option', { name: /jonah weiss/i })).toHaveAttribute('aria-disabled', 'true');
   });
 
   it('does not call the API until the required fields are filled', () => {
