@@ -44,7 +44,6 @@ const roster: RosterMember[] = [
 const fillValidDraft = () => {
   fireEvent.click(screen.getByRole('button', { name: /editing/i }));
   fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'City council overnight vote' } });
-  // ← changed: no slug to type any more; it is made from the title on submit
 };
 
 describe('NewAssignmentDrawer', () => {
@@ -74,7 +73,6 @@ describe('NewAssignmentDrawer', () => {
     expect(mockPush).toHaveBeenCalledWith('/dashboard', { scroll: false });
   });
 
-  // ← changed: type a title and check the slug preview follows it
   it('keeps what you type and previews the slug', () => {
     const title = screen.getByLabelText('Title');
     fireEvent.change(title, { target: { value: 'City council' } });
@@ -121,7 +119,6 @@ describe('NewAssignmentDrawer', () => {
     expect(body).toMatchObject({
       title: 'City council overnight vote',
       category: 'Editing',
-      // ← changed: title + 6-character random code
       slug: expect.stringMatching(/^city-council-overnight-vote-[a-z0-9]{6}$/),
     });
   });

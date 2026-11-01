@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useId } from 'react';
 import type { ProfileRole } from '../../types';
-import SidePanel from '../SidePanel/SidePanel'; // ← match how ProfilePanel imports it
-import Avatar from '../Avatar/Avatar'; // ← match how Header imports it
+import SidePanel from '../SidePanel/SidePanel';
+import Avatar from '../Avatar/Avatar';
 import { ROLE_CONFIG } from '../Profile/config/roleConfig';
 import { NAV_ITEMS } from './config/navConfig';
 import { isCurrentPath } from '../../utils/nav.utils';

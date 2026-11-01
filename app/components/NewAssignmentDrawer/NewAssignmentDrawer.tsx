@@ -7,7 +7,7 @@ import styles from './NewAssignmentDrawer.module.css';
 import type { NewAssignment } from '../../types/assignments.types';
 import type { RosterMember } from '../../types/dashboard.types';
 import {
-  createSlug, // ← changed
+  createSlug,
   EMPTY_ASSIGNMENT,
   hasErrors,
   validateAssignment,
@@ -59,10 +59,10 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
   };
 
   const submitAssignment = async () => {
-    // ← changed: slug = title + random code, made fresh on every submit
+    // slug = title + random code, made fresh on every submit
     const toSave: NewAssignment = { ...draft, slug: createSlug(draft.title) };
 
-    const nextErrors = validateAssignment(toSave); // ← changed
+    const nextErrors = validateAssignment(toSave);
     setErrors(nextErrors);
     if (hasErrors(nextErrors)) return;
 
@@ -75,7 +75,7 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...toSave, // ← changed
+          ...toSave,
           // datetime-local values have no timezone; send an absolute instant
           deadline: toSave.deadline ? new Date(toSave.deadline).toISOString() : '',
         }),

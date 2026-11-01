@@ -1,7 +1,7 @@
 import ChipGroup from '../ChipGroup/ChipGroup';
 import Field from '../Field/Field';
 import type { NewAssignment } from '../../types/assignments.types';
-import { slugify, type AssignmentErrors } from '../../utils/assignment.utils'; // ← changed
+import { slugify, type AssignmentErrors } from '../../utils/assignment.utils';
 import { PROJECT_TYPES } from '../NewAssignmentDrawer/constants';
 import styles from './NewAssignmentForm.module.css';
 
@@ -13,7 +13,7 @@ type NewAssignmentFormProps = {
 };
 
 export default function NewAssignmentForm({ draft, onChange, errors }: NewAssignmentFormProps) {
-  // ← changed: preview only; the random code is added when the editor posts
+  // preview only; the random code is added when the editor posts
   const slugBase = slugify(draft.title);
 
   return (
@@ -42,7 +42,6 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
         />
       </Field>
 
-      {/* ← changed: slug is generated, not typed */}
       <div>
         <Field label="Slug" error={errors?.slug}>
           <output className={`${styles.slug} ${slugBase ? '' : styles.slugEmpty}`}>
