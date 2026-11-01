@@ -24,6 +24,8 @@ export interface User {
   verified: boolean;
   shortBio?: string;
   longBio?: string;
+  /** S3 object key for the profile photo; the bucket is private, so URLs are signed on read */
+  photoKey?: string;
   preferences?: UserPreferences;
 }
 

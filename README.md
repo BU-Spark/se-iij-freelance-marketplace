@@ -163,9 +163,9 @@ computer.
 
 Profile photos live in the project's private S3 bucket. The browser posts a file to
 `POST /api/uploads/photo`, which validates it (JPEG, PNG or WebP, 5 MB maximum, and
-the bytes must match the declared type). `lib/s3.ts` stores the object under
-`photos/<clerk user id>/` and signs a short-lived GET URL whenever a photo is shown,
-so nothing in the bucket is publicly readable.
+the bytes must match the declared type). Only the object key is saved, in
+`users.photo_key`; the bucket stays private, so `lib/s3.ts` signs a short-lived GET
+URL whenever a photo is shown.
 
 Photos are uploaded to a Railway bucket (`user-images`). Wire its S3-compatible
 credentials to the app service:
@@ -191,5 +191,6 @@ host works. Optional knobs:
 | `S3_FORCE_PATH_STYLE` | unset | Set to `true` for MinIO/LocalStack |
 
 Without `AWS_S3_BUCKET_NAME` photo storage reports itself as unconfigured and uploads
-are rejected, so the rest of the app keeps working. Replacing a photo writes a new
-object; the previous one is left in the bucket.
+are rejected, so the rest of the app keeps working. Run `npm run db:migrate` to add
+the `users.photo_key` column. Replacing a photo writes a new object; the previous one
+is left in the bucket.

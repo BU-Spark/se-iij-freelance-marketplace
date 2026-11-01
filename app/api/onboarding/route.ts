@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
+import { isPhotoKeyFor } from '../../../lib/s3';
 import type { NewEditor, NewFreelancer, NewUser, OnboardingRole } from '../../types/onboarding.types';
 import type { PoolClient } from 'pg';
 
@@ -15,7 +16,10 @@ const isRoleList = (value: unknown): value is OnboardingRole[] =>
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
 
-const isUser = (value: unknown): value is NewUser => isRecord(value) && typeof value.email === 'string';
+const isUser = (value: unknown): value is NewUser =>
+  isRecord(value) &&
+  typeof value.email === 'string' &&
+  (value.photoKey === undefined || typeof value.photoKey === 'string');
 
 export async function POST(request: Request) {
   const { userId } = await auth();
@@ -37,6 +41,13 @@ export async function POST(request: Request) {
 
   const roles = body.roles;
   const user = body.user;
+
+  // Only a key produced by this user's own upload is accepted
+  const photoKey = user.photoKey || null;
+  if (photoKey && !isPhotoKeyFor(photoKey, userId)) {
+    return NextResponse.json({ error: 'The onboarding payload is invalid.' }, { status: 400 });
+  }
+
   const editor = roles.includes('editor') ? body.editor : undefined;
   const freelancer = roles.includes('freelancer') ? body.freelancer : undefined;
 
@@ -55,14 +66,15 @@ export async function POST(request: Request) {
     const connection = client;
     await connection.query('BEGIN');
     const userResult = await connection.query<{ id: string }>(
-      `INSERT INTO users (clerk_id, email, first_name, last_name, short_bio, long_bio, preferences, roles)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      `INSERT INTO users (clerk_id, email, first_name, last_name, short_bio, long_bio, photo_key, preferences, roles)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
        ON CONFLICT (clerk_id) DO UPDATE SET
          email = EXCLUDED.email,
          first_name = EXCLUDED.first_name,
          last_name = EXCLUDED.last_name,
          short_bio = EXCLUDED.short_bio,
          long_bio = EXCLUDED.long_bio,
+         photo_key = EXCLUDED.photo_key,
          preferences = EXCLUDED.preferences,
          roles = EXCLUDED.roles,
          updated_at = NOW()
@@ -74,6 +86,7 @@ export async function POST(request: Request) {
         user.lastName ?? '',
         user.shortBio ?? null,
         user.longBio ?? null,
+        photoKey,
         JSON.stringify(user.preferences ?? {}),
         roles,
       ]

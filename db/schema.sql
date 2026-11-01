@@ -10,6 +10,8 @@ CREATE TABLE IF NOT EXISTS users (
   roles TEXT[] NOT NULL DEFAULT '{}',
   short_bio TEXT,
   long_bio TEXT,
+  -- S3 object key for the profile photo; the bucket is private, so URLs are signed on read
+  photo_key TEXT,
   -- Notification + display preferences collected during onboarding
   preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -71,6 +73,7 @@ CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (statu
 
 -- Columns added after the initial release; CREATE TABLE IF NOT EXISTS skips existing tables
 ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;
 

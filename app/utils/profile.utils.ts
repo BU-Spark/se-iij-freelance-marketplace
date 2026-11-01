@@ -88,6 +88,7 @@ const toUser = (roles: OnboardingRole[], d: ProfileData): NewUser => ({
   lastName: d.lastName.trim(),
   shortBio: d.shortBio.trim() || undefined,
   longBio: d.longBio.trim() || undefined,
+  photoKey: d.photoKey || undefined,
   preferences: toPreferences(d),
   roles: roles.map((role) => ROLE_FOR[role]),
 });
