@@ -158,3 +158,36 @@ Set the app service's `DATABASE_URL` to the PostgreSQL service reference
 (`${{Postgres.DATABASE_URL}}`, replacing `Postgres` with the exact Railway service
 name). The private hostname is available from Railway services, not from a local
 computer.
+
+## Profile photo uploads
+
+Profile photos live in the project's private S3 bucket. `lib/s3.ts` wraps the S3
+client, stores objects under `photos/<clerk user id>/`, and signs a short-lived GET
+URL whenever a photo is shown, so nothing in the bucket is publicly readable.
+
+Photos are uploaded to a Railway bucket (`user-images`). Wire its S3-compatible
+credentials to the app service:
+
+```bash
+eval "$(railway bucket credentials --bucket user-images)"   # prints the AWS_* values
+railway variable set \
+  AWS_ENDPOINT_URL="$AWS_ENDPOINT_URL" \
+  AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  AWS_S3_BUCKET_NAME="$AWS_S3_BUCKET_NAME" \
+  AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" \
+  --service se-iij-freelance-marketplace
+```
+
+The code reads the same names Railway's bucket credentials use, so any S3-compatible
+host works. Optional knobs:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `S3_PHOTO_PREFIX` | `photos` | Key prefix; objects live under `<prefix>/<clerk user id>/` |
+| `S3_PHOTO_URL_TTL_SECONDS` | `3600` | Lifetime of a signed GET URL |
+| `S3_FORCE_PATH_STYLE` | unset | Set to `true` for MinIO/LocalStack |
+
+Without `AWS_S3_BUCKET_NAME` photo storage reports itself as unconfigured and uploads
+are rejected, so the rest of the app keeps working. Replacing a photo writes a new
+object; the previous one is left in the bucket.
