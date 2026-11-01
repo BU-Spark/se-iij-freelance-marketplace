@@ -158,3 +158,38 @@ Set the app service's `DATABASE_URL` to the PostgreSQL service reference
 (`${{Postgres.DATABASE_URL}}`, replacing `Postgres` with the exact Railway service
 name). The private hostname is available from Railway services, not from a local
 computer.
+
+## Profile photo uploads
+
+Onboarding will collect an optional profile photo; the browser posts the file to
+`POST /api/uploads/photo`, which validates it (JPEG, PNG or WebP, 5 MB maximum, and
+the bytes must match the declared type) and stores it in the project's S3 bucket.
+Only the object key is saved, in `users.photo_key`; because the bucket is private,
+`lib/s3.ts` signs a short-lived GET URL whenever a photo is shown.
+
+Photos are uploaded to a Railway bucket (`user-images`). Wire its S3-compatible
+credentials to the app service:
+
+```bash
+eval "$(railway bucket credentials --bucket user-images)"   # prints the AWS_* values
+railway variable set \
+  AWS_ENDPOINT_URL="$AWS_ENDPOINT_URL" \
+  AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" \
+  AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" \
+  AWS_S3_BUCKET_NAME="$AWS_S3_BUCKET_NAME" \
+  AWS_DEFAULT_REGION="$AWS_DEFAULT_REGION" \
+  --service se-iij-freelance-marketplace
+```
+
+The code reads the same names Railway's bucket credentials use, so any S3-compatible
+host works. Optional knobs:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `S3_PHOTO_PREFIX` | `photos` | Key prefix; objects live under `<prefix>/<clerk user id>/` |
+| `S3_PHOTO_URL_TTL_SECONDS` | `3600` | Lifetime of a signed GET URL |
+| `S3_FORCE_PATH_STYLE` | unset | Set to `true` for MinIO/LocalStack |
+
+Without `AWS_S3_BUCKET_NAME` the upload route answers `503`, so onboarding still works
+with no photo. Run `npm run db:migrate` to add the `users.photo_key` column. Replacing
+a photo writes a new object; the previous one is left in the bucket.

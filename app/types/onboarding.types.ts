@@ -18,6 +18,9 @@ export interface ProfileData {
   email: string;
   shortBio: string;
   longBio: string;
+  // profile photo: the S3 object key is saved, the signed URL is only for previewing it
+  photoKey: string;
+  photoUrl: string;
   // preferences -> User.preferences
   theme: UserPreferences['theme'];
   emailNotifications: boolean;
@@ -72,7 +75,10 @@ export type ProfileTouch = (key: keyof ProfileData) => void;
 export type FieldError = (key: keyof ProfileData) => string | undefined;
 
 /** The User fields onboarding collects; id, username, timestamps etc. are set by the backend */
-export type NewUser = Pick<User, 'email' | 'firstName' | 'lastName' | 'shortBio' | 'longBio' | 'preferences' | 'roles'>;
+export type NewUser = Pick<
+  User,
+  'email' | 'firstName' | 'lastName' | 'shortBio' | 'longBio' | 'photoKey' | 'preferences' | 'roles'
+>;
 export type NewEditor = Omit<Editor, 'user'>;
 export type NewFreelancer = Omit<Freelancer, 'user'>;
 
