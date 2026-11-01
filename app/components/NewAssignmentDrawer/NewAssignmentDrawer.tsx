@@ -11,6 +11,7 @@ import {
   EMPTY_ASSIGNMENT,
   hasErrors,
   validateAssignment,
+  validateCompensation,
   type AssignmentErrors,
 } from '../../utils/assignment.utils';
 import NewAssignmentForm from '../NewAssignmentForm/NewAssignmentForm';
@@ -62,7 +63,10 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
     // slug = title + random code, made fresh on every submit
     const toSave: NewAssignment = { ...draft, slug: createSlug(draft.title) };
 
-    const nextErrors = validateAssignment(toSave);
+    const nextErrors: AssignmentErrors = { ...validateAssignment(toSave) };
+    // frontend-only check: pay must be a number above 0
+    const compensationError = validateCompensation(toSave.compensation);
+    if (compensationError) nextErrors.compensation = compensationError;
     setErrors(nextErrors);
     if (hasErrors(nextErrors)) return;
 

@@ -44,6 +44,8 @@ const roster: RosterMember[] = [
 const fillValidDraft = () => {
   fireEvent.click(screen.getByRole('button', { name: /editing/i }));
   fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'City council overnight vote' } });
+  // the slug is made from the title on submit, so there is nothing to type for it
+  fireEvent.change(screen.getByLabelText('Compensation'), { target: { value: '750' } });
 };
 
 describe('NewAssignmentDrawer', () => {
@@ -101,6 +103,17 @@ describe('NewAssignmentDrawer', () => {
     expect(fetchMock).not.toHaveBeenCalled();
     expect(screen.getByText('Give the assignment a title.')).toBeInTheDocument();
     expect(screen.getByText('Pick a project type.')).toBeInTheDocument();
+    expect(screen.getByText('Enter an amount greater than $0.')).toBeInTheDocument();
+  });
+
+  it('does not post when compensation is $0', () => {
+    fillValidDraft();
+    fireEvent.change(screen.getByLabelText('Compensation'), { target: { value: '0' } });
+
+    fireEvent.click(screen.getByRole('button', { name: /post assignment/i }));
+
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(screen.getByText('Enter an amount greater than $0.')).toBeInTheDocument();
   });
 
   it('posts the assignment, then closes and refreshes the dashboard', async () => {
@@ -119,7 +132,9 @@ describe('NewAssignmentDrawer', () => {
     expect(body).toMatchObject({
       title: 'City council overnight vote',
       category: 'Editing',
+      // title + 6-character random code
       slug: expect.stringMatching(/^city-council-overnight-vote-[a-z0-9]{6}$/),
+      compensation: '750',
     });
   });
 

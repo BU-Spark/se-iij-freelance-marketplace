@@ -1,8 +1,8 @@
 import ChipGroup from '../ChipGroup/ChipGroup';
 import Field from '../Field/Field';
 import type { NewAssignment } from '../../types/assignments.types';
-import { slugify, type AssignmentErrors } from '../../utils/assignment.utils';
 import { PROJECT_TYPES } from '../NewAssignmentDrawer/constants';
+import { cleanAmount, slugify, type AssignmentErrors } from '../../utils/assignment.utils';
 import styles from './NewAssignmentForm.module.css';
 
 type NewAssignmentFormProps = {
@@ -42,13 +42,12 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
         />
       </Field>
 
-      <div>
-        <Field label="Slug" error={errors?.slug}>
-          <output className={`${styles.slug} ${slugBase ? '' : styles.slugEmpty}`}>
-            {slugBase ? `${slugBase}-······` : 'Fills in from the title'}
-          </output>
-        </Field>
-      </div>
+      {/* slug is generated from the title, not typed */}
+      <Field label="Slug" error={errors?.slug}>
+        <output className={`${styles.slug} ${slugBase ? '' : styles.slugEmpty}`}>
+          {slugBase ? `${slugBase}-······` : 'Fills in from the title'}
+        </output>
+      </Field>
 
       <div className={styles.row}>
         <Field label="Point of contact">
@@ -89,13 +88,21 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
       </div>
 
       <div>
-        <Field label="Compensation">
-          <input
-            className={styles.input}
-            value={draft.compensation}
-            onChange={(e) => onChange({ compensation: e.target.value })}
-            placeholder="e.g. $750 flat, $0.50/word, $85/hr"
-          />
+        <Field label="Compensation" error={errors?.compensation}>
+          <div className={styles.money}>
+            <span className={styles.currency} aria-hidden="true">
+              $
+            </span>
+            <input
+              className={`${styles.input} ${styles.moneyInput}`}
+              aria-label="Compensation"
+              inputMode="decimal"
+              value={draft.compensation}
+              onChange={(e) => onChange({ compensation: cleanAmount(e.target.value) })}
+              placeholder="750"
+            />
+            <span className={styles.unit}>USD</span>
+          </div>
         </Field>
         <p className={styles.hint}>Freelancers may have negotiated rates, so edit as needed.</p>
       </div>

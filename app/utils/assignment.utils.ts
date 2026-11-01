@@ -67,3 +67,18 @@ export function createSlug(title: string, seed: string = makeSeed()): string {
   const base = slugify(title) || 'assignment';
   return `${base}-${seed}`;
 }
+/** Keeps only a money amount: digits and one dot, max 2 decimals. "$1,2a.345" → "12.34" */
+export function cleanAmount(value: string): string {
+  const digits = value.replace(/[^0-9.]/g, '');
+  const [whole, ...rest] = digits.split('.');
+  return rest.length > 0 ? `${whole}.${rest.join('').slice(0, 2)}` : whole;
+}
+
+/** Compensation must be a number above 0. Returns the error message, or undefined if OK. */
+export function validateCompensation(value: string): string | undefined {
+  const amount = Number(value);
+  if (!value.trim() || !Number.isFinite(amount) || amount <= 0) {
+    return 'Enter an amount greater than $0.';
+  }
+  return undefined;
+}
