@@ -10,7 +10,16 @@ import type {
   ProfileData,
 } from '../types/onboarding.types';
 import type { UserPreferences } from '../types/user.types';
+import type { AccountProfile, ProfileRole } from '../types/profile.types';
+/** "Marcus Thorne" */
+export function fullName(profile: AccountProfile): string {
+  return `${profile.basic.firstName} ${profile.basic.lastName}`.trim();
+}
 
+/** The roles this person doesn't have yet (for the "Add role" button) */
+export function missingRoles(profile: AccountProfile, all: ProfileRole[]): ProfileRole[] {
+  return all.filter((r) => !profile.roles.some((x) => x.role === r));
+}
 const ROLE_FOR: Record<OnboardingRole, Role> = {
   editor: Role.EDITOR,
   freelancer: Role.FREELANCER,
