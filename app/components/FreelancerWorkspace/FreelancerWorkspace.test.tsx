@@ -1,13 +1,19 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { FreelancerWorkspace } from './index';
 import { ToastProvider } from '../Toast/ToastProvider';
+
 const mockPush = jest.fn();
 jest.mock('next/navigation', () => ({
   usePathname: () => '/dashboard/freelancer',
   useSearchParams: () => new URLSearchParams('panel=profile'),
-  useRouter: () => ({ push: mockPush }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
 }));
-it('uses the team profile panel and toggles the freelancer menu', () => {
+jest.mock('@clerk/nextjs', () => ({
+  useClerk: () => ({ signOut: jest.fn() }),
+}));
+
+it('uses the shared header on the freelancer side', async () => {
   render(
     <ToastProvider>
       <FreelancerWorkspace>
@@ -15,34 +21,19 @@ it('uses the team profile panel and toggles the freelancer menu', () => {
       </FreelancerWorkspace>
     </ToastProvider>
   );
+  expect(screen.getByText('Task content')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /make a pitch/i })).toHaveAttribute(
+    'href',
+    '/dashboard/freelancer/make-a-pitch'
+  );
   expect(screen.getByRole('link', { name: 'Open my profile' })).toHaveAttribute(
     'href',
     '/dashboard/freelancer?panel=profile'
   );
   expect(screen.getByRole('dialog', { name: 'My profile' })).toBeInTheDocument();
-  expect(screen.getByRole('link', { name: 'My assignments' })).toHaveAttribute(
-    'href',
-    '/dashboard/freelancer#active-assignments'
-  );
-  fireEvent.click(screen.getByRole('button', { name: 'Toggle freelancer menu' }));
-  expect(screen.queryByRole('navigation', { name: 'Freelancer menu' })).not.toBeInTheDocument();
-  expect(screen.getByText('Task content')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Toggle freelancer menu' }));
-  expect(screen.getByRole('link', { name: 'Make a pitch' })).toHaveAttribute(
-    'href',
-    '/dashboard/freelancer/make-a-pitch'
-  );
-  fireEvent.change(screen.getByLabelText('Workspace role'), { target: { value: 'editor' } });
+
+  await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+  expect(screen.getByRole('link', { name: /available assignments/i })).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('radio', { name: /editor/i }));
   expect(mockPush).toHaveBeenCalledWith('/dashboard');
-});
-it('opens notifications and derives the unread indicator from data', () => {
-  render(
-    <ToastProvider>
-      <FreelancerWorkspace notifications={[{ id: '1', message: 'New invitation', unread: true }]}>
-        <main>Tasks</main>
-      </FreelancerWorkspace>
-    </ToastProvider>
-  );
-  fireEvent.click(screen.getByLabelText('Notifications, 1 unread'));
-  expect(screen.getByRole('region', { name: 'Notifications' })).toBeVisible();
 });

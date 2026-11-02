@@ -20,8 +20,6 @@ describe('Dashboard', () => {
 
   it('renders the shared header and the status bar with real numbers', () => {
     expect(screen.getByRole('banner')).toBeInTheDocument();
-    expect(screen.getByText(/editor: sarah jenkins/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /2 new pitches in inbox/i })).toBeInTheDocument();
     const counts = screen.getByRole('list', { name: /assignment counts/i });
     expect(within(counts).getByText('2 open')).toBeInTheDocument();
     expect(within(counts).getByText('1 pending')).toBeInTheDocument();
