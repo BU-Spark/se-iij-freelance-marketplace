@@ -43,4 +43,26 @@ describe('AssignmentCard', () => {
     expect(screen.getByText('No one interested yet')).toBeInTheDocument();
     expect(screen.queryByText('Urgent')).not.toBeInTheDocument();
   });
+
+  it('renders a database-sourced assignment without a type, rate, or deadline', () => {
+    render(
+      <AssignmentCard
+        assignment={{
+          ...election,
+          type: undefined,
+          rate: undefined,
+          deadline: null,
+          compensation: '800',
+          contact: { name: 'Sam Desk' },
+        }}
+      />
+    );
+
+    expect(screen.getByText('Point of contact: Sam Desk')).toBeInTheDocument();
+    expect(screen.getByText('Compensation')).toBeInTheDocument();
+    expect(screen.getByText('$800')).toBeInTheDocument();
+    expect(screen.queryByText('Rate')).not.toBeInTheDocument();
+    expect(screen.queryByText('Type')).not.toBeInTheDocument();
+    expect(screen.queryByText(/^Due /)).not.toBeInTheDocument();
+  });
 });

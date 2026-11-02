@@ -43,14 +43,19 @@ export type DeskAssignment = {
   id: string;
   title: string;
   category: string;
-  type: string;
+  /** specific format, e.g. "Fact-check"; assignments posted to the database store only a category */
+  type?: string;
   urgent?: boolean;
   status: AssignmentStatus;
-  contact: { name: string; desk: string };
-  deadline: Date;
+  /** desk is optional because database posts only store a free-text contact name */
+  contact: { name: string; desk?: string };
+  deadline: Date | null;
   location: string;
   length: string;
-  rate: Rate;
+  /** structured pay from the sample desk data */
+  rate?: Rate;
+  /** raw pay text from the database, shown when there is no structured rate */
+  compensation?: string;
   interestedIds: string[];
   invitedIds?: string[];
   assignedToId?: string;
