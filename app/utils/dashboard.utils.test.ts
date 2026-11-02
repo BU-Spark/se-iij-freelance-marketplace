@@ -11,6 +11,7 @@ import {
   slotLabel,
   candidatesFor,
   timeAgo,
+  toDeskAssignment,
 } from './dashboard.utils';
 
 describe('dashboard utils', () => {
@@ -81,6 +82,41 @@ describe('dashboard utils', () => {
 
   it('counts assignments by status', () => {
     expect(countByStatus(ASSIGNMENTS)).toEqual({ open: 2, invited: 1, assigned: 1 });
+  });
+
+  describe('toDeskAssignment', () => {
+    it('adapts a posted assignment into the desk card shape', () => {
+      const posted = {
+        id: 'a1',
+        organizationId: 'org-1',
+        createdByUserId: 'u1',
+        title: 'Election night',
+        description: '',
+        category: 'Reporting/Writing',
+        slug: 'election-night',
+        contact: 'Sam Desk',
+        location: 'Remote',
+        length: '800 words',
+        deadline: new Date(2030, 0, 1, 23, 0),
+        compensation: '750',
+        status: 'open' as const,
+        createdAt: new Date(2030, 0, 1),
+        updatedAt: new Date(2030, 0, 1),
+      };
+
+      expect(toDeskAssignment(posted)).toEqual({
+        id: 'a1',
+        title: 'Election night',
+        category: 'Reporting/Writing',
+        status: 'open',
+        contact: { name: 'Sam Desk' },
+        deadline: new Date(2030, 0, 1, 23, 0),
+        location: 'Remote',
+        length: '800 words',
+        compensation: '750',
+        interestedIds: [],
+      });
+    });
   });
 
   it('counts everyone not marked off as on the roster', () => {
