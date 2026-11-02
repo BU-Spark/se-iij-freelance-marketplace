@@ -3,11 +3,12 @@ import userEvent from '@testing-library/user-event';
 import { EditorHeader } from './EditorHeader';
 
 const mockSignOut = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
   useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
 }));
 
 jest.mock('@clerk/nextjs', () => ({
@@ -42,7 +43,8 @@ describe('EditorHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
     await userEvent.click(screen.getByRole('radio', { name: /freelancer/i }));
 
-    expect(screen.getByRole('button', { name: /make a pitch/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /make a pitch/i })).toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith('/dashboard/freelancer');
   });
 
   it('signs out from the menu', async () => {

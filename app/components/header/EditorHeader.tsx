@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
@@ -16,13 +16,16 @@ const MY_NAME = fullName(MOCK_PROFILE);
 const MY_ROLES: ProfileRole[] = MOCK_PROFILE.roles.map((r) => r.role);
 const DEFAULT_ROLE: ProfileRole = MY_ROLES.includes('editor') ? 'editor' : MY_ROLES[0];
 
-// To do: replace with the real count of new pitches
-const BADGES = { pitches: 2 };
+type EditorHeaderProps = {
+  /** which side of the desk this page is for; the freelancer workspace passes 'freelancer' */
+  initialRole?: ProfileRole;
+};
 
-export function EditorHeader() {
+export function EditorHeader({ initialRole = DEFAULT_ROLE }: EditorHeaderProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useClerk();
-  const [role, setRole] = useState<ProfileRole>(DEFAULT_ROLE);
+  const [role, setRole] = useState<ProfileRole>(initialRole);
 
   return (
     <header className={styles.headerBox}>
@@ -31,10 +34,12 @@ export function EditorHeader() {
         name={MY_NAME}
         roles={MY_ROLES}
         activeRole={role}
-        onRoleChange={setRole}
+        onRoleChange={(nextRole) => {
+          setRole(nextRole);
+          router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard');
+        }}
         currentPath={pathname}
         profileHref={`${pathname}?panel=profile`}
-        badges={BADGES}
         onSignOut={() => signOut({ redirectUrl: '/' })}
       />
 
@@ -46,11 +51,9 @@ export function EditorHeader() {
             New Assignment
           </Link>
         ) : (
-          <button className={styles.newAssignment} type="button">
-            {/* To Do: Replace ! with idea icon */}
-            <span aria-hidden="true">!</span>
+          <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
             Make a Pitch
-          </button>
+          </Link>
         )}
 
         {/* avatar that opens My profile (?panel=profile) */}

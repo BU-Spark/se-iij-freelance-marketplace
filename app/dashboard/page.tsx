@@ -1,10 +1,9 @@
 import { Suspense } from 'react';
-import Link from 'next/link';
 import { EditorHeader } from '../components/header/EditorHeader';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
 import styles from './dashboard.module.css';
-import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
+import { ASSIGNMENTS, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
 import { listOpenAssignments } from '../../lib/assignments';
@@ -38,10 +37,7 @@ export default async function Dashboard() {
       {/* ---- Status bar ---- */}
       <div className={styles.statusBar}>
         <p>
-          <strong>{formatDeskDate(new Date())}</strong> • Editor: {EDITOR_NAME} •{' '}
-          <Link href="/dashboard/pitches" className={styles.inboxLink}>
-            {NEW_PITCHES} new pitches in inbox →
-          </Link>
+          <strong>{formatDeskDate(new Date())}</strong>
         </p>
         <ul aria-label="Assignment counts" className={styles.counts}>
           <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>

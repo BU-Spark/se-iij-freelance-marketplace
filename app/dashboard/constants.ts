@@ -5,9 +5,6 @@ import type { DeskAssignment, RosterMember } from '../types/dashboard.types';
 /*  TODO: replace with data from the backend once the API exists       */
 /* ------------------------------------------------------------------ */
 
-export const EDITOR_NAME = 'Sarah Jenkins';
-export const NEW_PITCHES = 2;
-
 /** A date `days` from today at `hour`:`minute`, so mock deadlines always look current */
 const at = (days: number, hour: number, minute = 0) => {
   const d = new Date();
