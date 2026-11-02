@@ -2,6 +2,7 @@ import {
   cleanAmount,
   createSlug,
   EMPTY_ASSIGNMENT,
+  formatCompensation,
   hasErrors,
   makeSeed,
   slugify,
@@ -111,5 +112,21 @@ describe('validateCompensation', () => {
 
   it('accepts a positive amount', () => {
     expect(validateCompensation('750')).toBeUndefined();
+  });
+});
+
+describe('formatCompensation', () => {
+  it('adds a dollar sign to a bare amount', () => {
+    expect(formatCompensation('750')).toBe('$750');
+    expect(formatCompensation('12.5')).toBe('$12.5');
+  });
+
+  it('leaves an already formatted or free-text value alone', () => {
+    expect(formatCompensation('$800 hr')).toBe('$800 hr');
+    expect(formatCompensation('Negotiable')).toBe('Negotiable');
+  });
+
+  it('returns an empty string for an empty value', () => {
+    expect(formatCompensation('   ')).toBe('');
   });
 });

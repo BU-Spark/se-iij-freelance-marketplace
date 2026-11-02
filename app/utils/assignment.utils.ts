@@ -82,3 +82,12 @@ export function validateCompensation(value: string): string | undefined {
   }
   return undefined;
 }
+
+/**
+ * Shows a bare amount with a currency sign: "750" → "$750". Anything else
+ * (legacy free-text values such as "$800 hr") is left exactly as it was saved.
+ */
+export function formatCompensation(value: string): string {
+  const trimmed = value.trim();
+  return /^\d+(?:\.\d+)?$/.test(trimmed) ? `$${trimmed}` : trimmed;
+}
