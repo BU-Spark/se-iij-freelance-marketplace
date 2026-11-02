@@ -1,4 +1,5 @@
 import type { AssignmentStatus, DeskAssignment } from '../../types/dashboard.types';
+import { formatCompensation } from '../../utils/assignment.utils';
 import { formatDeadline, formatRate } from '../../utils/dashboard.utils';
 import { categoryColor } from '../../utils/category.utils';
 import styles from './AssignmentCard.module.css';
@@ -26,6 +27,7 @@ function interestText(a: DeskAssignment, assignedName?: string): string {
 
 export default function AssignmentCard({ assignment: a, assignedName, onReview }: AssignmentCardProps) {
   const canReview = onReview && a.status !== 'assigned' && a.interestedIds.length > 0;
+  const contactLine = [a.contact.name, a.contact.desk].filter(Boolean).join(', ');
 
   return (
     <article className={styles.card}>
@@ -36,33 +38,42 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
         </span>
         {a.urgent && <span className={`${styles.pill} ${styles.urgent}`}>Urgent</span>}
         <span className={`${styles.pill} ${styles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
-        <span className={styles.deadline}>Due {formatDeadline(a.deadline)}</span>
+        {a.deadline && <span className={styles.deadline}>Due {formatDeadline(a.deadline)}</span>}
       </div>
 
       <div>
         <h3 className={styles.title}>{a.title}</h3>
-        <p className={styles.contact}>
-          Point of contact: {a.contact.name}, {a.contact.desk}
-        </p>
+        {contactLine && <p className={styles.contact}>Point of contact: {contactLine}</p>}
       </div>
 
       <dl className={styles.details}>
         <div>
           <dt>Location</dt>
-          <dd>{a.location}</dd>
+          <dd>{a.location || 'Not specified'}</dd>
         </div>
         <div>
           <dt>Length</dt>
-          <dd>{a.length}</dd>
+          <dd>{a.length || 'Not specified'}</dd>
         </div>
-        <div>
-          <dt>Type</dt>
-          <dd>{a.type}</dd>
-        </div>
-        <div>
-          <dt>Rate</dt>
-          <dd>{formatRate(a.rate)}</dd>
-        </div>
+        {a.type && (
+          <div>
+            <dt>Type</dt>
+            <dd>{a.type}</dd>
+          </div>
+        )}
+        {a.rate ? (
+          <div>
+            <dt>Rate</dt>
+            <dd>{formatRate(a.rate)}</dd>
+          </div>
+        ) : (
+          a.compensation && (
+            <div>
+              <dt>Compensation</dt>
+              <dd>{formatCompensation(a.compensation)}</dd>
+            </div>
+          )
+        )}
       </dl>
 
       <div className={styles.footer}>
