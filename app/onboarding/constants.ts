@@ -77,6 +77,8 @@ export const EMPTY: ProfileData = {
   email: '',
   shortBio: '',
   longBio: '',
+  photoKey: '',
+  photoUrl: '',
   theme: 'system',
   emailNotifications: true,
   pushNotifications: false,
