@@ -16,14 +16,16 @@ const MY_NAME = fullName(MOCK_PROFILE);
 const MY_ROLES: ProfileRole[] = MOCK_PROFILE.roles.map((r) => r.role);
 const DEFAULT_ROLE: ProfileRole = MY_ROLES.includes('editor') ? 'editor' : MY_ROLES[0];
 
-// To do: replace with the real count of new pitches
-const BADGES = { pitches: 2 };
+type EditorHeaderProps = {
+  /** which side of the desk this page is for; the freelancer workspace passes 'freelancer' */
+  initialRole?: ProfileRole;
+};
 
-export function EditorHeader() {
+export function EditorHeader({ initialRole = DEFAULT_ROLE }: EditorHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { signOut } = useClerk();
-  const [role, setRole] = useState<ProfileRole>(DEFAULT_ROLE);
+  const [role, setRole] = useState<ProfileRole>(initialRole);
 
   return (
     <header className={styles.headerBox}>
@@ -34,11 +36,10 @@ export function EditorHeader() {
         activeRole={role}
         onRoleChange={(nextRole) => {
           setRole(nextRole);
-          if (nextRole === 'freelancer') router.push('/dashboard/freelancer');
+          router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard');
         }}
         currentPath={pathname}
         profileHref={`${pathname}?panel=profile`}
-        badges={BADGES}
         onSignOut={() => signOut({ redirectUrl: '/' })}
       />
 
