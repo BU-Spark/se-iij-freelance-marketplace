@@ -1,6 +1,7 @@
 import { ChipGroup, Field, Section, TagInput } from '../../../components';
 import shared from '../../onboarding.module.css';
 import FormStep from '../FormStep';
+import PhotoField from '../../fields/PhotoField';
 import ShortBioField from '../../fields/ShortBioField';
 import { MEDIUMS, TOPICS } from '../../constants';
 import { fieldError, toggleValue } from '../../helpers';
@@ -57,6 +58,7 @@ export default function FreelancerProfileStep(p: FreelancerProfileStepProps) {
     >
       {p.showBasics !== false && (
         <Section title="Basics" color="var(--c-green)">
+          <PhotoField data={data} update={update} />
           <div className={shared.grid2}>
             <Field label="First name" error={err('firstName')}>
               {text('firstName', 'Alex')}

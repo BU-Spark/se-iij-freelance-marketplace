@@ -210,6 +210,57 @@ describe('Onboarding page', () => {
     });
   });
 
+  describe('Profile photo', () => {
+    const uploadPhoto = (file: File) =>
+      fireEvent.change(screen.getByLabelText(/add photo/i), { target: { files: [file] } });
+
+    const png = () =>
+      new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])], 'me.png', { type: 'image/png' });
+
+    /** Answers the upload with a signed URL and onboarding with a normal save */
+    const mockUpload = () => {
+      (global.fetch as jest.Mock).mockImplementation(async (url: string) =>
+        url === '/api/uploads/photo'
+          ? { ok: true, json: async () => ({ key: 'photos/clerk-1/me.png', url: 'https://signed.example/me.png' }) }
+          : { ok: true, json: async () => ({ saved: true, roles: ['editor'] }) }
+      );
+    };
+
+    it('uploads the photo and shows it in the live preview', async () => {
+      mockUpload();
+      startAs(/i'm an editor/i);
+
+      uploadPhoto(png());
+
+      expect(await screen.findByAltText(/your profile photo/i)).toHaveAttribute('src', 'https://signed.example/me.png');
+    });
+
+    it('saves the S3 key with the profile', async () => {
+      mockUpload();
+      startAs(/i'm an editor/i);
+      uploadPhoto(png());
+      await screen.findByAltText(/your profile photo/i);
+
+      fillEditorStep();
+      next();
+      submit();
+
+      await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
+
+      const [, init] = (global.fetch as jest.Mock).mock.calls.at(-1) as [string, { body: string }];
+      expect(JSON.parse(init.body).user.photoKey).toBe('photos/clerk-1/me.png');
+    });
+
+    it('rejects a file that is not an image without uploading it', async () => {
+      startAs(/i'm an editor/i);
+
+      uploadPhoto(new File(['hello'], 'notes.txt', { type: 'text/plain' }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/jpeg, png or webp/i);
+      expect(global.fetch).not.toHaveBeenCalled();
+    });
+  });
+
   describe('Step 3: preferences', () => {
     describe('editor', () => {
       beforeEach(() => {

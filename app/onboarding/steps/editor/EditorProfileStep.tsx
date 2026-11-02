@@ -1,6 +1,7 @@
 import { ChipGroup, Field, OrgPicker, Section } from '../../../components';
 import shared from '../../onboarding.module.css';
 import FormStep from '../FormStep';
+import PhotoField from '../../fields/PhotoField';
 import ShortBioField from '../../fields/ShortBioField';
 import { TOPICS } from '../../constants';
 import { fieldError, toggleValue } from '../../helpers';
@@ -58,6 +59,7 @@ export default function EditorProfileStep(p: EditorProfileStepProps) {
     >
       {p.showBasics !== false && (
         <Section title="Basics" color="var(--c-green)">
+          <PhotoField data={data} update={update} />
           <div className={shared.grid2}>
             <Field label="First name" error={err('firstName')}>
               {text('firstName', 'Sarah')}

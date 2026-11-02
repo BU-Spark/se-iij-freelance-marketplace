@@ -23,7 +23,10 @@ export default function PreviewCard({ role, data, org }: PreviewCardProps) {
   return (
     <div className={styles.preview}>
       <div className={styles.previewBanner} />
-      <div className={styles.avatar}>{initials}</div>
+      <div className={styles.avatar}>
+        {/* eslint-disable-next-line @next/next/no-img-element -- signed S3 URLs expire, so the optimizer must not cache them */}
+        {data.photoUrl ? <img src={data.photoUrl} alt="" className={styles.avatarImage} /> : initials}
+      </div>
       <h4>{fullName || 'Your name'}</h4>
       <p className={styles.previewMeta}>
         {role === 'editor'
