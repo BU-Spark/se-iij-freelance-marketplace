@@ -140,6 +140,12 @@ Clerk user and updates the profile if onboarding is submitted again. The onboard
 tables are `users`, `editors`, and `freelancers`, matching the domain models in
 `app/types/user.types.ts`.
 
+Editors publish assignments through `POST /api/assignments`, which stores them in the
+`assignments` table. The `/dashboard/assignments` discovery page reads the open rows
+directly from that table on the server and is rendered dynamically, so a newly posted
+assignment appears on the next request. The editor dashboard loads the same rows and
+lists them above its sample desk data.
+
 Onboarding lets a user pick one role or both. Each selected role gets a profile and
 a preferences step, so the flow is three steps for one role and five for both, and
 the shared account fields (name, email, location) are collected once on the first

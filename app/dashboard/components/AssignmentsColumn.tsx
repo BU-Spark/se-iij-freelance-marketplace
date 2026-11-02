@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SegmentedControl, { type SegmentOption } from './SegmentedControl';
 import AssignmentCard from '../../components/AssignmentCard/AssignmentCard';
 import ReviewCandidates from '../../components/ReviewCandidates/ReviewCandidates';
@@ -25,6 +25,10 @@ export default function AssignmentsColumn({ assignments, roster }: AssignmentsCo
   // our own copy, so assigning someone updates the cards on screen
   // TODO: save to the backend once the API exists
   const [items, setItems] = useState(assignments);
+  // a refresh after posting sends a new list, so keep the copy in step
+  useEffect(() => {
+    setItems(assignments);
+  }, [assignments]);
   const [filter, setFilter] = useState<DeskFilter>('all');
   // which assignment's "Review candidates" popup is open (none = undefined)
   const [reviewingId, setReviewingId] = useState<string | undefined>();

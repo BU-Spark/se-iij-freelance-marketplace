@@ -6,7 +6,9 @@ import AssignmentsColumn from './components/AssignmentsColumn';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, EDITOR_NAME, NEW_PITCHES, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
-import { countByStatus, formatDeskDate } from '../utils/dashboard.utils';
+import type { Assignment } from '../types/assignments.types';
+import { listOpenAssignments } from '../../lib/assignments';
+import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 
 /*
  * Dashboard: availability (day / week / month) on the left,
@@ -14,8 +16,20 @@ import { countByStatus, formatDeskDate } from '../utils/dashboard.utils';
  * The New Assignment drawer opens when the URL has ?new=assignment.
  */
 
-export default function Dashboard() {
-  const counts = countByStatus(ASSIGNMENTS);
+// New posts have to appear as soon as the drawer sends the editor back here
+export const dynamic = 'force-dynamic';
+
+export default async function Dashboard() {
+  let posted: Assignment[] = [];
+  try {
+    posted = await listOpenAssignments();
+  } catch (error) {
+    console.error('Failed to load assignments.', error);
+  }
+
+  // Assignments posted to the database sit above the sample desk data
+  const assignments = [...posted.map(toDeskAssignment), ...ASSIGNMENTS];
+  const counts = countByStatus(assignments);
 
   return (
     <div className={styles.shell}>
@@ -41,7 +55,7 @@ export default function Dashboard() {
         <AvailabilityColumn roster={ROSTER} />
 
         {/* ---- Right column: assignments ---- */}
-        <AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />
+        <AssignmentsColumn assignments={assignments} roster={ROSTER} />
       </main>
 
       {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}

@@ -6,6 +6,7 @@ import type {
   Rate,
   RosterMember,
 } from '../types/dashboard.types';
+import type { Assignment } from '../types/assignments.types';
 /** The availability bar shows six 2-hour slots: 8a, 10a, 12p, 2p, 4p, 6p */
 export const SLOT_STARTS = [8, 10, 12, 14, 16, 18];
 
@@ -70,6 +71,26 @@ export function countByStatus(assignments: DeskAssignment[]): Record<AssignmentS
   const counts: Record<AssignmentStatus, number> = { open: 0, invited: 0, assigned: 0 };
   assignments.forEach((a) => counts[a.status]++);
   return counts;
+}
+
+/**
+ * Adapts an assignment posted to the database to the desk card shape.
+ * Invites, interest and a structured rate only exist in the sample desk data,
+ * so those fields are left empty and the raw compensation text is shown instead.
+ */
+export function toDeskAssignment(a: Assignment): DeskAssignment {
+  return {
+    id: a.id,
+    title: a.title,
+    category: a.category,
+    status: a.status,
+    contact: { name: a.contact },
+    deadline: a.deadline,
+    location: a.location,
+    length: a.length,
+    compensation: a.compensation,
+    interestedIds: [],
+  };
 }
 
 /** Everyone on the roster who isn't marked off */
