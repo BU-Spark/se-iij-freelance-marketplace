@@ -27,11 +27,6 @@
   font-weight: 600;
   color: var(--ink);
 }
-.inboxLink {
-  color: var(--c-blue);
-  font-weight: 600;
-}
-
 /* "2 open • 1 pending • 1 assigned" with a colored dot before each; --dot is set inline */
 .counts {
   display: flex;

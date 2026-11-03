@@ -16,9 +16,6 @@ const MY_NAME = fullName(MOCK_PROFILE);
 const MY_ROLES: ProfileRole[] = MOCK_PROFILE.roles.map((r) => r.role);
 const DEFAULT_ROLE: ProfileRole = MY_ROLES.includes('editor') ? 'editor' : MY_ROLES[0];
 
-// To do: replace with the real count of new pitches
-const BADGES = { pitches: 2 };
-
 export function EditorHeader() {
   const pathname = usePathname();
   const { signOut } = useClerk();
@@ -34,7 +31,6 @@ export function EditorHeader() {
         onRoleChange={setRole}
         currentPath={pathname}
         profileHref={`${pathname}?panel=profile`}
-        badges={BADGES}
         onSignOut={() => signOut({ redirectUrl: '/' })}
       />
 
