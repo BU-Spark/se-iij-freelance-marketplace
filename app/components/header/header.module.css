@@ -37,6 +37,9 @@
 
 .navigation {
   display: flex;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow-x: auto;
   align-self: stretch;
   align-items: center;
   gap: var(--nav-gap);
@@ -45,6 +48,7 @@
 .navItem {
   position: relative;
   display: inline-flex;
+  flex-shrink: 0;
   height: 100%;
   align-items: center;
   gap: 6px;
@@ -147,6 +151,12 @@
 .newAssignment:hover {
   background: #1b2a4d;
   transform: translateY(-1px);
+}
+
+.newAssignment:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .newAssignment span {
