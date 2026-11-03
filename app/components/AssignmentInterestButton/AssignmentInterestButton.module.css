@@ -1,0 +1,60 @@
+.container {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.button {
+  min-height: 44px;
+  max-width: 100%;
+  padding: 10px 16px;
+  border: 1px solid var(--c-blue);
+  border-radius: 8px;
+  background: var(--c-blue);
+  color: var(--white);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+
+.button:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 3px;
+}
+
+.button:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.interested:disabled {
+  border-color: #17623a;
+  background: #def5e6;
+  color: #17623a;
+  opacity: 1;
+}
+
+.message,
+.error {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message:empty {
+  margin: 0;
+}
+
+.message {
+  color: var(--muted);
+}
+
+.error {
+  color: #a32020;
+}
