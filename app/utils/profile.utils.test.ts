@@ -1,7 +1,15 @@
 import { EMPTY } from '../onboarding/constants';
 import type { ProfileData } from '../types/onboarding.types';
 import { Role } from '../types/user.types';
-import { formatRate, summarizeAvailability, toEditor, toFreelancer, toProfile } from './profile.utils';
+import {
+  factText,
+  formatRate,
+  summarizeAvailability,
+  toEditor,
+  toFreelancer,
+  toProfile,
+  validateBasic,
+} from './profile.utils';
 
 const base: ProfileData = { ...EMPTY, firstName: ' Sarah ', lastName: 'Jenkins', email: 'sarah@newsroom.example' };
 
@@ -184,5 +192,32 @@ describe('profile helpers', () => {
     expect(missingRoles(MOCK_PROFILE, ['freelancer', 'editor'])).toEqual([]);
     const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
     expect(missingRoles(onlyFreelancer, ['freelancer', 'editor'])).toEqual(['editor']);
+  });
+});
+
+describe('validateBasic', () => {
+  const basic = { firstName: 'Sarah', lastName: '', email: 'sarah@newsroom.example', shortBio: '', longBio: '' };
+
+  it('accepts a first name and a valid email', () => {
+    expect(validateBasic(basic)).toEqual({});
+  });
+
+  it('asks for a first name', () => {
+    expect(validateBasic({ ...basic, firstName: '  ' })).toEqual({ firstName: 'Add your first name.' });
+  });
+
+  it('rejects an address without a domain', () => {
+    expect(validateBasic({ ...basic, email: 'sarah@' })).toEqual({ email: 'Enter a valid email address.' });
+  });
+});
+
+describe('factText', () => {
+  it('joins chip lists and renders numbers', () => {
+    expect(factText(['Politics', 'Housing'])).toBe('Politics, Housing');
+    expect(factText(4)).toBe('4');
+  });
+
+  it('resolves an organisation id through the resolver', () => {
+    expect(factText('meridian', () => 'The Meridian Post')).toBe('The Meridian Post');
   });
 });

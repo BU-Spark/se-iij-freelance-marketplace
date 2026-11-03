@@ -17,15 +17,20 @@ export default function BasicInfoCard({ basic, onEdit }: BasicInfoCardProps) {
   return (
     <InfoCard title="Basic info" action={onEdit && <EditButton label="Edit basic info" onClick={onEdit} />}>
       <div className={styles.who}>
-        <Avatar name={name} size={64} />
-        <p className={styles.name}>{name}</p>
+        {basic.photoUrl ? (
+          <img src={basic.photoUrl} alt="" className={styles.photo} />
+        ) : (
+          <Avatar name={name} size={64} />
+        )}
+        <p className={styles.name}>{name || 'Your name'}</p>
       </div>
       <DetailList
         items={[
           { label: 'First name', value: basic.firstName },
           { label: 'Last name', value: basic.lastName },
           { label: 'Email', value: basic.email, wide: true },
-          { label: 'Location', value: basic.location, wide: true },
+          { label: 'Short bio', value: basic.shortBio, wide: true },
+          { label: 'Long bio', value: basic.longBio, wide: true },
         ]}
       />
     </InfoCard>

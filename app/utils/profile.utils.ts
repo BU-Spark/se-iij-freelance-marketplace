@@ -10,7 +10,7 @@ import type {
   ProfileData,
 } from '../types/onboarding.types';
 import type { UserPreferences } from '../types/user.types';
-import type { AccountProfile, ProfileRole } from '../types/profile.types';
+import type { AccountProfile, BasicInfo, ProfileRole, RoleValue } from '../types/profile.types';
 /** "Marcus Thorne" */
 export function fullName(profile: AccountProfile): string {
   return `${profile.basic.firstName} ${profile.basic.lastName}`.trim();
@@ -19,6 +19,31 @@ export function fullName(profile: AccountProfile): string {
 /** The roles this person doesn't have yet (for the "Add role" button) */
 export function missingRoles(profile: AccountProfile, all: ProfileRole[]): ProfileRole[] {
   return all.filter((r) => !profile.roles.some((x) => x.role === r));
+}
+
+/** Turns a panel field value into the string DetailList renders */
+export function factText(value: RoleValue | undefined, resolveOrganization?: (id: string) => string): string {
+  if (Array.isArray(value)) return value.join(', ');
+  if (typeof value === 'number') return String(value);
+  if (typeof value !== 'string') return '';
+  if (resolveOrganization && value) return resolveOrganization(value);
+  return value;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Panel edits -> validated values                                    */
+/* ------------------------------------------------------------------ */
+
+const EMAIL = /^\S+@\S+\.\S+$/;
+
+export type BasicErrors = Partial<Record<'firstName' | 'email', string>>;
+
+/** Only a first name and a usable email are required; the rest can stay blank */
+export function validateBasic(basic: BasicInfo): BasicErrors {
+  const errors: BasicErrors = {};
+  if (!basic.firstName.trim()) errors.firstName = 'Add your first name.';
+  if (!EMAIL.test(basic.email.trim())) errors.email = 'Enter a valid email address.';
+  return errors;
 }
 const ROLE_FOR: Record<OnboardingRole, Role> = {
   editor: Role.EDITOR,
