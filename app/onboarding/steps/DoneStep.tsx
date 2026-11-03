@@ -51,8 +51,8 @@ export default function DoneStep({ role, data, org, onEdit }: DoneStepProps) {
         <button className={shared.secondaryBtn} onClick={onEdit}>
           Edit profile
         </button>
-        <Link href={isEditor ? '/dashboard' : '/dashboard/assignments'} className={shared.primaryBtn}>
-          {isEditor ? 'Post first assignment →' : 'Browse assignments →'}
+        <Link href={isEditor ? '/dashboard' : '/dashboard/freelancer'} className={shared.primaryBtn}>
+          {isEditor ? 'Post first assignment →' : 'Go to dashboard →'}
         </Link>
       </div>
     </section>
