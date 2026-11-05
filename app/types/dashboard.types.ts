@@ -24,7 +24,10 @@ export type HourWindow = { start: number; end: number };
 export type RosterMember = {
   id: string;
   name: string;
+  /** the headline beat shown under the name */
   specialty: string;
+  /** every beat they cover, so the roster can filter on more than the headline */
+  beats?: string[];
   city: string;
   status: AvailabilityStatus;
   openHours: HourWindow[];
