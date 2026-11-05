@@ -22,9 +22,7 @@ export default function RosterCard({ member, view = 'day' }: RosterCardProps) {
         <Avatar name={member.name} />
         <div className={styles.who}>
           <h3 className={styles.name}>{member.name}</h3>
-          <p className={styles.meta}>
-            {member.specialty} · {member.city}
-          </p>
+          <p className={styles.meta}>{[member.specialty, member.city].filter(Boolean).join(' · ')}</p>
         </div>
         <span className={`${styles.pill} ${styles[member.status]}`}>{STATUS_LABEL[member.status]}</span>
       </div>
