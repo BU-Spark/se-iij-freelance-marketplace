@@ -10,6 +10,7 @@ import type {
   ProfileData,
 } from '../types/onboarding.types';
 import type { UserPreferences } from '../types/user.types';
+import type { PortfolioItem } from '../types/portfolioItem.types';
 import type {
   AccountProfile,
   BasicInfo,
@@ -100,7 +101,7 @@ const freelancerDetails = (row: ProfileRow): RoleDetails => ({
  * A role shows when either the role row or users.roles says it exists, so a profile saved
  * before the role arrays agreed still renders everything.
  */
-const roleKeys = (row: ProfileRow): ProfileRole[] => {
+export const profileRoles = (row: ProfileRow): ProfileRole[] => {
   const present = new Set<string>(list(row.roles));
   if (row.editor_id) present.add('editor');
   if (row.freelancer_id) present.add('freelancer');
@@ -119,7 +120,7 @@ export function toAccountProfile(row: ProfileRow, photoUrl?: string): AccountPro
       photoKey: row.photo_key ?? undefined,
       photoUrl,
     },
-    roles: roleKeys(row).map((role) => (role === 'editor' ? editorDetails(row) : freelancerDetails(row))),
+    roles: profileRoles(row).map((role) => (role === 'editor' ? editorDetails(row) : freelancerDetails(row))),
   };
 }
 
@@ -246,6 +247,85 @@ export function cleanEditorFacts(facts: Record<string, unknown>): CleanRole {
       editorialPreferences: chips(facts.editorialPreferences),
       lookingFor: chips(facts.lookingFor),
     },
+  };
+}
+
+/* ------------------------------------------------------------------ */
+/*  Reads: database row -> onboarding form state (for adding a role)   */
+/* ------------------------------------------------------------------ */
+
+/**
+ * Onboarding stores pay as one formatted string ("$1.10 / word", "$1,200 flat"), so reopening
+ * the form has to take it apart again. Anything unrecognised is left blank rather than guessed.
+ */
+export function parseRate(text: string): { rateAmount: string; rateUnit: RateUnit } {
+  const match = /^\$\s*([\d,]+(?:\.\d+)?)\s*(?:\/\s*([a-z]+)|(flat))$/i.exec(text.trim());
+
+  if (!match) return { rateAmount: '', rateUnit: 'word' };
+
+  const unit = (match[3] ? 'flat' : (match[2] ?? '')).toLowerCase();
+  const known: RateUnit[] = ['word', 'hour', 'flat'];
+
+  return {
+    rateAmount: match[1].replace(/,/g, ''),
+    rateUnit: known.includes(unit as RateUnit) ? (unit as RateUnit) : 'word',
+  };
+}
+
+const preferencesOf = (raw: Record<string, unknown> | null) => {
+  const notifications = (raw?.notifications ?? {}) as Record<string, unknown>;
+  const theme = raw?.theme;
+
+  return {
+    theme: theme === 'light' || theme === 'dark' ? theme : ('system' as UserPreferences['theme']),
+    language: str(raw?.language) || 'English',
+    // onboarding defaults to email on and push off, so match that when nothing is stored
+    emailNotifications: notifications.email !== false,
+    pushNotifications: notifications.push === true,
+  };
+};
+
+/**
+ * The inverse of `toProfile`: every answer onboarding collected, so the form can reopen on a
+ * saved profile instead of blank fields. Marked partial because a row may only have one role.
+ */
+export function toOnboardingData(row: ProfileRow): Partial<ProfileData> {
+  const pitch = pitchPreferences(row.pitch_preferences);
+  const rate = parseRate(str(row.rate));
+  const availability = row.editor_availability ?? row.freelancer_availability;
+  const days = (availability?.days ?? []).filter((day): day is Weekday => DAY_ORDER.includes(day as Weekday));
+
+  return {
+    firstName: str(row.first_name),
+    lastName: str(row.last_name),
+    email: str(row.email),
+    shortBio: str(row.short_bio),
+    longBio: str(row.long_bio),
+    photoKey: row.photo_key ?? '',
+    ...preferencesOf(row.preferences),
+    // location is a single answer shared by both roles, so the editor's copy wins when both exist
+    location: str(row.editor_location) || str(row.freelancer_location),
+    rateAmount: rate.rateAmount,
+    rateUnit: rate.rateUnit,
+    communityCovered: str(row.community_covered),
+    reportingBeats: list(row.reporting_beats),
+    beatTags: list(row.beat_tags),
+    workMediums: list(row.work_mediums),
+    tools: list(row.tools),
+    portfolio: Array.isArray(row.portfolio) ? (row.portfolio as PortfolioItem[]) : [],
+    jobTitle: str(row.job_title),
+    yearsAtDesk: typeof row.years_at_desk === 'number' ? row.years_at_desk : 0,
+    organizationId: str(row.organization_id),
+    desks: list(row.desks),
+    preferredPitchFormat: pitch.preferredPitchFormat,
+    averageResponseTime: pitch.averageResponseTime,
+    interestedTopics: pitch.interestedTopics,
+    editorialPreferences: pitch.editorialPreferences,
+    lookingFor: pitch.lookingFor,
+    availableDays: days,
+    workdayStart: availability?.typicalWorkingWindow?.startsAt || '09:00',
+    workdayEnd: availability?.typicalWorkingWindow?.endsAt || '17:00',
+    timezone: str(availability?.timezone),
   };
 }
 
