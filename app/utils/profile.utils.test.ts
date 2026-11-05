@@ -6,6 +6,7 @@ import type { ProfileRow } from '../types/profile.types';
 import {
   cleanBasic,
   cleanEditorFacts,
+  cleanFreelancerFacts,
   factText,
   formatRate,
   summarizeAvailability,
@@ -393,6 +394,24 @@ describe('cleanEditorFacts', () => {
     expect(cleanEditorFacts({ ...facts, yearsAtDesk: 'four' })).toEqual({
       ok: false,
       error: 'Years at desk must be a number.',
+    });
+  });
+});
+
+describe('cleanFreelancerFacts', () => {
+  it('keeps empty fields as null so the card shows a dash', () => {
+    expect(cleanFreelancerFacts({ location: ' ', rate: '$50 / hour', tools: ['Excel', 7] })).toEqual({
+      ok: true,
+      role: 'freelancer',
+      value: {
+        location: null,
+        rate: '$50 / hour',
+        communityCovered: null,
+        reportingBeats: [],
+        beatTags: [],
+        workMediums: [],
+        tools: ['Excel'],
+      },
     });
   });
 });

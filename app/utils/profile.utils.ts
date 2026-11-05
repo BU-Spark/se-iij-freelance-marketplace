@@ -206,7 +206,20 @@ export type CleanEditor = {
   lookingFor: string[];
 };
 
-export type CleanRole = { ok: true; role: 'editor'; value: CleanEditor } | { ok: false; error: string };
+export type CleanFreelancer = {
+  location: string | null;
+  rate: string | null;
+  communityCovered: string | null;
+  reportingBeats: string[];
+  beatTags: string[];
+  workMediums: string[];
+  tools: string[];
+};
+
+export type CleanRole =
+  | { ok: true; role: 'editor'; value: CleanEditor }
+  | { ok: true; role: 'freelancer'; value: CleanFreelancer }
+  | { ok: false; error: string };
 
 export function cleanEditorFacts(facts: Record<string, unknown>): CleanRole {
   const jobTitle = text(facts.jobTitle);
@@ -239,6 +252,22 @@ export function cleanEditorFacts(facts: Record<string, unknown>): CleanRole {
 /* ------------------------------------------------------------------ */
 /*  Onboarding: form state -> the payload the API takes                */
 /* ------------------------------------------------------------------ */
+
+export function cleanFreelancerFacts(facts: Record<string, unknown>): CleanRole {
+  return {
+    ok: true,
+    role: 'freelancer',
+    value: {
+      location: optional(facts.location),
+      rate: optional(facts.rate),
+      communityCovered: optional(facts.communityCovered),
+      reportingBeats: chips(facts.reportingBeats),
+      beatTags: chips(facts.beatTags),
+      workMediums: chips(facts.workMediums),
+      tools: chips(facts.tools),
+    },
+  };
+}
 
 const ROLE_FOR: Record<OnboardingRole, Role> = {
   editor: Role.EDITOR,
