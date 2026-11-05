@@ -2,6 +2,8 @@ import InfoCard from '../../InfoCard/InfoCard';
 import DetailList from '../../DetailList/DetailList';
 import EditButton from './EditButton';
 import { ROLE_CONFIG } from '../config/roleConfig';
+import { DEFAULT_ORGS } from '../../../onboarding/constants';
+import { factText } from '../../../utils/profile.utils';
 import type { RoleDetails } from '../../../types/profile.types';
 import styles from '../Profile.module.css';
 
@@ -9,6 +11,9 @@ type RoleCardProps = {
   details: RoleDetails;
   onEdit?: () => void;
 };
+
+/** The row stores the organisation id; people recognise the name */
+const organizationName = (id: string) => DEFAULT_ORGS.find((org) => org.id === id)?.name ?? id;
 
 export default function RoleCard({ details, onEdit }: RoleCardProps) {
   const config = ROLE_CONFIG[details.role];
@@ -23,14 +28,13 @@ export default function RoleCard({ details, onEdit }: RoleCardProps) {
       accent={config.accent}
       action={onEdit && <EditButton label={`Edit ${config.label} details`} onClick={onEdit} />}
     >
-      <div>
-        <p className={styles.label}>Bio</p>
-        <p className={styles.bio}>{details.bio || 'No bio yet.'}</p>
-      </div>
-      {/* the role config decides which facts to show and how to label them */}
+      {/* the role config decides which fields to show and how to label them */}
       <DetailList
         columns={1}
-        items={config.facts.map((f) => ({ label: f.label, value: details.facts[f.key] ?? '' }))}
+        items={config.fields.map((field) => ({
+          label: field.label,
+          value: factText(details.facts[field.key], field.type === 'org' ? organizationName : undefined),
+        }))}
       />
     </InfoCard>
   );
