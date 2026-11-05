@@ -28,6 +28,7 @@ const row: ProfileRow = {
   long_bio: null,
   photo_key: null,
   roles: ['editor'],
+  preferences: null,
   editor_id: 'user-1',
   organization_id: 'meridian',
   desks: ['Politics'],
@@ -44,6 +45,7 @@ const row: ProfileRow = {
   beat_tags: null,
   work_mediums: null,
   tools: null,
+  portfolio: null,
   freelancer_availability: null,
 };
 

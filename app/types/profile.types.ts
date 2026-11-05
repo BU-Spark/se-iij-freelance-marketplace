@@ -40,6 +40,7 @@ export type AccountProfile = {
 /** Availability as stored in JSONB; the driver hands back dates as strings */
 export type StoredAvailability = {
   days?: string[];
+  timezone?: string;
   typicalWorkingWindow?: { startsAt?: string; endsAt?: string };
 };
 
@@ -53,6 +54,7 @@ export type ProfileRow = {
   long_bio: string | null;
   photo_key: string | null;
   roles: string[] | null;
+  preferences: Record<string, unknown> | null;
   editor_id: string | null;
   organization_id: string | null;
   desks: string[] | null;
@@ -69,5 +71,6 @@ export type ProfileRow = {
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   tools: string[] | null;
+  portfolio: unknown[] | null;
   freelancer_availability: StoredAvailability | null;
 };

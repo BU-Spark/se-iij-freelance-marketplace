@@ -8,9 +8,11 @@ import {
   cleanEditorFacts,
   cleanFreelancerFacts,
   factText,
+  parseRate,
   formatRate,
   summarizeAvailability,
   toAccountProfile,
+  toOnboardingData,
   toEditor,
   toFreelancer,
   toProfile,
@@ -237,6 +239,7 @@ const baseRow: ProfileRow = {
   long_bio: null,
   photo_key: 'photos/user-1/photo.jpg',
   roles: ['editor'],
+  preferences: null,
   editor_id: 'user-1',
   organization_id: 'meridian',
   desks: ['Politics'],
@@ -262,6 +265,7 @@ const baseRow: ProfileRow = {
   beat_tags: null,
   work_mediums: null,
   tools: null,
+  portfolio: null,
   freelancer_availability: null,
 };
 
@@ -412,6 +416,98 @@ describe('cleanFreelancerFacts', () => {
         workMediums: [],
         tools: ['Excel'],
       },
+    });
+  });
+});
+
+describe('parseRate', () => {
+  it('takes apart the strings formatRate writes', () => {
+    expect(parseRate('$1.10 / word')).toEqual({ rateAmount: '1.10', rateUnit: 'word' });
+    expect(parseRate('$85 / hour')).toEqual({ rateAmount: '85', rateUnit: 'hour' });
+    expect(parseRate('$1,200 flat')).toEqual({ rateAmount: '1200', rateUnit: 'flat' });
+  });
+
+  it('leaves anything it cannot read blank rather than guessing', () => {
+    expect(parseRate('')).toEqual({ rateAmount: '', rateUnit: 'word' });
+    expect(parseRate('depends on the story')).toEqual({ rateAmount: '', rateUnit: 'word' });
+  });
+
+  it('survives a round trip through formatRate', () => {
+    const formatted = formatRate('1.25', 'word');
+    expect(parseRate(formatted ?? '')).toEqual({ rateAmount: '1.25', rateUnit: 'word' });
+  });
+});
+
+describe('toOnboardingData', () => {
+  it('rebuilds every answer onboarding asks for', () => {
+    const data = toOnboardingData(baseRow);
+
+    expect(data).toMatchObject({
+      firstName: 'Sarah',
+      lastName: 'Jenkins',
+      email: 'sarah@newsroom.example',
+      shortBio: 'Local politics reporter',
+      longBio: '',
+      jobTitle: 'News Editor',
+      yearsAtDesk: 4,
+      organizationId: 'meridian',
+      desks: ['Politics'],
+      location: 'Leeds, UK',
+      preferredPitchFormat: 'Short email pitch',
+      averageResponseTime: 3,
+      interestedTopics: ['Politics'],
+      editorialPreferences: ['Data-backed'],
+      lookingFor: ['Investigations'],
+      availableDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      workdayStart: '09:00',
+      workdayEnd: '17:00',
+    });
+  });
+
+  it('restores the freelancer answers, including the rate and portfolio', () => {
+    const data = toOnboardingData(freelancerRow);
+
+    expect(data).toMatchObject({
+      rateAmount: '1.10',
+      rateUnit: 'word',
+      reportingBeats: ['Housing'],
+      beatTags: ['Accountability'],
+      workMediums: ['Reporting'],
+      tools: ['Excel'],
+      communityCovered: 'Bristol',
+      location: 'Bristol, UK',
+      workdayStart: '10:00',
+      workdayEnd: '16:00',
+    });
+  });
+
+  it('keeps stored preferences and the photo key, so a re-save cannot wipe them', () => {
+    const data = toOnboardingData({
+      ...baseRow,
+      photo_key: 'photos/user-1/photo.jpg',
+      preferences: { theme: 'dark', language: 'French', notifications: { email: false, push: true } },
+    });
+
+    expect(data).toMatchObject({
+      photoKey: 'photos/user-1/photo.jpg',
+      theme: 'dark',
+      language: 'French',
+      emailNotifications: false,
+      pushNotifications: true,
+    });
+  });
+
+  it('falls back to onboarding defaults when nothing is stored', () => {
+    const data = toOnboardingData({ ...baseRow, preferences: null, editor_availability: null });
+
+    expect(data).toMatchObject({
+      theme: 'system',
+      language: 'English',
+      emailNotifications: true,
+      pushNotifications: false,
+      workdayStart: '09:00',
+      workdayEnd: '17:00',
+      availableDays: [],
     });
   });
 });
