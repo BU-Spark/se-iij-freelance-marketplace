@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import ProfilePanel from './ProfilePanel';
 import SidePanel from '../SidePanel/SidePanel';
@@ -19,17 +21,48 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
   const params = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
-  const { profile, loading, error, saveBasic, saveRole, addRole } = useProfile();
+  const { profile, loading, error, needsOnboarding, refresh, saveBasic, saveRole, addRole } = useProfile();
+  const open = params.get('panel') === 'profile';
 
-  if (params.get('panel') !== 'profile') return null;
+  // The store may still hold a "no profile" answer from before onboarding was finished, so
+  // re-check once when the panel opens rather than trusting a stale result.
+  useEffect(() => {
+    if (open && needsOnboarding) void refresh();
+  }, [open, needsOnboarding, refresh]);
+
+  if (!open) return null;
 
   const close = () => router.push(closeHref, { scroll: false });
 
   if (!profile) {
+    // the re-check above runs on open, so say "loading" rather than flashing the setup prompt
+    if (loading) {
+      return (
+        <SidePanel title="My profile" side="right" onClose={close}>
+          <p className={styles.status} role="status">
+            Loading your profile…
+          </p>
+        </SidePanel>
+      );
+    }
+
+    if (needsOnboarding) {
+      return (
+        <SidePanel title="My profile" side="right" onClose={close}>
+          <p className={styles.notice}>
+            You haven&apos;t set up your profile yet. Onboarding is where it gets created — it only takes a minute.
+          </p>
+          <Link href="/onboarding" className={styles.setupLink}>
+            Finish setting up your profile →
+          </Link>
+        </SidePanel>
+      );
+    }
+
     return (
       <SidePanel title="My profile" side="right" onClose={close}>
         <p className={styles.status} role="status">
-          {loading ? 'Loading your profile…' : (error ?? 'Your profile is unavailable right now.')}
+          {error ?? 'Your profile is unavailable right now.'}
         </p>
       </SidePanel>
     );

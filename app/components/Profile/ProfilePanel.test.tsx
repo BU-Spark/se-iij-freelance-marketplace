@@ -22,6 +22,36 @@ describe('ProfilePanel', () => {
     expect(screen.getByText('Reporting beats')).toBeInTheDocument();
   });
 
+  it('prompts for a role when the profile has none yet', () => {
+    const empty = { ...MOCK_PROFILE, roles: [] };
+    render(<ProfilePanel profile={empty} onClose={jest.fn()} onAddRole={jest.fn()} />);
+
+    expect(screen.getByText(/isn't finished yet/i)).toBeInTheDocument();
+    // and still offers both roles to pick from
+    expect(screen.getByRole('button', { name: /add the editor role/i })).toBeInTheDocument();
+  });
+
+  it('points at the field a role still needs before it counts as finished', () => {
+    const editor = MOCK_PROFILE.roles.find((r) => r.role === 'editor');
+    if (!editor) throw new Error('sample profile has no editor role');
+
+    const profile = {
+      ...MOCK_PROFILE,
+      roles: [{ role: 'editor' as const, facts: { ...editor.facts, jobTitle: '' } }],
+    };
+
+    render(<ProfilePanel profile={profile} onClose={jest.fn()} onSaveRole={jest.fn()} />);
+
+    expect(screen.getByText(/finish your editor profile: add a job title/i)).toBeInTheDocument();
+  });
+
+  it('has no prompt once every role is filled in', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={jest.fn()} />);
+
+    expect(screen.queryByText(/isn't finished yet/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/finish your .* profile/i)).not.toBeInTheDocument();
+  });
+
   it('offers to add only the roles the person does not have', async () => {
     const onAddRole = jest.fn().mockResolvedValue(true);
     render(<ProfilePanel profile={onlyFreelancer} onClose={jest.fn()} onAddRole={onAddRole} />);

@@ -17,6 +17,8 @@ type RoleConfig = {
   ink: string;
   /** which fields this role has, in order; `readonly` ones are shown but not edited */
   fields: RoleField[];
+  /** fields that must be filled in before the role counts as finished */
+  requiredFields: string[];
 };
 
 /** Everything that differs between roles lives here; the card and the form both read from it */
@@ -36,6 +38,8 @@ export const ROLE_CONFIG: Record<ProfileRole, RoleConfig> = {
       { key: 'tools', label: 'Tools', type: 'chips' },
       { key: 'availability', label: 'Availability', type: 'readonly' },
     ],
+    // nothing here is mandatory: a freelancer can fill the rest in whenever
+    requiredFields: [],
   },
   editor: {
     label: 'Editor',
@@ -55,8 +59,14 @@ export const ROLE_CONFIG: Record<ProfileRole, RoleConfig> = {
       { key: 'lookingFor', label: 'Looking for', type: 'chips' },
       { key: 'availability', label: 'Availability', type: 'readonly' },
     ],
+    // editors.job_title is NOT NULL, so a card without one cannot be saved
+    requiredFields: ['jobTitle'],
   },
 };
 
 /** The roles in the order we show them */
 export const ALL_ROLES: ProfileRole[] = PROFILE_ROLE_ORDER;
+
+/** The fields a role still needs before its card counts as finished */
+export const requiredFieldsFor = (role: ProfileRole): RoleField[] =>
+  ROLE_CONFIG[role].fields.filter((field) => ROLE_CONFIG[role].requiredFields.includes(field.key));
