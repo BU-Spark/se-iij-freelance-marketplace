@@ -20,13 +20,16 @@ function colorFor(name: string) {
 type AvatarProps = {
   name: string;
   size?: number;
+  /** draws the green "free right now" dot on the bottom-right corner */
+  available?: boolean;
 };
 
-export default function Avatar({ name, size = 44 }: AvatarProps) {
+export default function Avatar({ name, size = 44, available = false }: AvatarProps) {
   const { bg, fg } = colorFor(name);
   return (
     <span className={styles.avatar} style={{ width: size, height: size, background: bg, color: fg }} aria-hidden="true">
       {initials(name)}
+      {available && <span className={styles.availableDot} data-testid="available-dot" />}
     </span>
   );
 }

@@ -204,7 +204,14 @@ describe('profile helpers', () => {
 });
 
 describe('validateBasic', () => {
-  const basic = { firstName: 'Sarah', lastName: '', email: 'sarah@newsroom.example', shortBio: '', longBio: '' };
+  const basic = {
+    firstName: 'Sarah',
+    lastName: '',
+    email: 'sarah@newsroom.example',
+    shortBio: '',
+    longBio: '',
+    availableNow: false,
+  };
 
   it('accepts a first name and a valid email', () => {
     expect(validateBasic(basic)).toEqual({});
@@ -238,6 +245,7 @@ const baseRow: ProfileRow = {
   short_bio: 'Local politics reporter',
   long_bio: null,
   photo_key: 'photos/user-1/photo.jpg',
+  available_now: true,
   roles: ['editor'],
   preferences: null,
   editor_id: 'user-1',
@@ -306,6 +314,7 @@ describe('toAccountProfile', () => {
       longBio: '',
       photoKey: 'photos/user-1/photo.jpg',
       photoUrl: 'https://signed.example/photo.jpg',
+      availableNow: true,
     });
     expect(profile.roles[0]).toMatchObject({
       role: 'editor',

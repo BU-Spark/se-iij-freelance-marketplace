@@ -14,6 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
   photo_key TEXT,
   -- Notification + display preferences collected during onboarding
   preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
+  -- The person's own "I'm free right now" flag, shown as the dot on their avatar
+  available_now BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT users_roles_allowed CHECK (roles <@ ARRAY['editor', 'freelancer']::TEXT[])
@@ -75,6 +77,7 @@ CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (statu
 ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS available_now BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;
 
 -- users.role (single value) became users.roles (array) so one person can be both

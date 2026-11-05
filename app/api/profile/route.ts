@@ -113,11 +113,7 @@ export async function PATCH(request: Request) {
 
       const basic = cleanBasic(body.basic);
 
-      const problems = validateBasic({
-        ...basic,
-        shortBio: basic.shortBio ?? '',
-        longBio: basic.longBio ?? '',
-      });
+      const problems = validateBasic(basic);
       const firstProblem = Object.values(problems)[0];
 
       if (firstProblem) {
@@ -216,6 +212,23 @@ export async function PATCH(request: Request) {
       }
 
       notFound = !(await addRoleToUser((sql, values) => connection.query(sql, values), userId, role));
+    } else if (section === 'availableNow') {
+      if (typeof body.availableNow !== 'boolean') {
+        await connection.query('ROLLBACK');
+        return NextResponse.json({ error: 'The profile payload is invalid.' }, { status: 400 });
+      }
+
+      // one flag on the person, so it is a single update rather than a role upsert
+      const updated = await connection.query(
+        `UPDATE users
+           SET available_now = $2,
+               updated_at = NOW()
+         WHERE clerk_id = $1
+         RETURNING id`,
+        [userId, body.availableNow]
+      );
+
+      notFound = updated.rowCount === 0;
     } else {
       await connection.query('ROLLBACK');
       return NextResponse.json({ error: 'The profile payload is invalid.' }, { status: 400 });

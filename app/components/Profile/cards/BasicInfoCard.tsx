@@ -9,9 +9,11 @@ type BasicInfoCardProps = {
   basic: BasicInfo;
   /** if given, shows an Edit button in the card's title row */
   onEdit?: () => void;
+  /** if given, shows the "free right now" switch */
+  onToggleAvailable?: (availableNow: boolean) => void;
 };
 
-export default function BasicInfoCard({ basic, onEdit }: BasicInfoCardProps) {
+export default function BasicInfoCard({ basic, onEdit, onToggleAvailable }: BasicInfoCardProps) {
   const name = `${basic.firstName} ${basic.lastName}`.trim();
 
   return (
@@ -20,10 +22,24 @@ export default function BasicInfoCard({ basic, onEdit }: BasicInfoCardProps) {
         {basic.photoUrl ? (
           <img src={basic.photoUrl} alt="" className={styles.photo} />
         ) : (
-          <Avatar name={name} size={64} />
+          <Avatar name={name} size={64} available={basic.availableNow} />
         )}
         <p className={styles.name}>{name || 'Your name'}</p>
       </div>
+      {onToggleAvailable && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={basic.availableNow}
+          className={styles.availableToggle}
+          onClick={() => onToggleAvailable(!basic.availableNow)}
+        >
+          <span>Free right now</span>
+          <span className={styles.availableTrack} data-on={basic.availableNow} aria-hidden="true">
+            <span className={styles.availableThumb} />
+          </span>
+        </button>
+      )}
       <DetailList
         items={[
           { label: 'First name', value: basic.firstName },
