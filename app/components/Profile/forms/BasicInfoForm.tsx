@@ -21,6 +21,7 @@ export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoForm
   // a copy to type into; the real profile only changes on Save
   const [draft, setDraft] = useState(basic);
   const [errors, setErrors] = useState<BasicErrors>({});
+  const [saving, setSaving] = useState(false);
 
   // one change handler for every field, e.g. update('email')
   const update = (key: TextField) => (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -32,14 +33,19 @@ export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoForm
     setErrors(problems);
     if (Object.keys(problems).length > 0) return;
 
-    await onSave({
-      ...draft,
-      firstName: draft.firstName.trim(),
-      lastName: draft.lastName.trim(),
-      email: draft.email.trim(),
-      shortBio: draft.shortBio.trim(),
-      longBio: draft.longBio.trim(),
-    });
+    setSaving(true);
+    try {
+      await onSave({
+        ...draft,
+        firstName: draft.firstName.trim(),
+        lastName: draft.lastName.trim(),
+        email: draft.email.trim(),
+        shortBio: draft.shortBio.trim(),
+        longBio: draft.longBio.trim(),
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -78,7 +84,7 @@ export default function BasicInfoForm({ basic, onSave, onCancel }: BasicInfoForm
         <Field label="Long bio">
           <textarea className={styles.input} rows={4} value={draft.longBio} onChange={update('longBio')} />
         </Field>
-        <FormActions onCancel={onCancel} />
+        <FormActions onCancel={onCancel} saving={saving} />
       </form>
     </InfoCard>
   );

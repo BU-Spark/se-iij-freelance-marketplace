@@ -26,12 +26,18 @@ const asText = (value: RoleValue | undefined): string =>
 export default function RoleForm({ details, onSave, onCancel }: RoleFormProps) {
   const config = ROLE_CONFIG[details.role];
   const [facts, setFacts] = useState<Record<string, RoleValue>>(details.facts);
+  const [saving, setSaving] = useState(false);
 
   const set = (key: string, value: RoleValue) => setFacts((current) => ({ ...current, [key]: value }));
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
-    await onSave({ ...details, facts });
+    setSaving(true);
+    try {
+      await onSave({ ...details, facts });
+    } finally {
+      setSaving(false);
+    }
   };
 
   // availability is shown on the card but only onboarding can change it
@@ -72,7 +78,7 @@ export default function RoleForm({ details, onSave, onCancel }: RoleFormProps) {
             )}
           </Field>
         ))}
-        <FormActions onCancel={onCancel} />
+        <FormActions onCancel={onCancel} saving={saving} />
       </form>
     </InfoCard>
   );

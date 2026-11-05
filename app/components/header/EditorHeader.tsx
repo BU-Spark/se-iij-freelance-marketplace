@@ -7,28 +7,31 @@ import { useClerk } from '@clerk/nextjs';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
 import ProfileButton from '../Profile/ProfileButton';
-import { MOCK_PROFILE } from '../Profile/config/constants';
+import { useProfile } from '../../hooks/useProfile';
 import { fullName } from '../../utils/profile.utils';
 import styles from './editorHeader.module.css';
-
-// To do: replace MOCK_PROFILE with the signed-in user's profile from the API
-const MY_NAME = fullName(MOCK_PROFILE);
-const MY_ROLES: ProfileRole[] = MOCK_PROFILE.roles.map((r) => r.role);
-const DEFAULT_ROLE: ProfileRole = MY_ROLES.includes('editor') ? 'editor' : MY_ROLES[0];
 
 export function EditorHeader() {
   const pathname = usePathname();
   const { signOut } = useClerk();
-  const [role, setRole] = useState<ProfileRole>(DEFAULT_ROLE);
+  const { profile } = useProfile();
+
+  const myName = profile ? fullName(profile) : '';
+  const myRoles: ProfileRole[] = profile?.roles.map((r) => r.role) ?? [];
+
+  // people can switch which side of the desk they are working as; editors land on the desk by default
+  const [workingAs, setWorkingAs] = useState<ProfileRole | null>(null);
+  const defaultRole: ProfileRole = myRoles.includes('editor') ? 'editor' : (myRoles[0] ?? 'editor');
+  const role = workingAs ?? defaultRole;
 
   return (
     <header className={styles.headerBox}>
       {/* ☰ opens the navigation menu on the left */}
       <HamburgerMenu
-        name={MY_NAME}
-        roles={MY_ROLES}
+        name={myName}
+        roles={myRoles}
         activeRole={role}
-        onRoleChange={setRole}
+        onRoleChange={setWorkingAs}
         currentPath={pathname}
         profileHref={`${pathname}?panel=profile`}
         onSignOut={() => signOut({ redirectUrl: '/' })}
@@ -50,7 +53,7 @@ export function EditorHeader() {
         )}
 
         {/* avatar that opens My profile (?panel=profile) */}
-        <ProfileButton name={MY_NAME} />
+        <ProfileButton name={myName} />
       </div>
     </header>
   );

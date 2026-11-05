@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { EditorHeader } from './EditorHeader';
+import { MOCK_PROFILE } from '../Profile/config/constants';
 
 const mockSignOut = jest.fn();
 
@@ -15,7 +16,11 @@ jest.mock('@clerk/nextjs', () => ({
 }));
 
 describe('EditorHeader', () => {
-  beforeEach(() => mockSignOut.mockClear());
+  beforeEach(() => {
+    mockSignOut.mockClear();
+    // the header reads the signed-in user's name and roles from /api/profile
+    global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => MOCK_PROFILE });
+  });
 
   it('opens the menu from the ☰ button', async () => {
     render(<EditorHeader />);
@@ -40,7 +45,7 @@ describe('EditorHeader', () => {
     expect(screen.getByRole('link', { name: /new assignment/i })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    await userEvent.click(screen.getByRole('radio', { name: /freelancer/i }));
+    await userEvent.click(await screen.findByRole('radio', { name: /freelancer/i }));
 
     expect(screen.getByRole('button', { name: /make a pitch/i })).toBeInTheDocument();
   });

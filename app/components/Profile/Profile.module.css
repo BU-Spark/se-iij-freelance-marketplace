@@ -131,3 +131,23 @@ textarea.input {
   background: var(--navy-deep);
   color: #fff;
 }
+/* the signed-in user's uploaded photo, when there is one */
+.photo {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* loading / error line shown instead of the cards */
+.status {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.cancel:disabled,
+.save:disabled {
+  opacity: 0.6;
+  cursor: default;
+}

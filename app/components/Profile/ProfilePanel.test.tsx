@@ -66,6 +66,17 @@ describe('ProfilePanel', () => {
     expect(await screen.findByRole('button', { name: 'Edit basic info' })).toBeInTheDocument();
   });
 
+  it('keeps the form open when the save fails', async () => {
+    const onSaveBasic = jest.fn().mockResolvedValue(false);
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSaveBasic).toHaveBeenCalled());
+    expect(await screen.findByRole('button', { name: 'Save' })).toBeInTheDocument();
+  });
+
   it('does not save basic info without a first name', async () => {
     const onSaveBasic = jest.fn().mockResolvedValue(true);
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);

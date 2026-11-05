@@ -9,6 +9,7 @@
  */
 
 export { default as useLocalStorage } from './useLocalStorage';
+export { useProfile, loadProfile } from './useProfile';
 // Add other hooks here as they are created, e.g.:
 // export { default as useAuth } from './useAuth';
 // export { default as useForm } from './useForm';
