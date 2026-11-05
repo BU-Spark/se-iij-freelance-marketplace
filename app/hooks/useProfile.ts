@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../types/profile.types';
+import type { AccountProfile, BasicInfo, RoleDetails } from '../types/profile.types';
 
 /**
  * One shared copy of the signed-in user's profile.
@@ -113,7 +113,6 @@ export function createProfileStore(request: ProfileRequest = defaultRequest) {
     load,
     saveBasic: (basic: BasicInfo) => save({ section: 'basic', basic }),
     saveRole: (details: RoleDetails) => save({ section: 'role', role: details.role, facts: details.facts }),
-    addRole: (role: ProfileRole) => save({ section: 'addRole', role }),
   };
 }
 
@@ -139,6 +138,5 @@ export function useProfile() {
     refresh: profileStore.load,
     saveBasic: profileStore.saveBasic,
     saveRole: profileStore.saveRole,
-    addRole: profileStore.addRole,
   };
 }

@@ -32,7 +32,6 @@ const store = (overrides: Record<string, unknown> = {}) => ({
   refresh: jest.fn(),
   saveBasic: jest.fn(),
   saveRole: jest.fn(),
-  addRole: jest.fn(),
   ...overrides,
 });
 

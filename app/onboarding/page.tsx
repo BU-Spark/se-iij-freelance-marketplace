@@ -63,6 +63,41 @@ export default function OnboardingPage() {
     setData((d) => (d.timezone ? d : { ...d, timezone: detectTimezone() }));
   }, []);
 
+  // Arriving from "Add the freelancer role": reopen the saved profile and land on that role,
+  // so nobody has to retype (or overwrite) what they already filled in.
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('add');
+    if (requested !== 'editor' && requested !== 'freelancer') return;
+
+    let cancelled = false;
+
+    const seed = async () => {
+      try {
+        const response = await fetch('/api/profile/onboarding');
+        if (!response.ok) return;
+
+        const { roles: saved, data: answers } = (await response.json()) as {
+          roles: OnboardingRole[];
+          data: Partial<ProfileData>;
+        };
+        if (cancelled) return;
+
+        const nextRoles = ALL_ROLES.filter((role) => saved.includes(role) || role === requested);
+        setRoles(nextRoles);
+        setData((d) => ({ ...d, ...answers, timezone: answers.timezone || d.timezone }));
+        setIndex(Math.max(0, buildSequence(nextRoles).indexOf(`${requested}-profile`)));
+      } catch {
+        // if the seed cannot be read, the normal flow still works — just from empty
+      }
+    };
+
+    void seed();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const sequence = useMemo(() => buildSequence(roles), [roles]);
   const step = sequence[Math.min(index, sequence.length - 1)];
   const errors = useMemo(() => validateStep(step, roles, data), [step, roles, data]);

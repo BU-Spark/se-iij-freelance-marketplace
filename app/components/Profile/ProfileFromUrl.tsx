@@ -7,7 +7,7 @@ import ProfilePanel from './ProfilePanel';
 import SidePanel from '../SidePanel/SidePanel';
 import { useToast } from '../Toast/ToastProvider';
 import { useProfile } from '../../hooks/useProfile';
-import type { BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
+import type { BasicInfo, RoleDetails } from '../../types/profile.types';
 import styles from './Profile.module.css';
 
 type ProfileFromUrlProps = {
@@ -21,7 +21,7 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
   const params = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
-  const { profile, loading, error, needsOnboarding, refresh, saveBasic, saveRole, addRole } = useProfile();
+  const { profile, loading, error, needsOnboarding, refresh, saveBasic, saveRole } = useProfile();
   const open = params.get('panel') === 'profile';
 
   // The store may still hold a "no profile" answer from before onboarding was finished, so
@@ -82,19 +82,5 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
     return ok;
   };
 
-  const handleAddRole = async (role: ProfileRole) => {
-    const ok = await addRole(role);
-    toast(ok, `${role === 'editor' ? 'Editor' : 'Freelancer'} role added`);
-    return ok;
-  };
-
-  return (
-    <ProfilePanel
-      profile={profile}
-      onClose={close}
-      onAddRole={handleAddRole}
-      onSaveBasic={handleSaveBasic}
-      onSaveRole={handleSaveRole}
-    />
-  );
+  return <ProfilePanel profile={profile} onClose={close} onSaveBasic={handleSaveBasic} onSaveRole={handleSaveRole} />;
 }
