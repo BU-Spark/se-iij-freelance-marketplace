@@ -182,3 +182,22 @@
     gap: 12px;
   }
 }
+
+/* device-verification step */
+.trustNote {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.switchAccount {
+  align-self: center;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  color: var(--c-blue);
+  text-decoration: underline;
+  cursor: pointer;
+}
