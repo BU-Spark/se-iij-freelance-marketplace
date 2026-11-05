@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import ProfileFromUrl from './ProfileFromUrl';
 import { ToastProvider } from '../Toast/ToastProvider';
 import { MOCK_PROFILE } from './config/constants';
@@ -32,6 +32,7 @@ const store = (overrides: Record<string, unknown> = {}) => ({
   refresh: jest.fn(),
   saveBasic: jest.fn(),
   saveRole: jest.fn(),
+  saveAvailableNow: jest.fn(),
   ...overrides,
 });
 
@@ -74,6 +75,17 @@ describe('ProfileFromUrl', () => {
     renderPanel();
 
     expect(panelStatus()).toHaveTextContent(/unable to load your profile/i);
+  });
+
+  it('saves the free-right-now flag and says so', async () => {
+    const saveAvailableNow = jest.fn().mockResolvedValue(true);
+    mockStore.mockReturnValue(store({ profile: MOCK_PROFILE, saveAvailableNow }));
+
+    renderPanel();
+    fireEvent.click(screen.getByRole('switch', { name: /free right now/i }));
+
+    await waitFor(() => expect(saveAvailableNow).toHaveBeenCalledWith(false));
+    expect(await screen.findByText(/no longer marked as free/i)).toBeInTheDocument();
   });
 
   it('renders the panel when there is a profile', () => {

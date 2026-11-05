@@ -119,6 +119,7 @@ export function toAccountProfile(row: ProfileRow, photoUrl?: string): AccountPro
       longBio: str(row.long_bio),
       photoKey: row.photo_key ?? undefined,
       photoUrl,
+      availableNow: Boolean(row.available_now),
     },
     roles: profileRoles(row).map((role) => (role === 'editor' ? editorDetails(row) : freelancerDetails(row))),
   };
@@ -168,7 +169,7 @@ const count = (value: unknown): number | null => {
 export type BasicErrors = Partial<Record<'firstName' | 'email', string>>;
 
 /** Only a first name and a usable email are required; the rest can stay blank */
-export function validateBasic(basic: BasicInfo): BasicErrors {
+export function validateBasic(basic: Pick<BasicInfo, 'firstName' | 'email'>): BasicErrors {
   const errors: BasicErrors = {};
   if (!basic.firstName.trim()) errors.firstName = 'Add your first name.';
   if (!EMAIL.test(basic.email.trim())) errors.email = 'Enter a valid email address.';

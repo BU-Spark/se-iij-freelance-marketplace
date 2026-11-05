@@ -22,13 +22,21 @@ type ProfilePanelProps = {
   onSaveBasic?: (basic: BasicInfo) => SaveResult;
   /** if given, each role card gets an Edit button */
   onSaveRole?: (details: RoleDetails) => SaveResult;
+  /** if given, basic info gets the "free right now" switch */
+  onSaveAvailable?: (availableNow: boolean) => SaveResult;
 };
 
 /** Empty text, or a chip list with nothing picked */
 const isBlank = (value: RoleValue | undefined) =>
   value === undefined || (Array.isArray(value) ? value.length === 0 : String(value).trim() === '');
 
-export default function ProfilePanel({ profile, onClose, onSaveBasic, onSaveRole }: ProfilePanelProps) {
+export default function ProfilePanel({
+  profile,
+  onClose,
+  onSaveBasic,
+  onSaveRole,
+  onSaveAvailable,
+}: ProfilePanelProps) {
   // which card is open as a form: 'basic', a role, or nothing
   const [editing, setEditing] = useState<'basic' | ProfileRole | null>(null);
   const stopEditing = () => setEditing(null);
@@ -54,7 +62,11 @@ export default function ProfilePanel({ profile, onClose, onSaveBasic, onSaveRole
         {editing === 'basic' && onSaveBasic ? (
           <BasicInfoForm basic={profile.basic} onSave={saveBasic} onCancel={stopEditing} />
         ) : (
-          <BasicInfoCard basic={profile.basic} onEdit={onSaveBasic && (() => setEditing('basic'))} />
+          <BasicInfoCard
+            basic={profile.basic}
+            onEdit={onSaveBasic && (() => setEditing('basic'))}
+            onToggleAvailable={onSaveAvailable && ((next) => void onSaveAvailable(next))}
+          />
         )}
 
         <h3 className={styles.label}>My roles</h3>
