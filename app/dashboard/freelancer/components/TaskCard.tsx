@@ -1,5 +1,6 @@
 import type { DeskAssignment } from '../../../types/dashboard.types';
 import { formatDeadline, formatRate } from '../../../utils/dashboard.utils';
+import { formatCompensation } from '../../../utils/assignment.utils';
 import { taskStatus, FILTERS } from '../freelancer.utils';
 import styles from '../freelancer.module.css';
 
@@ -25,11 +26,11 @@ export function TaskCard({ task, freelancerId }: TaskCardProps) {
         </div>
         <div>
           <dt>Compensation</dt>
-          <dd>{formatRate(task.rate)}</dd>
+          <dd>{task.rate ? formatRate(task.rate) : task.compensation ? formatCompensation(task.compensation) : '—'}</dd>
         </div>
         <div>
           <dt>Deadline</dt>
-          <dd>{formatDeadline(task.deadline)}</dd>
+          <dd>{task.deadline ? formatDeadline(task.deadline) : '—'}</dd>
         </div>
         <div>
           <dt>Type / length</dt>
