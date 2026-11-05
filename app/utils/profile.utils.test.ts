@@ -1,10 +1,15 @@
 import { EMPTY } from '../onboarding/constants';
 import type { ProfileData } from '../types/onboarding.types';
 import { Role } from '../types/user.types';
+import { ROLE_CONFIG } from '../components/Profile/config/roleConfig';
+import type { ProfileRow } from '../types/profile.types';
 import {
+  cleanBasic,
+  cleanEditorFacts,
   factText,
   formatRate,
   summarizeAvailability,
+  toAccountProfile,
   toEditor,
   toFreelancer,
   toProfile,
@@ -219,5 +224,175 @@ describe('factText', () => {
 
   it('resolves an organisation id through the resolver', () => {
     expect(factText('meridian', () => 'The Meridian Post')).toBe('The Meridian Post');
+  });
+});
+
+const baseRow: ProfileRow = {
+  id: 'user-1',
+  email: 'sarah@newsroom.example',
+  first_name: 'Sarah',
+  last_name: 'Jenkins',
+  short_bio: 'Local politics reporter',
+  long_bio: null,
+  photo_key: 'photos/user-1/photo.jpg',
+  roles: ['editor'],
+  editor_id: 'user-1',
+  organization_id: 'meridian',
+  desks: ['Politics'],
+  job_title: 'News Editor',
+  years_at_desk: 4,
+  editor_location: 'Leeds, UK',
+  pitch_preferences: {
+    preferredPitchFormat: 'Short email pitch',
+    averageResponseTime: 3,
+    interestedTopics: ['Politics'],
+    editorialPreferences: ['Data-backed'],
+    lookingFor: ['Investigations'],
+  },
+  editor_availability: {
+    days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+    typicalWorkingWindow: { startsAt: '09:00', endsAt: '17:00' },
+  },
+  freelancer_id: null,
+  freelancer_location: null,
+  rate: null,
+  community_covered: null,
+  reporting_beats: null,
+  beat_tags: null,
+  work_mediums: null,
+  tools: null,
+  freelancer_availability: null,
+};
+
+const freelancerRow: ProfileRow = {
+  ...baseRow,
+  roles: ['freelancer'],
+  editor_id: null,
+  organization_id: null,
+  desks: null,
+  job_title: null,
+  years_at_desk: null,
+  editor_location: null,
+  pitch_preferences: null,
+  editor_availability: null,
+  freelancer_id: 'user-1',
+  freelancer_location: 'Bristol, UK',
+  rate: '$1.10 / word',
+  community_covered: 'Bristol',
+  reporting_beats: ['Housing'],
+  beat_tags: ['Accountability'],
+  work_mediums: ['Reporting'],
+  tools: ['Excel'],
+  freelancer_availability: {
+    days: ['monday', 'tuesday'],
+    typicalWorkingWindow: { startsAt: '10:00', endsAt: '16:00' },
+  },
+};
+
+describe('toAccountProfile', () => {
+  it('maps the row and the signed photo URL onto the panel profile', () => {
+    const profile = toAccountProfile(baseRow, 'https://signed.example/photo.jpg');
+
+    expect(profile.basic).toEqual({
+      firstName: 'Sarah',
+      lastName: 'Jenkins',
+      email: 'sarah@newsroom.example',
+      shortBio: 'Local politics reporter',
+      longBio: '',
+      photoKey: 'photos/user-1/photo.jpg',
+      photoUrl: 'https://signed.example/photo.jpg',
+    });
+    expect(profile.roles[0]).toMatchObject({
+      role: 'editor',
+      facts: {
+        organizationId: 'meridian',
+        jobTitle: 'News Editor',
+        desks: ['Politics'],
+        yearsAtDesk: 4,
+        availability: 'Mon–Fri · 09:00–17:00',
+      },
+    });
+  });
+
+  it('maps the freelancer columns to the freelancer card', () => {
+    expect(toAccountProfile(freelancerRow).roles).toEqual([
+      {
+        role: 'freelancer',
+        facts: {
+          location: 'Bristol, UK',
+          rate: '$1.10 / word',
+          communityCovered: 'Bristol',
+          reportingBeats: ['Housing'],
+          beatTags: ['Accountability'],
+          workMediums: ['Reporting'],
+          tools: ['Excel'],
+          availability: 'Mon, Tue · 10:00–16:00',
+        },
+      },
+    ]);
+  });
+
+  it('keeps a role that has a row even when users.roles has not caught up', () => {
+    expect(toAccountProfile({ ...baseRow, roles: [] }).roles.map((r) => r.role)).toEqual(['editor']);
+  });
+
+  it('shows both roles in the canonical order', () => {
+    const profile = toAccountProfile({ ...baseRow, roles: ['editor', 'freelancer'], freelancer_id: 'user-1' });
+    expect(profile.roles.map((r) => r.role)).toEqual(['freelancer', 'editor']);
+  });
+
+  it('produces a fact for every field the panel renders', () => {
+    for (const details of [toAccountProfile(baseRow).roles[0], toAccountProfile(freelancerRow).roles[0]]) {
+      ROLE_CONFIG[details.role].fields.forEach((field) => expect(details.facts).toHaveProperty(field.key));
+    }
+  });
+});
+
+describe('cleanBasic', () => {
+  it('trims the text, stores blank bios as null and ignores wrong types', () => {
+    expect(
+      cleanBasic({ firstName: ' Sarah ', lastName: ' Jenkins ', email: 's@x.co', shortBio: ' ', longBio: '' })
+    ).toEqual({ firstName: 'Sarah', lastName: 'Jenkins', email: 's@x.co', shortBio: null, longBio: null });
+    expect(cleanBasic({ firstName: 42, email: null })).toMatchObject({ firstName: '', email: '' });
+  });
+});
+
+describe('cleanEditorFacts', () => {
+  const facts = {
+    organizationId: 'meridian',
+    jobTitle: ' News Editor ',
+    desks: [' Politics ', ''],
+    yearsAtDesk: '4',
+    location: ' Leeds ',
+    preferredPitchFormat: 'Email',
+    averageResponseTime: 3,
+    interestedTopics: ['Politics'],
+    editorialPreferences: [],
+    lookingFor: ['Investigations'],
+  };
+
+  it('coerces numbers and trims chip lists', () => {
+    expect(cleanEditorFacts(facts)).toEqual({
+      ok: true,
+      role: 'editor',
+      value: expect.objectContaining({
+        jobTitle: 'News Editor',
+        desks: ['Politics'],
+        yearsAtDesk: 4,
+        location: 'Leeds',
+        organizationId: 'meridian',
+      }),
+    });
+  });
+
+  it('requires a job title and a numeric years at desk', () => {
+    expect(cleanEditorFacts({ ...facts, jobTitle: '' })).toEqual({
+      ok: false,
+      error: 'Add the job title for this desk.',
+    });
+    expect(cleanEditorFacts({ ...facts, yearsAtDesk: 'four' })).toEqual({
+      ok: false,
+      error: 'Years at desk must be a number.',
+    });
   });
 });
