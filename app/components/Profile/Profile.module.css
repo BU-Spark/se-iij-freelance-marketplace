@@ -178,3 +178,46 @@ textarea.input {
   font-weight: 600;
   text-decoration: none;
 }
+
+/* "free right now" switch */
+.availableToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.availableTrack {
+  position: relative;
+  flex-shrink: 0;
+  width: 40px;
+  height: 22px;
+  border-radius: 999px;
+  background: #d5dae3;
+  transition: background 150ms ease;
+}
+.availableTrack[data-on='true'] {
+  background: #22c55e;
+}
+.availableThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 150ms ease;
+}
+.availableTrack[data-on='true'] .availableThumb {
+  transform: translateX(18px);
+}

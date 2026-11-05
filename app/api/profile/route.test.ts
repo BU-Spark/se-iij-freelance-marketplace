@@ -27,6 +27,7 @@ const row: ProfileRow = {
   short_bio: 'Local politics reporter',
   long_bio: null,
   photo_key: null,
+  available_now: false,
   roles: ['editor'],
   preferences: null,
   editor_id: 'user-1',
@@ -185,6 +186,24 @@ describe('PATCH /api/profile', () => {
     const response = await PATCH(patch({ section: 'basic', basic: { firstName: ' ', email: 'a@b.co' } }));
     expect(response.status).toBe(400);
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+  });
+
+  it('sets the free-right-now flag on the user', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk-1' });
+    const client = makeClient();
+    connectMock.mockResolvedValue(client);
+    queryMock.mockResolvedValue({ rows: [row] });
+
+    expect((await PATCH(patch({ section: 'availableNow', availableNow: true }))).status).toBe(200);
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('SET available_now = $2'), ['clerk-1', true]);
+  });
+
+  it('rejects a flag that is not a boolean', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk-1' });
+    const client = makeClient();
+    connectMock.mockResolvedValue(client);
+
+    expect((await PATCH(patch({ section: 'availableNow', availableNow: 'yes' }))).status).toBe(400);
   });
 
   it('upserts the editor role and adds it to users.roles', async () => {

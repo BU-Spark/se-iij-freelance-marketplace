@@ -52,6 +52,30 @@ describe('ProfilePanel', () => {
     expect(screen.queryByText(/finish your .* profile/i)).not.toBeInTheDocument();
   });
 
+  it('shows the free-right-now switch and flips it', () => {
+    const onSaveAvailable = jest.fn().mockResolvedValue(true);
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveAvailable={onSaveAvailable} />);
+
+    const toggle = screen.getByRole('switch', { name: /free right now/i });
+    expect(toggle).toHaveAttribute('aria-checked', 'true');
+
+    fireEvent.click(toggle);
+
+    expect(onSaveAvailable).toHaveBeenCalledWith(false);
+  });
+
+  it('has no switch when the panel cannot save', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+  });
+
+  it('shows the dot on the profile photo when they are free', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+
+    expect(screen.getByTestId('available-dot')).toBeInTheDocument();
+  });
+
   it('links to onboarding to add only the roles the person does not have', () => {
     render(<ProfilePanel profile={onlyFreelancer} onClose={jest.fn()} />);
 

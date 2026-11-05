@@ -27,7 +27,7 @@ export default function ProfileButton({ name, size = 40 }: ProfileButtonProps) {
   return (
     <>
       <Link href={`${pathname}?panel=profile`} scroll={false} className={styles.avatar} aria-label="Open my profile">
-        <Avatar name={label} size={size} />
+        <Avatar name={label} size={size} available={profile?.basic.availableNow} />
       </Link>
 
       {/* the profile panel itself; Suspense is required because it reads the URL */}

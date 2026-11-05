@@ -18,6 +18,8 @@ export type BasicInfo = {
   photoKey?: string;
   /** short-lived signed URL derived from photoKey */
   photoUrl?: string;
+  /** the person's own "free right now" flag, shown as a dot on their avatar */
+  availableNow: boolean;
 };
 
 /** A value a role field holds: text, a chip list, or a number */
@@ -53,6 +55,7 @@ export type ProfileRow = {
   short_bio: string | null;
   long_bio: string | null;
   photo_key: string | null;
+  available_now: boolean | null;
   roles: string[] | null;
   preferences: Record<string, unknown> | null;
   editor_id: string | null;

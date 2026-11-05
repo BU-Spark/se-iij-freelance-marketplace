@@ -113,6 +113,16 @@ export function createProfileStore(request: ProfileRequest = defaultRequest) {
     load,
     saveBasic: (basic: BasicInfo) => save({ section: 'basic', basic }),
     saveRole: (details: RoleDetails) => save({ section: 'role', role: details.role, facts: details.facts }),
+    saveAvailableNow: async (availableNow: boolean) => {
+      // flip immediately so the switch and the dot respond, and put it back if the save fails
+      const previous = state.profile;
+      if (previous) publish({ profile: { ...previous, basic: { ...previous.basic, availableNow } } });
+
+      const ok = await save({ section: 'availableNow', availableNow });
+      if (!ok && previous) publish({ profile: previous });
+
+      return ok;
+    },
   };
 }
 
@@ -138,5 +148,6 @@ export function useProfile() {
     refresh: profileStore.load,
     saveBasic: profileStore.saveBasic,
     saveRole: profileStore.saveRole,
+    saveAvailableNow: profileStore.saveAvailableNow,
   };
 }

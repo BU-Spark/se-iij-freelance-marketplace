@@ -21,7 +21,7 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
   const params = useSearchParams();
   const router = useRouter();
   const { showToast } = useToast();
-  const { profile, loading, error, needsOnboarding, refresh, saveBasic, saveRole } = useProfile();
+  const { profile, loading, error, needsOnboarding, refresh, saveBasic, saveRole, saveAvailableNow } = useProfile();
   const open = params.get('panel') === 'profile';
 
   // The store may still hold a "no profile" answer from before onboarding was finished, so
@@ -76,11 +76,25 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
     return ok;
   };
 
+  const handleSaveAvailable = async (availableNow: boolean) => {
+    const ok = await saveAvailableNow(availableNow);
+    toast(ok, availableNow ? "You're marked as free right now" : "You're no longer marked as free");
+    return ok;
+  };
+
   const handleSaveRole = async (details: RoleDetails) => {
     const ok = await saveRole(details);
     toast(ok, 'Role details saved');
     return ok;
   };
 
-  return <ProfilePanel profile={profile} onClose={close} onSaveBasic={handleSaveBasic} onSaveRole={handleSaveRole} />;
+  return (
+    <ProfilePanel
+      profile={profile}
+      onClose={close}
+      onSaveBasic={handleSaveBasic}
+      onSaveRole={handleSaveRole}
+      onSaveAvailable={handleSaveAvailable}
+    />
+  );
 }

@@ -10,6 +10,7 @@ export const MOCK_PROFILE: AccountProfile = {
     firstName: 'Marcus',
     lastName: 'Thorne',
     email: 'marcus.thorne@example.com',
+    availableNow: true,
     shortBio: 'Investigative reporter covering local government and public money in London.',
     longBio:
       'Comfortable with FOI requests and tight overnight deadlines. Previously at the Harbour Community News local politics desk.',
