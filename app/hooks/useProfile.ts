@@ -7,24 +7,22 @@ import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../typ
  * One shared copy of the signed-in user's profile.
  *
  * The header and the profile panel both need it, and an edit in the panel has to update the
- * name next to the avatar, so the state lives in this module rather than in either component.
+ * name next to the avatar, so the state lives in the store below rather than in either
+ * component. The store takes its request function as an argument so it can be tested without
+ * React or a live server.
  */
 
-type ProfileState = {
+export type ProfileState = {
   profile: AccountProfile | null;
   loading: boolean;
   error: string | null;
+  /** There is no row in users yet, so the answer is onboarding rather than an edit form. */
+  needsOnboarding: boolean;
 };
+
+type ProfileRequest = (method: 'GET' | 'PATCH', body?: unknown) => Promise<Response>;
 
 const FALLBACK_ERROR = 'Unable to save your profile right now.';
-
-let state: ProfileState = { profile: null, loading: false, error: null };
-const listeners = new Set<(next: ProfileState) => void>();
-
-const publish = (patch: Partial<ProfileState>) => {
-  state = { ...state, ...patch };
-  listeners.forEach((listener) => listener(state));
-};
 
 const readError = async (response: Response): Promise<string> => {
   const body: unknown = await response.json().catch(() => null);
@@ -34,61 +32,113 @@ const readError = async (response: Response): Promise<string> => {
   return FALLBACK_ERROR;
 };
 
-async function request(method: 'GET' | 'PATCH', body?: unknown): Promise<AccountProfile> {
-  const response = await fetch('/api/profile', {
+const messageOf = (error: unknown) => (error instanceof Error && error.message ? error.message : FALLBACK_ERROR);
+
+const defaultRequest: ProfileRequest = (method, body) =>
+  fetch('/api/profile', {
     method,
     ...(body === undefined ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }),
   });
 
-  if (!response.ok) throw new Error(await readError(response));
+export function createProfileStore(request: ProfileRequest = defaultRequest) {
+  let state: ProfileState = { profile: null, loading: false, error: null, needsOnboarding: false };
+  const listeners = new Set<(next: ProfileState) => void>();
 
-  return (await response.json()) as AccountProfile;
+  const publish = (patch: Partial<ProfileState>) => {
+    state = { ...state, ...patch };
+    listeners.forEach((listener) => listener(state));
+  };
+
+  const load = async (): Promise<void> => {
+    if (state.loading) return;
+
+    publish({ loading: true });
+
+    try {
+      const response = await request('GET');
+
+      // a missing profile is a state, not a failure: the caller sends them to onboarding
+      if (response.status === 404) {
+        publish({ profile: null, loading: false, error: null, needsOnboarding: true });
+        return;
+      }
+
+      if (!response.ok) {
+        publish({ loading: false, error: await readError(response) });
+        return;
+      }
+
+      publish({
+        profile: (await response.json()) as AccountProfile,
+        loading: false,
+        error: null,
+        needsOnboarding: false,
+      });
+    } catch (error) {
+      publish({ loading: false, error: messageOf(error) });
+    }
+  };
+
+  const save = async (payload: unknown): Promise<boolean> => {
+    try {
+      const response = await request('PATCH', payload);
+
+      // the row vanished underneath us, e.g. it was deleted in another tab
+      if (response.status === 404) {
+        publish({ needsOnboarding: true, error: null });
+        return false;
+      }
+
+      if (!response.ok) {
+        publish({ error: await readError(response) });
+        return false;
+      }
+
+      publish({ profile: (await response.json()) as AccountProfile, error: null, needsOnboarding: false });
+      return true;
+    } catch (error) {
+      publish({ error: messageOf(error) });
+      return false;
+    }
+  };
+
+  return {
+    getState: () => state,
+    subscribe: (listener: (next: ProfileState) => void) => {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
+    load,
+    saveBasic: (basic: BasicInfo) => save({ section: 'basic', basic }),
+    saveRole: (details: RoleDetails) => save({ section: 'role', role: details.role, facts: details.facts }),
+    addRole: (role: ProfileRole) => save({ section: 'addRole', role }),
+  };
 }
 
-const messageOf = (error: unknown) => (error instanceof Error && error.message ? error.message : FALLBACK_ERROR);
+export const profileStore = createProfileStore();
 
-export async function loadProfile(): Promise<void> {
-  // jsdom has no fetch, and there is nothing to load before the page is live
-  if (typeof fetch !== 'function' || state.loading) return;
-
-  publish({ loading: true });
-
-  try {
-    publish({ profile: await request('GET'), loading: false, error: null });
-  } catch (error) {
-    publish({ loading: false, error: messageOf(error) });
-  }
-}
-
-async function save(payload: unknown): Promise<boolean> {
-  try {
-    publish({ profile: await request('PATCH', payload), error: null });
-    return true;
-  } catch (error) {
-    publish({ error: messageOf(error) });
-    return false;
-  }
-}
+export const loadProfile = profileStore.load;
 
 export function useProfile() {
-  const [snapshot, setSnapshot] = useState(state);
+  const [snapshot, setSnapshot] = useState<ProfileState>(profileStore.getState());
 
   useEffect(() => {
-    listeners.add(setSnapshot);
+    const unsubscribe = profileStore.subscribe(setSnapshot);
     // the store may have finished loading between render and subscribe
-    setSnapshot(state);
-    if (!state.profile) void loadProfile();
+    const current = profileStore.getState();
+    setSnapshot(current);
+    if (!current.profile && !current.needsOnboarding && typeof fetch === 'function') void profileStore.load();
 
-    return () => {
-      listeners.delete(setSnapshot);
-    };
+    return unsubscribe;
   }, []);
 
   return {
     ...snapshot,
-    refresh: loadProfile,
-    saveBasic: (basic: BasicInfo) => save({ section: 'basic', basic }),
-    saveRole: (details: RoleDetails) => save({ section: 'role', role: details.role, facts: details.facts }),
-    addRole: (role: ProfileRole) => save({ section: 'addRole', role }),
+    refresh: profileStore.load,
+    saveBasic: profileStore.saveBasic,
+    saveRole: profileStore.saveRole,
+    addRole: profileStore.addRole,
   };
 }
