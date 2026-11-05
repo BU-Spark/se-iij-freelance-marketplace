@@ -247,31 +247,3 @@ describe('PATCH /api/profile', () => {
     expect(failing.release).toHaveBeenCalled();
   });
 });
-
-describe('PATCH /api/profile — adding a role', () => {
-  beforeEach(() => {
-    jest.resetAllMocks();
-    configuredMock.mockReturnValue(false);
-  });
-
-  it('appends the role to users.roles without creating the role row', async () => {
-    authMock.mockResolvedValue({ userId: 'clerk-1' });
-    const client = makeClient();
-    connectMock.mockResolvedValue(client);
-    queryMock.mockResolvedValue({ rows: [row] });
-
-    expect((await PATCH(patch({ section: 'addRole', role: 'freelancer' }))).status).toBe(200);
-    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('array_append'), ['clerk-1', 'freelancer']);
-    expect(client.query).not.toHaveBeenCalledWith(expect.stringContaining('INSERT INTO'));
-  });
-
-  it('is idempotent when the person already has the role', async () => {
-    authMock.mockResolvedValue({ userId: 'clerk-1' });
-    const client = makeClient([{ rowCount: 0 }]);
-    connectMock.mockResolvedValue(client);
-    queryMock.mockResolvedValue({ rows: [row] });
-
-    expect((await PATCH(patch({ section: 'addRole', role: 'editor' }))).status).toBe(200);
-    expect(client.query).toHaveBeenCalledWith('SELECT 1 FROM users WHERE clerk_id = $1', ['clerk-1']);
-  });
-});

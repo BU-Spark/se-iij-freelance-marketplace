@@ -58,8 +58,9 @@
   cursor: pointer;
 }
 
-/* dashed "Add the … role" button */
+/* dashed "Add the … role" link */
 .add {
+  text-decoration: none;
   display: flex;
   align-items: center;
   justify-content: center;

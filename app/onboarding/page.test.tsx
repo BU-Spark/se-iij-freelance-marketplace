@@ -421,3 +421,34 @@ describe('Onboarding page', () => {
     });
   });
 });
+
+describe('adding the other role from the profile panel', () => {
+  beforeEach(() => {
+    // the panel links here with ?add=<role>
+    window.history.replaceState({}, '', '/onboarding?add=editor');
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        roles: ['freelancer'],
+        data: { firstName: 'Sarah', lastName: 'Jenkins', email: 'sarah@newsroom.example', reportingBeats: ['Housing'] },
+      }),
+    });
+    render(<OnboardingPage />);
+  });
+
+  afterEach(() => {
+    window.history.replaceState({}, '', '/');
+  });
+
+  it('skips the role picker and opens on the missing role', async () => {
+    expect(await screen.findByRole('heading', { level: 1, name: /your newsroom/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /welcome aboard/i })).not.toBeInTheDocument();
+  });
+
+  it('opens with the saved answers already filled in', async () => {
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+
+    expect(screen.getByLabelText(/first name/i)).toHaveValue('Sarah');
+    expect(screen.getByLabelText(/work email/i)).toHaveValue('sarah@newsroom.example');
+  });
+});

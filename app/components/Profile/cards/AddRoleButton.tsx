@@ -1,15 +1,19 @@
+import Link from 'next/link';
 import { ROLE_CONFIG } from '../config/roleConfig';
 import type { ProfileRole } from '../../../types/profile.types';
 import styles from '../Profile.module.css';
 
 type AddRoleButtonProps = {
   role: ProfileRole;
-  onAdd: (role: ProfileRole) => void;
 };
 
-export default function AddRoleButton({ role, onAdd }: AddRoleButtonProps) {
+/**
+ * Adding a role is an onboarding job — it needs that role's whole step. So this is a link into
+ * onboarding rather than an inline form, and onboarding reopens on the saved profile.
+ */
+export default function AddRoleButton({ role }: AddRoleButtonProps) {
   return (
-    <button type="button" className={styles.add} onClick={() => onAdd(role)}>
+    <Link href={`/onboarding?add=${role}`} className={styles.add}>
       <svg
         width="18"
         height="18"
@@ -24,6 +28,6 @@ export default function AddRoleButton({ role, onAdd }: AddRoleButtonProps) {
         <path d="M12 8v8M8 12h8" />
       </svg>
       Add the {ROLE_CONFIG[role].label.toLowerCase()} role
-    </button>
+    </Link>
   );
 }

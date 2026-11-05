@@ -24,11 +24,11 @@ describe('ProfilePanel', () => {
 
   it('prompts for a role when the profile has none yet', () => {
     const empty = { ...MOCK_PROFILE, roles: [] };
-    render(<ProfilePanel profile={empty} onClose={jest.fn()} onAddRole={jest.fn()} />);
+    render(<ProfilePanel profile={empty} onClose={jest.fn()} />);
 
     expect(screen.getByText(/isn't finished yet/i)).toBeInTheDocument();
-    // and still offers both roles to pick from
-    expect(screen.getByRole('button', { name: /add the editor role/i })).toBeInTheDocument();
+    // and still offers both roles to add
+    expect(screen.getByRole('link', { name: /add the editor role/i })).toBeInTheDocument();
   });
 
   it('points at the field a role still needs before it counts as finished', () => {
@@ -52,19 +52,20 @@ describe('ProfilePanel', () => {
     expect(screen.queryByText(/finish your .* profile/i)).not.toBeInTheDocument();
   });
 
-  it('offers to add only the roles the person does not have', async () => {
-    const onAddRole = jest.fn().mockResolvedValue(true);
-    render(<ProfilePanel profile={onlyFreelancer} onClose={jest.fn()} onAddRole={onAddRole} />);
-    expect(screen.queryByRole('button', { name: /add the freelancer role/i })).not.toBeInTheDocument();
+  it('links to onboarding to add only the roles the person does not have', () => {
+    render(<ProfilePanel profile={onlyFreelancer} onClose={jest.fn()} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /add the editor role/i }));
-
-    await waitFor(() => expect(onAddRole).toHaveBeenCalledWith('editor'));
+    expect(screen.queryByRole('link', { name: /add the freelancer role/i })).not.toBeInTheDocument();
+    // adding a role needs that role's onboarding steps, so it links there rather than opening a form
+    expect(screen.getByRole('link', { name: /add the editor role/i })).toHaveAttribute(
+      'href',
+      '/onboarding?add=editor'
+    );
   });
 
-  it('has no add button when the person has every role', () => {
-    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onAddRole={jest.fn()} />);
-    expect(screen.queryByRole('button', { name: /add the/i })).not.toBeInTheDocument();
+  it('has no add link when the person has every role', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.queryByRole('link', { name: /add the/i })).not.toBeInTheDocument();
   });
 
   it('closes with the ✕', () => {

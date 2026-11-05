@@ -216,13 +216,6 @@ export async function PATCH(request: Request) {
       }
 
       notFound = !(await addRoleToUser((sql, values) => connection.query(sql, values), userId, role));
-    } else if (section === 'addRole') {
-      if (!isRole(body.role)) {
-        await connection.query('ROLLBACK');
-        return NextResponse.json({ error: 'The profile payload is invalid.' }, { status: 400 });
-      }
-
-      notFound = !(await addRoleToUser((sql, values) => connection.query(sql, values), userId, body.role));
     } else {
       await connection.query('ROLLBACK');
       return NextResponse.json({ error: 'The profile payload is invalid.' }, { status: 400 });
