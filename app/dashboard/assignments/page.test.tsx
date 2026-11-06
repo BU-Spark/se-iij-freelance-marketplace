@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import AssignmentsPage from './page';
 import type { Assignment } from '../../types/assignments.types';
 import { listOpenAssignments } from '../../../lib/assignments';
 
-jest.mock('../../components/header/Header', () => ({
-  Header: () => <header>Header</header>,
+jest.mock('../../components/FreelancerWorkspace', () => ({
+  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 jest.mock('../../../lib/assignments', () => ({ listOpenAssignments: jest.fn() }));
 

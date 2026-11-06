@@ -1,0 +1,82 @@
+.form,
+.preview {
+  display: grid;
+  gap: 20px;
+  max-width: 960px;
+}
+.form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  font-weight: 600;
+}
+.form input,
+.form select,
+.form textarea {
+  min-height: 44px;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid #a5b0bf;
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+}
+.form textarea {
+  resize: vertical;
+}
+.form small {
+  font-weight: 400;
+  color: var(--muted);
+}
+.row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: 16px;
+}
+.fieldset {
+  min-width: 0;
+  border: 1px solid #a5b0bf;
+  border-radius: 8px;
+  padding: 20px;
+}
+.error {
+  color: #a32020;
+  font-size: 14px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.actions button {
+  min-height: 44px;
+  padding: 10px 20px;
+  background: var(--c-blue);
+  color: var(--white);
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+}
+.actions button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.form :focus-visible,
+.preview :focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+.preview dl {
+  display: grid;
+  gap: 16px;
+}
+.preview dt {
+  font-weight: 700;
+}
+.preview dd {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

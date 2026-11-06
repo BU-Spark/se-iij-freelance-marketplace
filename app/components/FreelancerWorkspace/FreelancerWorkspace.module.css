@@ -1,0 +1,9 @@
+.workspace {
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: var(--ink);
+}
+.workspace :focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}

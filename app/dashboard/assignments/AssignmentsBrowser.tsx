@@ -37,8 +37,8 @@ export default function AssignmentsBrowser({ assignments, loadFailed = false }: 
 
   return (
     <main className={styles.main}>
-      <Link href="/dashboard" className={styles.backLink}>
-        ← Back to dashboard
+      <Link href="/dashboard/freelancer" className={styles.backLink}>
+        ← Back to freelancer dashboard
       </Link>
       <div className={styles.heading}>
         <p className={styles.eyebrow}>Find your next assignment</p>

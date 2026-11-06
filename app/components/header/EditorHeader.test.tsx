@@ -4,11 +4,12 @@ import { EditorHeader } from './EditorHeader';
 import { MOCK_PROFILE } from '../Profile/config/constants';
 
 const mockSignOut = jest.fn();
+const mockPush = jest.fn();
 
 jest.mock('next/navigation', () => ({
   usePathname: () => '/dashboard',
   useSearchParams: () => new URLSearchParams(),
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn() }),
 }));
 
 jest.mock('@clerk/nextjs', () => ({
@@ -18,6 +19,7 @@ jest.mock('@clerk/nextjs', () => ({
 describe('EditorHeader', () => {
   beforeEach(() => {
     mockSignOut.mockClear();
+    mockPush.mockClear();
     // the header reads the signed-in user's name and roles from /api/profile
     global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => MOCK_PROFILE });
   });
@@ -47,7 +49,13 @@ describe('EditorHeader', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
     await userEvent.click(await screen.findByRole('radio', { name: /freelancer/i }));
 
-    expect(screen.getByRole('button', { name: /make a pitch/i })).toBeInTheDocument();
+    const pitchLinks = screen.getAllByRole('link', { name: /make a pitch/i });
+    expect(pitchLinks).toHaveLength(2); // Header action and the open menu item.
+    expect(pitchLinks.map((link) => link.getAttribute('href'))).toEqual([
+      '/dashboard/freelancer/make-a-pitch',
+      '/dashboard/freelancer/make-a-pitch',
+    ]);
+    expect(mockPush).toHaveBeenCalledWith('/dashboard/freelancer');
   });
 
   it('signs out from the menu', async () => {

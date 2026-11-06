@@ -1,9 +1,12 @@
+import type { ReactNode } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useAuth } from '@clerk/nextjs';
 import AvailabilityPage from './page';
 
 jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
-jest.mock('../../components/header/Header', () => ({ Header: () => <header>Header</header> }));
+jest.mock('../../components/FreelancerWorkspace', () => ({
+  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
+}));
 const auth = jest.mocked(useAuth);
 const account = (userId: string) => auth.mockReturnValue({ userId, isLoaded: true } as ReturnType<typeof useAuth>);
 const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save availability' }));

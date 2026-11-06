@@ -4,7 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import type { Weekday } from '../../types/availability.types';
 import type { AvailabilityStatus } from '../../types/dashboard.types';
-import { Header } from '../../components/header/Header';
+import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import styles from './availability.module.css';
 
 const DAYS: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -167,8 +167,7 @@ function AvailabilityForm({ userId }: { userId: string }) {
 export default function AvailabilityPage() {
   const { userId, isLoaded } = useAuth();
   return (
-    <div className={styles.shell}>
-      <Header />
+    <FreelancerWorkspace>
       <main className={styles.main}>
         <h1>My availability</h1>
         <p>Set your current status and usual working hours.</p>
@@ -181,6 +180,6 @@ export default function AvailabilityPage() {
           <p>Please sign in to edit your availability.</p>
         )}
       </main>
-    </div>
+    </FreelancerWorkspace>
   );
 }
