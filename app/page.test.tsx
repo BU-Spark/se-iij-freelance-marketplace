@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import Home from './page';
 
-describe('Home (IIJ welcome page)', () => {
+describe('Home (StoryMatch welcome page)', () => {
   beforeEach(() => {
     render(<Home />);
   });
@@ -10,7 +10,7 @@ describe('Home (IIJ welcome page)', () => {
     expect(
       screen.getByRole('heading', {
         level: 1,
-        name: /institute for independent journalists/i,
+        name: /storymatch/i,
       })
     ).toBeInTheDocument();
   });
@@ -25,10 +25,10 @@ describe('Home (IIJ welcome page)', () => {
     expect(screen.getByRole('link', { name: /log in/i })).toHaveAttribute('href', '/login');
   });
 
-  it('renders the IIJ logo', () => {
+  it('renders the StoryMatch logo', () => {
     expect(
       screen.getByRole('img', {
-        name: /institute for independent journalists logo/i,
+        name: /storymatch logo/i,
       })
     ).toBeInTheDocument();
   });

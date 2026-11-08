@@ -243,7 +243,7 @@ export default function OnboardingPage() {
           <IIJLogo size={40} showText={false} animated={false} />
           <span>
             <strong>IIJ</strong>
-            <small>Institute for Independent Journalists</small>
+            <small>StoryMatch</small>
           </span>
         </Link>
         <span className={styles.stepLabel}>{label}</span>

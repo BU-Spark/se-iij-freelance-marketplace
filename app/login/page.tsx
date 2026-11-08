@@ -143,12 +143,12 @@ function LoginForm() {
     <main className={styles.main}>
       <div className={styles.colorBand} aria-hidden="true" />
       <section className={styles.panel} aria-labelledby="login-title">
-        <Link href="/" className={styles.brand} aria-label="Institute for Independent Journalists home">
+        <Link href="/" className={styles.brand} aria-label="StoryMatch home">
           <IIJLogo size={92} />
         </Link>
 
         <p className={styles.eyebrow}>Welcome back</p>
-        <h1 id="login-title">Log in to IIJ</h1>
+        <h1 id="login-title">Log in to StoryMatch</h1>
         <p className={styles.intro}>Pick up where you left off with your assignments and pitches.</p>
 
         {verifyingDevice ? (
@@ -227,7 +227,7 @@ function LoginForm() {
             </form>
 
             <p className={styles.signupPrompt}>
-              New to IIJ? <Link href="/signup">Create an account</Link>
+              New to StoryMatch? <Link href="/signup">Create an account</Link>
             </p>
           </>
         )}

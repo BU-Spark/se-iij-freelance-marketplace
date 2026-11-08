@@ -4,7 +4,7 @@ import { useId } from 'react';
 import styles from './IIJLogo.module.css';
 
 /**
- * SVG version of the IIJ logo: navy ring, circular text, rainbow fan.
+ * SVG version of the StoryMatch logo: navy ring, circular text, rainbow fan.
  * The wedges animate in one by one and spin slightly on hover.
  */
 
@@ -61,7 +61,7 @@ export default function IIJLogo({ size = 160, animated = true, showText = true, 
       width={size}
       height={size}
       role="img"
-      aria-label="Institute for Independent Journalists logo"
+      aria-label="StoryMatch logo"
       className={`${styles.logo} ${animated ? styles.animated : ''} ${className}`}
     >
       <defs>
@@ -89,12 +89,12 @@ export default function IIJLogo({ size = 160, animated = true, showText = true, 
         <g className={styles.text}>
           <text>
             <textPath href={`#${topPath}`} startOffset="50%" textAnchor="middle">
-              INSTITUTE FOR
+              STORY
             </textPath>
           </text>
           <text>
             <textPath href={`#${bottomPath}`} startOffset="50%" textAnchor="middle">
-              INDEPENDENT JOURNALISTS
+              MATCH
             </textPath>
           </text>
         </g>
