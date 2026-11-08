@@ -147,6 +147,18 @@
   --tone: var(--muted);
 }
 
+.pending {
+  --tone: var(--c-amber);
+}
+
+.verified {
+  --tone: var(--c-green-d);
+}
+
+.rejected {
+  --tone: var(--c-red);
+}
+
 .row {
   border-left: 4px solid var(--tone, var(--line));
 }
