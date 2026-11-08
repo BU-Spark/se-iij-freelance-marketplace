@@ -139,6 +139,14 @@
   --tone: var(--c-blue);
 }
 
+.resolved {
+  --tone: var(--c-green-d);
+}
+
+.dismissed {
+  --tone: var(--muted);
+}
+
 .row {
   border-left: 4px solid var(--tone, var(--line));
 }
@@ -196,4 +204,45 @@
   display: block;
   margin-bottom: 4px;
   color: var(--navy-deep);
+}
+
+.rowFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action {
+  height: 36px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--white);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action:hover {
+  background: var(--bg);
+}
+
+.primaryAction {
+  border-color: var(--navy-deep);
+  background: var(--navy-deep);
+  color: var(--white);
+}
+
+.primaryAction:hover {
+  background: var(--navy);
 }
