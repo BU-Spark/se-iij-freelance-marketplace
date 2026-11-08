@@ -159,6 +159,14 @@
   --tone: var(--c-red);
 }
 
+.active {
+  --tone: var(--c-green-d);
+}
+
+.suspended {
+  --tone: var(--c-red);
+}
+
 .row {
   border-left: 4px solid var(--tone, var(--line));
 }
@@ -257,4 +265,46 @@
 
 .primaryAction:hover {
   background: var(--navy);
+}
+
+.search {
+  max-width: 320px;
+}
+
+/* breathing room when the footer follows the name directly */
+.spaced {
+  margin-top: 12px;
+}
+
+.suspendForm {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+.suspendForm label {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.suspendForm textarea {
+  min-height: 72px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  resize: vertical;
+}
+
+.dangerAction {
+  border-color: var(--c-red);
+  background: var(--c-red);
+  color: var(--white);
+}
+
+.dangerAction:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
