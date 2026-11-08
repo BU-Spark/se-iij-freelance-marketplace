@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import { EditorHeader } from '../components/header/EditorHeader';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
+import PageSearch from './components/PageSearch';
 import styles from './dashboard.module.css';
 import { ASSIGNMENTS, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
@@ -36,9 +37,13 @@ export default async function Dashboard() {
 
       {/* ---- Status bar ---- */}
       <div className={styles.statusBar}>
-        <p>
-          <strong>{formatDeskDate(new Date())}</strong>
-        </p>
+        <div className={styles.statusLead}>
+          <p>
+            <strong>{formatDeskDate(new Date())}</strong>
+          </p>
+          {/* Generic for now: highlights matches in the columns, does not filter yet */}
+          <PageSearch targetId="dashboard-columns" />
+        </div>
         <ul aria-label="Assignment counts" className={styles.counts}>
           <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>
           <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>{counts.invited} pending</li>
@@ -46,7 +51,7 @@ export default async function Dashboard() {
         </ul>
       </div>
 
-      <main className={styles.columns}>
+      <main id="dashboard-columns" className={styles.columns}>
         {/* ---- Left column: who is available ---- */}
         <AvailabilityColumn roster={ROSTER} />
 
