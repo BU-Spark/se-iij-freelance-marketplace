@@ -10,7 +10,8 @@ describe('NewAssignmentForm', () => {
       'Slug',
       'Point of contact',
       'Location',
-      'Length / time',
+      'Length',
+      'Time',
       'Deadline',
       'Compensation',
       'Description',
@@ -58,5 +59,24 @@ describe('NewAssignmentForm', () => {
     render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={onChange} />);
     fireEvent.change(screen.getByLabelText('Compensation'), { target: { value: '$7a50.505' } });
     expect(onChange).toHaveBeenCalledWith({ compensation: '750.50' });
+  });
+
+  it('keeps only a whole number of words in length', () => {
+    const onChange = jest.fn();
+    render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={onChange} />);
+    fireEvent.change(screen.getByLabelText('Length'), { target: { value: '1,2a00.5' } });
+    expect(onChange).toHaveBeenCalledWith({ length: '12005' });
+  });
+
+  it('only lets numbers into time', () => {
+    const onChange = jest.fn();
+    render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={onChange} />);
+    fireEvent.change(screen.getByLabelText('Time'), { target: { value: '4.5h' } });
+    expect(onChange).toHaveBeenCalledWith({ time: '4.5' });
+  });
+
+  it('has no example amount in compensation', () => {
+    render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={jest.fn()} />);
+    expect(screen.getByLabelText('Compensation')).not.toHaveAttribute('placeholder');
   });
 });

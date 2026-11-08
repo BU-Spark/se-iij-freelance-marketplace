@@ -28,7 +28,10 @@ export type NewAssignment = {
   slug: string;
   contact: string;
   location: string;
+  /** Word count as a whole number, e.g. "800", or '' when left blank */
   length: string;
+  /** Hours of work as a number, e.g. "4" or "1.5", or '' when left blank */
+  time: string;
   /** ISO 8601 timestamp from a `datetime-local` input, or '' when left blank */
   deadline: string;
   compensation: string;

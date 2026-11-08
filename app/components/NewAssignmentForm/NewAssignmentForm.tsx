@@ -2,7 +2,7 @@ import ChipGroup from '../ChipGroup/ChipGroup';
 import Field from '../Field/Field';
 import type { NewAssignment } from '../../types/assignments.types';
 import { PROJECT_TYPES } from '../NewAssignmentDrawer/constants';
-import { cleanAmount, slugify, type AssignmentErrors } from '../../utils/assignment.utils';
+import { cleanAmount, cleanWholeNumber, slugify, type AssignmentErrors } from '../../utils/assignment.utils';
 import styles from './NewAssignmentForm.module.css';
 
 type NewAssignmentFormProps = {
@@ -69,23 +69,34 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
       </div>
 
       <div className={styles.row}>
-        <Field label="Length / time">
+        <Field label="Length">
           <input
             className={styles.input}
+            inputMode="numeric"
             value={draft.length}
-            onChange={(e) => onChange({ length: e.target.value })}
-            placeholder="e.g. 800 words / 4 hours"
+            onChange={(e) => onChange({ length: cleanWholeNumber(e.target.value) })}
+            placeholder="Words"
           />
         </Field>
-        <Field label="Deadline" error={errors?.deadline}>
+        <Field label="Time">
           <input
-            type="datetime-local"
             className={styles.input}
-            value={draft.deadline}
-            onChange={(e) => onChange({ deadline: e.target.value })}
+            inputMode="decimal"
+            value={draft.time}
+            onChange={(e) => onChange({ time: cleanAmount(e.target.value) })}
+            placeholder="Hours"
           />
         </Field>
       </div>
+
+      <Field label="Deadline" error={errors?.deadline}>
+        <input
+          type="datetime-local"
+          className={styles.input}
+          value={draft.deadline}
+          onChange={(e) => onChange({ deadline: e.target.value })}
+        />
+      </Field>
 
       <div>
         <Field label="Compensation" error={errors?.compensation}>
@@ -99,7 +110,6 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
               inputMode="decimal"
               value={draft.compensation}
               onChange={(e) => onChange({ compensation: cleanAmount(e.target.value) })}
-              placeholder="750"
             />
             <span className={styles.unit}>USD</span>
           </div>
