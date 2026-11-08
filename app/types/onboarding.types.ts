@@ -16,6 +16,8 @@ export interface ProfileData {
   firstName: string;
   lastName: string;
   email: string;
+  /** client-only: true once the work email's one-time code has been confirmed */
+  businessEmailVerified: boolean;
   shortBio: string;
   longBio: string;
   // profile photo: the S3 object key is saved, the signed URL is only for previewing it

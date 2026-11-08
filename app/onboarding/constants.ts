@@ -75,6 +75,7 @@ export const EMPTY: ProfileData = {
   firstName: '',
   lastName: '',
   email: '',
+  businessEmailVerified: false,
   shortBio: '',
   longBio: '',
   photoKey: '',

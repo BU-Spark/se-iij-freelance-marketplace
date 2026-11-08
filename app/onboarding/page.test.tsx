@@ -1,5 +1,34 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import OnboardingPage from './page';
+
+type FakeAddress = {
+  emailAddress: string;
+  verification: { status: string };
+  prepareVerification: jest.Mock;
+  attemptVerification: jest.Mock;
+};
+
+/** Stands in for one of the Clerk user's email addresses */
+const makeAddress = (emailAddress: string, status = 'unverified'): FakeAddress => {
+  const address: FakeAddress = {
+    emailAddress,
+    verification: { status },
+    prepareVerification: jest.fn(async () => address),
+    attemptVerification: jest.fn(async ({ code }: { code: string }) => {
+      if (code !== '123456') throw { errors: [{ longMessage: 'That code is not right.' }] };
+      address.verification.status = 'verified';
+      return address;
+    }),
+  };
+
+  return address;
+};
+
+let mockClerkUser: { emailAddresses: FakeAddress[]; createEmailAddress: jest.Mock };
+
+jest.mock('@clerk/nextjs', () => ({
+  useUser: () => ({ user: mockClerkUser, isLoaded: true }),
+}));
 
 // jsdom doesn't implement scrollTo, and the page calls it when changing steps
 beforeAll(() => {
@@ -7,6 +36,15 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  mockClerkUser = {
+    emailAddresses: [],
+    createEmailAddress: jest.fn(async ({ email }: { email: string }) => {
+      const address = makeAddress(email);
+      mockClerkUser.emailAddresses.push(address);
+      return address;
+    }),
+  };
+
   global.fetch = jest.fn().mockResolvedValue({
     ok: true,
     json: async () => ({ saved: true, roles: ['editor'] }),
@@ -31,13 +69,21 @@ const startAs = (...labels: RegExp[]) => {
   next();
 };
 
+/** The work email must be proven before the editor step will continue */
+const verifyWorkEmail = async () => {
+  fireEvent.click(screen.getByRole('button', { name: /^send code$/i }));
+  fireEvent.change(await screen.findByLabelText(/verification code/i), { target: { value: '123456' } });
+  fireEvent.click(screen.getByRole('button', { name: /^verify$/i }));
+  await screen.findByText(/work email verified/i);
+};
 /** The first profile step also collects the shared account fields */
-const fillEditorStep = () => {
+const fillEditorStep = async () => {
   type(/first name/i, 'Sarah');
   type(/last name/i, 'Jenkins');
   type(/work email/i, 'sarah@newsroom.example');
   type(/position \/ title/i, 'News Editor');
   fireEvent.click(chip('Politics'));
+  await verifyWorkEmail();
 };
 
 const fillFreelancerStep = () => {
@@ -56,7 +102,7 @@ const fillFreelancerRoleOnly = () => {
 
 /** The JSON body posted to /api/onboarding by the most recent submit */
 const postedPayload = () => {
-  const [, init] = (global.fetch as jest.Mock).mock.calls[0] as [string, { body: string }];
+  const [, init] = (global.fetch as jest.Mock).mock.calls.at(-1) as [string, { body: string }];
   return JSON.parse(init.body);
 };
 
@@ -123,6 +169,51 @@ describe('Onboarding page', () => {
       expect(screen.getByLabelText(/based in/i)).toHaveValue('Chicago, IL');
     });
 
+    it('keeps the editor on the step until the work email is verified', async () => {
+      type(/first name/i, 'Sarah');
+      type(/last name/i, 'Jenkins');
+      type(/work email/i, 'sarah@newsroom.example');
+      type(/position \/ title/i, 'News Editor');
+      fireEvent.click(chip('Politics'));
+
+      next();
+
+      expect(await screen.findByText(/verify your work email to continue/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /your newsroom/i })).toBeInTheDocument();
+    });
+
+    it('reports a work email another account already claimed', async () => {
+      mockClerkUser.createEmailAddress.mockRejectedValueOnce({
+        errors: [{ longMessage: 'This email address is already associated with another account.' }],
+      });
+      type(/work email/i, 'sarah@newsroom.example');
+
+      fireEvent.click(screen.getByRole('button', { name: /^send code$/i }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/already associated with another account/i);
+      expect(screen.queryByLabelText(/verification code/i)).not.toBeInTheDocument();
+    });
+
+    it('refuses a personal inbox as a work email', async () => {
+      type(/work email/i, 'sarah@gmail.com');
+
+      fireEvent.click(screen.getByRole('button', { name: /^send code$/i }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/not a personal inbox/i);
+      expect(mockClerkUser.createEmailAddress).not.toHaveBeenCalled();
+    });
+
+    it('keeps the code input open when the code is wrong', async () => {
+      type(/work email/i, 'sarah@newsroom.example');
+
+      fireEvent.click(screen.getByRole('button', { name: /^send code$/i }));
+      fireEvent.change(await screen.findByLabelText(/verification code/i), { target: { value: '000000' } });
+      fireEvent.click(screen.getByRole('button', { name: /^verify$/i }));
+
+      expect(await screen.findByRole('alert')).toHaveTextContent(/that code is not right/i);
+      expect(screen.getByLabelText(/verification code/i)).toBeInTheDocument();
+    });
+
     it('shows validation errors when continuing with an empty form', () => {
       next();
       expect(screen.getByText(/please enter your first name/i)).toBeInTheDocument();
@@ -157,7 +248,7 @@ describe('Onboarding page', () => {
     });
 
     it('reaches the success screen with valid details', async () => {
-      fillEditorStep();
+      await fillEditorStep();
       next();
       submit();
 
@@ -241,7 +332,7 @@ describe('Onboarding page', () => {
       uploadPhoto(png());
       await screen.findByAltText(/your profile photo/i);
 
-      fillEditorStep();
+      await fillEditorStep();
       next();
       submit();
 
@@ -263,9 +354,9 @@ describe('Onboarding page', () => {
 
   describe('Step 3: preferences', () => {
     describe('editor', () => {
-      beforeEach(() => {
+      beforeEach(async () => {
         startAs(/i'm an editor/i);
-        fillEditorStep();
+        await fillEditorStep();
         next();
       });
 
@@ -372,10 +463,10 @@ describe('Onboarding page', () => {
       startAs(/i'm an editor/i, /i'm a freelancer/i);
     });
 
-    it('walks the editor steps before the freelancer steps', () => {
+    it('walks the editor steps before the freelancer steps', async () => {
       expect(screen.getByText(/step 2 of 5 — your newsroom/i)).toBeInTheDocument();
 
-      fillEditorStep();
+      await fillEditorStep();
       next();
       expect(screen.getByText(/step 3 of 5 — how you work/i)).toBeInTheDocument();
 
@@ -392,7 +483,7 @@ describe('Onboarding page', () => {
     });
 
     it('submits both records with both roles', async () => {
-      fillEditorStep();
+      await fillEditorStep();
       next();
       next();
       fillFreelancerRoleOnly();
@@ -401,6 +492,7 @@ describe('Onboarding page', () => {
 
       await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
 
+      // the onboarding save is the only request now that Clerk sends the codes
       expect(fetchMock).toHaveBeenCalledTimes(1);
       const body = postedPayload();
       expect(body.roles).toEqual(['editor', 'freelancer']);
@@ -450,5 +542,19 @@ describe('adding the other role from the profile panel', () => {
 
     expect(screen.getByLabelText(/first name/i)).toHaveValue('Sarah');
     expect(screen.getByLabelText(/work email/i)).toHaveValue('sarah@newsroom.example');
+  });
+
+  it('accepts an address Clerk already verified without sending a new code', async () => {
+    const saved = makeAddress('sarah@newsroom.example', 'verified');
+    mockClerkUser.emailAddresses = [saved];
+    cleanup();
+    render(<OnboardingPage />);
+
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+    fireEvent.click(screen.getByRole('button', { name: /^send code$/i }));
+
+    expect(await screen.findByText(/work email verified/i)).toBeInTheDocument();
+    expect(saved.prepareVerification).not.toHaveBeenCalled();
+    expect(mockClerkUser.createEmailAddress).not.toHaveBeenCalled();
   });
 });
