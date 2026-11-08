@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import type { NewAssignment } from '../../types/assignments.types';
-import { validateAssignment } from '../../utils/assignment.utils';
+import { combineLengthAndTime, validateAssignment } from '../../utils/assignment.utils';
 import type { PoolClient } from 'pg';
 
 export const runtime = 'nodejs';
@@ -22,6 +22,7 @@ function toAssignment(body: Record<string, unknown>): NewAssignment {
     contact: text(body.contact),
     location: text(body.location),
     length: text(body.length),
+    time: text(body.time),
     deadline: text(body.deadline),
     compensation: text(body.compensation),
   };
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
         input.slug,
         input.contact,
         input.location,
-        input.length,
+        combineLengthAndTime(input.length, input.time),
         input.deadline ? new Date(input.deadline) : null,
         input.compensation,
       ]
