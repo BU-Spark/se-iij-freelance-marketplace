@@ -1,6 +1,36 @@
 .shell {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
   min-height: 100vh;
   background: var(--bg);
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  height: 100vh;
+  padding: 20px 16px;
+  border-right: 1px solid var(--line);
+  background: var(--white);
+}
+
+.sidebar .backLink {
+  margin-top: auto;
+  padding: 0 14px;
+}
+
+/* phones: hide the sidebar and show the ☰ top bar instead */
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    display: none;
+  }
 }
 
 .header {
@@ -19,31 +49,64 @@
 }
 
 .title {
-  margin: 0 0 24px;
+  margin: 0;
   color: var(--navy-deep);
   font-family: var(--font-serif);
   font-size: clamp(30px, 4vw, 42px);
   font-weight: 400;
 }
 
-.tabs {
-  display: flex;
-  gap: 4px;
-  border-bottom: 1px solid var(--line);
+.description {
+  margin: 6px 0 0;
+  color: var(--muted);
 }
 
-.tab {
-  padding: 10px 16px;
-  border-bottom: 2px solid transparent;
-  color: var(--muted);
+.topBar {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  height: 58px;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--line);
+  background: var(--white);
+}
+
+@media (max-width: 860px) {
+  .topBar {
+    display: flex;
+  }
+}
+
+.brandLink {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brandLink {
+  color: var(--navy-deep);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.brandTag {
+  margin-left: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--navy);
+  font-size: 12px;
+}
+
+.backLink {
+  color: var(--c-blue);
   font-size: 14px;
   font-weight: 600;
   text-decoration: none;
 }
 
-.tabActive {
-  border-bottom-color: var(--navy);
-  color: var(--navy-deep);
+.backLink:hover {
+  text-decoration: underline;
 }
 
 .main {
