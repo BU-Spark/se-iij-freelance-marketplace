@@ -221,3 +221,44 @@ textarea.input {
 .availableTrack[data-on='true'] .availableThumb {
   transform: translateX(18px);
 }
+
+/* onboarding completion bar at the top of the panel */
+.completion {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+.completionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--ink);
+}
+.completionHead strong {
+  font-size: 15px;
+}
+.completionTrack {
+  height: 8px;
+  border-radius: 999px;
+  background: #e7ebf2;
+  overflow: hidden;
+}
+.completionFill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--c-blue), #22c55e);
+  transition: width 250ms ease;
+}
+.completionHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
