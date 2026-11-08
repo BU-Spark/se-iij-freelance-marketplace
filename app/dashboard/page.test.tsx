@@ -15,7 +15,13 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-jest.mock('../../lib/assignments', () => ({ listOpenAssignments: jest.fn() }));
+jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
+jest.mock('../../lib/assignments', () => ({
+  listOpenAssignments: jest.fn(),
+  loadAssignmentViewer: jest.fn(async () => viewer),
+}));
+
+const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 
 const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
 
@@ -84,6 +90,16 @@ describe('Dashboard', () => {
     expect(within(card).getByText(/sarah jenkins, news desk/i)).toBeInTheDocument();
     expect(within(card).getByText(/\$1\.10 \/ word \(≈ \$1,100 est\.\)/)).toBeInTheDocument();
     expect(within(card).getByText('3 interested')).toBeInTheDocument();
+  });
+
+  it('links the sample cards to their expanded view too', async () => {
+    listOpenAssignmentsMock.mockResolvedValue([]);
+    await renderDashboard();
+
+    expect(screen.getByRole('link', { name: ASSIGNMENTS[0].title })).toHaveAttribute(
+      'href',
+      `/dashboard/assignments/${ASSIGNMENTS[0].id}`
+    );
   });
 
   it('shows assignments posted to the database above the sample data', async () => {

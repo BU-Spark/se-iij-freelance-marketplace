@@ -115,6 +115,7 @@ describe('dashboard utils', () => {
         length: '800 words',
         compensation: '750',
         interestedIds: [],
+        href: '/dashboard/assignments/a1',
       });
     });
   });
