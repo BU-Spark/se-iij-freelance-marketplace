@@ -18,6 +18,8 @@ export interface ProfileData {
   email: string;
   /** client-only: true once the work email's one-time code has been confirmed */
   businessEmailVerified: boolean;
+  /** client-only 18+ gate: checked in the browser and never sent to the API */
+  dateOfBirth: string;
   shortBio: string;
   longBio: string;
   // profile photo: the S3 object key is saved, the signed URL is only for previewing it
@@ -64,6 +66,7 @@ export type Touched = Partial<Record<keyof ProfileData, boolean>>;
  */
 export type Step =
   | 'role'
+  | 'age'
   | 'editor-profile'
   | 'editor-preferences'
   | 'freelancer-profile'

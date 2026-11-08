@@ -312,3 +312,9 @@
   color: var(--c-red);
   font-weight: 600;
 }
+
+/* ============ Age gate ============ */
+.ageForm {
+  margin-top: 32px;
+  max-width: 240px;
+}

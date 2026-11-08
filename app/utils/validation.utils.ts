@@ -13,6 +13,34 @@ export const isFreeEmailDomain = (email: string) => FREE_EMAIL_DOMAINS.test(emai
 
 export const isValidUrl = (url: string) => URL_PATTERN.test(url);
 
+export const MINIMUM_AGE = 18;
+
+/** Whole years old on `today`; null when the value is not a date or is in the future */
+export function ageFrom(dateOfBirth: string, today: Date = new Date()): number | null {
+  if (!dateOfBirth) return null;
+
+  // parsed as local midnight so the birthday never shifts across time zones
+  const birth = new Date(`${dateOfBirth}T00:00:00`);
+  if (Number.isNaN(birth.getTime()) || birth.getTime() > today.getTime()) return null;
+
+  const years = today.getFullYear() - birth.getFullYear();
+  const beforeBirthday =
+    today.getMonth() < birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() < birth.getDate());
+
+  return beforeBirthday ? years - 1 : years;
+}
+
+/** The 18+ gate; the date of birth itself is never part of what onboarding saves */
+export function validateAge(d: Pick<ProfileData, 'dateOfBirth'>): ProfileErrors {
+  if (!d.dateOfBirth) return { dateOfBirth: 'Enter your date of birth' };
+
+  const age = ageFrom(d.dateOfBirth);
+  if (age === null) return { dateOfBirth: 'Enter a valid date of birth' };
+  if (age < MINIMUM_AGE) return { dateOfBirth: `You must be ${MINIMUM_AGE} or older to join the desk` };
+
+  return {};
+}
+
 function validateBasics(d: ProfileData): ProfileErrors {
   const e: ProfileErrors = {};
   if (!d.firstName.trim()) e.firstName = 'Please enter your first name';
@@ -60,8 +88,9 @@ export function validateRoleSelection(roles: OnboardingRole[]): ProfileErrors {
 }
 
 /** Every rule that applies to the roles the user picked; used on the final submit */
-export function validateProfile(roles: OnboardingRole[], d: ProfileData): ProfileErrors {
+export function validateProfile(roles: OnboardingRole[], d: ProfileData, requireAge = true): ProfileErrors {
   return {
+    ...(requireAge ? validateAge(d) : {}),
     ...validateBasics(d),
     ...(roles.includes('editor') ? validateEditor(d) : {}),
     ...(roles.includes('freelancer') ? validateFreelancer(d) : {}),
@@ -74,6 +103,8 @@ export function validateStep(step: Step, roles: OnboardingRole[], d: ProfileData
   switch (step) {
     case 'role':
       return validateRoleSelection(roles);
+    case 'age':
+      return validateAge(d);
     case 'editor-profile':
       return { ...validateBasics(d), ...validateEditor(d) };
     case 'freelancer-profile':

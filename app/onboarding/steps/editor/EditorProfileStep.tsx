@@ -28,6 +28,8 @@ type EditorProfileStepProps = {
   touch: ProfileTouch;
   addOrg: (org: OrgOption) => void;
   onBack: () => void;
+  /** label says "Change role", so this jumps back to the picker instead of the age gate */
+  onBackToRoles?: () => void;
   onNext: () => void;
   /** Name, email and location belong to the account, so only the first profile step collects them */
   showBasics?: boolean;
@@ -134,6 +136,7 @@ export default function EditorProfileStep(p: EditorProfileStepProps) {
       role="editor"
       backLabel="← Change role"
       onBack={p.onBack}
+      onBackToRoles={p.onBackToRoles}
       title="Your newsroom"
       lead="Freelancers see this when they're deciding whether to pitch you."
       data={data}
