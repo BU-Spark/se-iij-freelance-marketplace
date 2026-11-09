@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { RosterCard } from '../../components';
-import { countOnRoster } from '../../utils/dashboard.utils';
 import type { RosterMember } from '../../types/dashboard.types';
 import styles from './roster.module.css';
 
@@ -13,8 +12,19 @@ type RosterBrowserProps = {
   loadFailed?: boolean;
 };
 
+const beatsOf = (member: RosterMember) => member.beats ?? [member.specialty];
+
+/** Unique, sorted values for a dropdown */
+const options = (values: string[]) => [...new Set(values.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+
 const formatAdded = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+/** Search text matches the name, any beat, or the city */
+function matchesQuery(member: RosterMember, query: string) {
+  if (!query) return true;
+  return [member.name, member.city, ...beatsOf(member)].some((value) => value.toLowerCase().includes(query));
+}
 
 export default function RosterBrowser({ members, loadFailed = false }: RosterBrowserProps) {
   const [query, setQuery] = useState('');
@@ -22,18 +32,19 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
   const [city, setCity] = useState('');
   const [status, setStatus] = useState('');
 
-  const beats = [...new Set(members.flatMap((member) => member.beats ?? [member.specialty]))].sort();
-  const cities = [...new Set(members.map((member) => member.city).filter(Boolean))].sort();
+  const beats = options(members.flatMap(beatsOf));
+  const cities = options(members.map((member) => member.city));
 
   const normalizedQuery = query.trim().toLowerCase();
-  const visibleRoster = members.filter(
+  const visible = members.filter(
     (member) =>
-      member.name.toLowerCase().includes(normalizedQuery) &&
-      (!beat || (member.beats ?? [member.specialty]).includes(beat)) &&
+      matchesQuery(member, normalizedQuery) &&
+      (!beat || beatsOf(member).includes(beat)) &&
       (!city || member.city === city) &&
       (!status || member.status === status)
   );
-  const hasFilters = Boolean(query || beat || city || status);
+
+  const activeFilters = [query.trim(), beat, city, status].filter(Boolean).length;
 
   const clearFilters = () => {
     setQuery('');
@@ -52,98 +63,105 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
     );
   }
 
-  if (members.length === 0) {
-    return (
-      <main className={styles.main}>
-        <div className={styles.heading}>
-          <div>
-            <p className={styles.eyebrow}>Your freelancers</p>
-            <h1>Roster</h1>
-            <p className={styles.description}>Freelancers you&apos;ve invited to work with you.</p>
-          </div>
-        </div>
-        <p className={styles.notice} role="status">
-          You haven&apos;t invited anyone to your roster yet.
-        </p>
-      </main>
-    );
-  }
-
   return (
     <main className={styles.main}>
       <div className={styles.heading}>
         <div>
           <p className={styles.eyebrow}>Your freelancers</p>
-          <h1>Roster</h1>
+          <h1 className={styles.title}>
+            Roster
+            {members.length > 0 && (
+              <span className={styles.countBadge} aria-label={`${members.length} on your roster`}>
+                {members.length}
+              </span>
+            )}
+          </h1>
           <p className={styles.description}>Freelancers you&apos;ve invited to work with you.</p>
         </div>
-        <p className={styles.count}>
-          <strong>{countOnRoster(members)}</strong> available or busy <span>·</span> {members.length} total
-        </p>
       </div>
-      <section className={styles.filters} aria-label="Filter freelancers">
-        <label className={styles.filterField}>
-          Name
-          <input
-            type="search"
-            placeholder="Search by name"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-        </label>
-        <label className={styles.filterField}>
-          Beat
-          <select value={beat} onChange={(event) => setBeat(event.target.value)}>
-            <option value="">All beats</option>
-            {beats.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
+
+      {members.length === 0 ? (
+        <p className={styles.notice} role="status">
+          You haven&apos;t invited anyone to your roster yet.
+        </p>
+      ) : (
+        <>
+          <section className={styles.filters} aria-label="Filter your roster">
+            <label className={styles.filterField}>
+              Search
+              <input
+                type="search"
+                placeholder="Name, beat or city"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </label>
+            <FilterSelect label="Beat" value={beat} onChange={setBeat} all="All beats" values={beats} />
+            <FilterSelect label="Location" value={city} onChange={setCity} all="All locations" values={cities} />
+            <label className={styles.filterField}>
+              Availability
+              <select value={status} onChange={(event) => setStatus(event.target.value)}>
+                <option value="">All statuses</option>
+                <option value="available">Available</option>
+                <option value="busy">Busy</option>
+                <option value="off">Off today</option>
+              </select>
+            </label>
+            {activeFilters > 0 && (
+              <button type="button" className={styles.clearButton} onClick={clearFilters}>
+                Clear filters ({activeFilters})
+              </button>
+            )}
+          </section>
+          <p className={styles.results} role="status">
+            Showing {visible.length} of {members.length} freelancers
+          </p>
+
+          {visible.length === 0 && (
+            <p className={styles.noMatches}>No matches. Try changing or clearing your filters.</p>
+          )}
+
+          <ul className={styles.grid}>
+            {visible.map((member) => (
+              <li key={member.id}>
+                <RosterCard
+                  member={member}
+                  footer={
+                    <span className={styles.added}>
+                      {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
+                    </span>
+                  }
+                />
+              </li>
             ))}
-          </select>
-        </label>
-        <label className={styles.filterField}>
-          Location
-          <select value={city} onChange={(event) => setCity(event.target.value)}>
-            <option value="">All locations</option>
-            {cities.map((value) => (
-              <option key={value} value={value}>
-                {value}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.filterField}>
-          Availability
-          <select value={status} onChange={(event) => setStatus(event.target.value)}>
-            <option value="">All statuses</option>
-            <option value="available">Available</option>
-            <option value="busy">Busy</option>
-            <option value="off">Off today</option>
-          </select>
-        </label>
-        <button type="button" className={styles.clearButton} onClick={clearFilters} disabled={!hasFilters}>
-          Clear filters
-        </button>
-      </section>
-      <p className={styles.results} role="status">
-        Showing {visibleRoster.length} of {members.length} freelancers
-        {visibleRoster.length === 0 && '. No matches. Try changing or clearing your filters.'}
-      </p>
-      <ul className={styles.grid}>
-        {visibleRoster.map((member) => (
-          <li key={member.id}>
-            <RosterCard
-              member={member}
-              footer={
-                <span className={styles.added}>
-                  {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
-                </span>
-              }
-            />
-          </li>
-        ))}
-      </ul>
+          </ul>
+        </>
+      )}
     </main>
+  );
+}
+
+type FilterSelectProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  /** the "no filter" option's text */
+  all: string;
+  values: string[];
+};
+
+function FilterSelect({ label, value, onChange, all, values }: FilterSelectProps) {
+  return (
+    <label className={styles.filterField}>
+      {label}
+      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={values.length === 0}>
+        <option value="">{all}</option>
+        {values.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
