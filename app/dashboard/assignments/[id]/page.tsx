@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 import { Header } from '../../../components/header/Header';
-import { canViewAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
+import { canEditAssignment, canViewAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
 import { ASSIGNMENTS } from '../../constants';
 import { sampleToAssignment } from '../../../utils/dashboard.utils';
 import AssignmentDetail from './AssignmentDetail';
@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 type AssignmentPageProps = { params: Promise<{ id: string }> };
 
-/** The expanded view of one assignment */
+/** The expanded view of one assignment; editors from the posting organization can edit it here */
 export default async function AssignmentPage({ params }: AssignmentPageProps) {
   const { id } = await params;
   const { userId } = await auth();
@@ -25,7 +25,7 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
     return (
       <div className={styles.shell}>
         <Header />
-        <AssignmentDetail assignment={sampleToAssignment(sample)} isSample />
+        <AssignmentDetail assignment={sampleToAssignment(sample)} canEdit={false} isSample />
       </div>
     );
   }
@@ -35,7 +35,7 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
   return (
     <div className={styles.shell}>
       <Header />
-      <AssignmentDetail assignment={assignment} />
+      <AssignmentDetail assignment={assignment} canEdit={canEditAssignment(viewer, assignment)} />
     </div>
   );
 }
