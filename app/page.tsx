@@ -28,7 +28,7 @@ export default function Home() {
         <h1 className={styles.title}>
           Welcome to the
           <br />
-          <span className={styles.highlight}>Institute for Independent Journalists</span>
+          <span className={styles.highlight}>StoryMatch</span>
         </h1>
 
         <p className={styles.subtitle}>

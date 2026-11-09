@@ -124,7 +124,7 @@ function ForgotPasswordForm() {
     <main className={styles.main}>
       <div className={styles.colorBand} aria-hidden="true" />
       <section className={styles.panel} aria-labelledby="forgot-password-title">
-        <Link href="/" className={styles.brand} aria-label="Institute for Independent Journalists home">
+        <Link href="/" className={styles.brand} aria-label="StoryMatch home">
           <IIJLogo size={92} />
         </Link>
 

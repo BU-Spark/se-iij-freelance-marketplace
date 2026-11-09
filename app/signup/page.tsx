@@ -99,11 +99,11 @@ function SignupForm() {
     <main className={styles.main}>
       <div className={styles.colorBand} aria-hidden="true" />
       <section className={styles.panel} aria-labelledby="signup-title">
-        <Link href="/" className={styles.brand} aria-label="Institute for Independent Journalists home">
+        <Link href="/" className={styles.brand} aria-label="StoryMatch home">
           <IIJLogo size={92} />
         </Link>
         <p className={styles.eyebrow}>Join the desk</p>
-        <h1 id="signup-title">{verificationPending ? 'Check your email' : 'Create your IIJ account'}</h1>
+        <h1 id="signup-title">{verificationPending ? 'Check your email' : 'Create your StoryMatch account'}</h1>
         <p className={styles.intro}>
           {verificationPending
             ? `We sent a verification code to ${email}.`

@@ -55,7 +55,7 @@ describe('Login page', () => {
   });
 
   it('renders the returning-user login form', () => {
-    expect(screen.getByRole('heading', { level: 1, name: /log in to iij/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /log in to storymatch/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();

@@ -16,7 +16,7 @@ const sans = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Institute for Independent Journalists',
+  title: 'StoryMatch',
   description: 'The assignment desk that connects newsroom editors with independent journalists.',
 };
 

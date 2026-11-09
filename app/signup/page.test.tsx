@@ -7,7 +7,7 @@ describe('Signup page', () => {
   });
 
   it('renders the signup form with password confirmation', () => {
-    expect(screen.getByRole('heading', { level: 1, name: /create your iij account/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: /create your storymatch account/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/^password$/i)).toHaveAttribute('type', 'password');
     expect(screen.getByLabelText(/^confirm password$/i)).toHaveAttribute('type', 'password');
