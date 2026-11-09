@@ -251,3 +251,64 @@
   color: var(--muted);
   margin-bottom: 12px;
 }
+
+/* ============ Work email verification ============ */
+.verify {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 14px;
+  background: #fbfcfe;
+}
+.verify[data-verified='true'] {
+  border-style: solid;
+  border-color: var(--c-green);
+  background: #f6fbf7;
+}
+.verifyStatus {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.verify[data-verified='true'] .verifyStatus {
+  color: var(--c-green);
+  font-weight: 600;
+}
+/* reuses .secondaryBtn and Field's input styling; only the size differs here */
+.verifyControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+.verifyControls .secondaryBtn {
+  min-width: 0;
+  min-height: 40px;
+  padding: 0 18px;
+  font-size: 13px;
+}
+.verifyControls :disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+.verifyCode input {
+  width: 130px;
+  padding: 10px 12px;
+  letter-spacing: 2px;
+}
+.verifyNotice,
+.verifyError {
+  margin: 0;
+  font-size: 12px;
+}
+.verifyNotice {
+  color: var(--muted);
+}
+.verifyError {
+  color: var(--c-red);
+  font-weight: 600;
+}

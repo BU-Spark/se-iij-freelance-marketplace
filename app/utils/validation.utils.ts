@@ -5,6 +5,12 @@ const URL_PATTERN = /^https?:\/\/\S+\.\S+/;
 
 export const isValidEmail = (email: string) => EMAIL_PATTERN.test(email);
 
+/** Consumer inboxes don't prove a newsroom; Clerk has no opinion, so the app draws the line */
+const FREE_EMAIL_DOMAINS =
+  /@(aol|fastmail|gmail|googlemail|gmx|hey|hotmail|icloud|live|mac|mail|me|msn|outlook|proton|protonmail|yahoo|ymail|yandex|zoho)\.[a-z.]+$/i;
+
+export const isFreeEmailDomain = (email: string) => FREE_EMAIL_DOMAINS.test(email.trim());
+
 export const isValidUrl = (url: string) => URL_PATTERN.test(url);
 
 function validateBasics(d: ProfileData): ProfileErrors {
@@ -17,6 +23,9 @@ function validateBasics(d: ProfileData): ProfileErrors {
 
 function validateEditor(d: ProfileData): ProfileErrors {
   const e: ProfileErrors = {};
+  // the work email is only accepted once its one-time code has been confirmed
+  if (!d.businessEmailVerified && isValidEmail(d.email)) e.email = 'Verify your work email to continue';
+  if (isFreeEmailDomain(d.email)) e.email = 'Use your work email, not a personal inbox';
   if (!d.jobTitle.trim()) e.jobTitle = "What's your position?";
   if (d.yearsAtDesk < 0) e.yearsAtDesk = "Years can't be negative";
   if (d.desks.length === 0) e.desks = 'Pick at least one desk';
