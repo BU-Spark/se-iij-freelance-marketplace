@@ -1,0 +1,57 @@
+.shell {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.header {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 32px clamp(16px, 4vw, 64px) 0;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--c-blue);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 0 0 24px;
+  color: var(--navy-deep);
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 400;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  padding: 10px 16px;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tabActive {
+  border-bottom-color: var(--navy);
+  color: var(--navy-deep);
+}
+
+.main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 24px clamp(16px, 4vw, 64px) 80px;
+}
+
+.empty {
+  color: var(--muted);
+}
