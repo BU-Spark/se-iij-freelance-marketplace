@@ -1,0 +1,166 @@
+.picker {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px 28px 24px;
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  color: #8a93a3;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.search:focus-within {
+  border-color: var(--c-blue);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.search input {
+  flex: 1;
+  min-width: 0;
+  height: 42px;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* one freelancer; the whole row toggles the hidden checkbox */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px 10px 10px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+}
+
+.row:hover {
+  border-color: #c9d0dc;
+  background: var(--bg);
+}
+
+.row:focus-within {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.rowOn,
+.rowOn:hover {
+  border-color: var(--c-blue);
+  background: #f3f6fd;
+}
+
+.who {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.name {
+  color: var(--navy-deep);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.meta {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.available {
+  background: #e8f6ee;
+  color: #17663a;
+}
+.busy {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+.off {
+  background: #f0f2f5;
+  color: #4a5468;
+}
+
+/* round tick box on the right */
+.tick {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 1.5px solid #c9d0dc;
+  border-radius: 50%;
+  color: transparent;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.rowOn .tick {
+  border-color: var(--c-blue);
+  background: var(--c-blue);
+  color: var(--white);
+}
+
+.empty {
+  margin: 0;
+  padding: 32px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 480px) {
+  .picker {
+    padding: 16px;
+  }
+  .status {
+    display: none;
+  }
+}
