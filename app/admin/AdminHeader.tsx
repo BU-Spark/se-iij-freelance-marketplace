@@ -1,0 +1,45 @@
+'use client';
+
+import { useState } from 'react';
+import Link from 'next/link';
+import SidePanel from '../components/SidePanel/SidePanel';
+import menu from '../components/NavMenu/NavMenu.module.css';
+import { AdminBrand, AdminNavLinks } from './AdminNav';
+import styles from './admin.module.css';
+
+/** Phone-only top bar: the sidebar is hidden there, so ☰ opens the same sections in a panel */
+export default function AdminHeader() {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <header className={styles.topBar}>
+      <button
+        type="button"
+        className={menu.menuButton}
+        onClick={() => setOpen(true)}
+        aria-label="Open admin menu"
+        aria-expanded={open}
+      >
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+        </svg>
+      </button>
+      <AdminBrand />
+
+      {open && (
+        <SidePanel
+          title="Admin"
+          side="left"
+          onClose={() => setOpen(false)}
+          footer={
+            <Link href="/dashboard" className={menu.footerLink}>
+              ← Back to the app
+            </Link>
+          }
+        >
+          <AdminNavLinks onNavigate={() => setOpen(false)} />
+        </SidePanel>
+      )}
+    </header>
+  );
+}
