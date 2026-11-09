@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import RosterBrowser from './RosterBrowser';
 import type { RosterMember } from '../../types/dashboard.types';
 
@@ -70,19 +70,27 @@ describe('RosterBrowser', () => {
     expect(screen.queryByText('Amara Diallo')).not.toBeInTheDocument();
   });
 
-  it('filters by status and location', () => {
+  it('filters by location, and clears it again', () => {
     render(<RosterBrowser members={members} />);
 
-    fireEvent.change(screen.getByLabelText('Availability'), { target: { value: 'busy' } });
-    expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
-    expect(screen.queryByText('Sarah Jenkins')).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Dakar' } });
+    expect(cardNames()).toEqual(['Amara Diallo']);
 
     fireEvent.click(screen.getByRole('button', { name: /clear filters \(1\)/i }));
+    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
     expect(screen.queryByRole('button', { name: /clear filters/i })).not.toBeInTheDocument();
+  });
 
-    fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Dakar' } });
-    expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
-    expect(screen.queryByText('Sarah Jenkins')).not.toBeInTheDocument();
+  it('filters by availability with chips that count what the other filters leave', () => {
+    render(<RosterBrowser members={members} />);
+    const chips = within(screen.getByRole('group', { name: 'Availability' }));
+
+    expect(chips.getByRole('button', { name: /^busy 1$/i })).toBeInTheDocument();
+    fireEvent.click(chips.getByRole('button', { name: /^busy/i }));
+    expect(cardNames()).toEqual(['Amara Diallo']);
+
+    fireEvent.change(screen.getByLabelText('Beat'), { target: { value: 'Housing' } });
+    expect(chips.getByRole('button', { name: /^busy 0$/i })).toHaveAttribute('aria-pressed', 'true');
   });
 
   it('sorts by name, most recently added, or who is available first', () => {
