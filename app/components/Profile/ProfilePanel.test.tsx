@@ -4,6 +4,41 @@ import { MOCK_PROFILE } from './config/constants';
 
 const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
 
+describe('ProfilePanel completion bar', () => {
+  const blankBios = { ...MOCK_PROFILE, basic: { ...MOCK_PROFILE.basic, shortBio: '', longBio: '' } };
+
+  it('shows how much of the profile is filled in', () => {
+    render(<ProfilePanel profile={blankBios} onClose={jest.fn()} />);
+
+    expect(screen.getByRole('progressbar', { name: /profile completion/i })).toHaveAttribute('aria-valuenow', '90');
+    expect(screen.getByText('90%')).toBeInTheDocument();
+  });
+
+  it('hides the bar once everything is filled in', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
+  it('does not count fields the panel cannot edit', () => {
+    // availability is set during onboarding only, so it must not hold the bar below 100%
+    const noAvailability = {
+      ...MOCK_PROFILE,
+      roles: MOCK_PROFILE.roles.map((details) => ({ ...details, facts: { ...details.facts, availability: '' } })),
+    };
+
+    render(<ProfilePanel profile={noAvailability} onClose={jest.fn()} />);
+
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+  });
+
+  it('is never complete without a role', () => {
+    render(<ProfilePanel profile={{ ...blankBios, roles: [] }} onClose={jest.fn()} />);
+
+    expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '0');
+  });
+});
+
 describe('ProfilePanel', () => {
   it('shows the basic info', () => {
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);

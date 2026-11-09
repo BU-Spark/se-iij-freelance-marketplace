@@ -1,4 +1,4 @@
-import type { ProfileRole } from '../../../types/profile.types';
+import type { AccountProfile, ProfileRole, RoleValue } from '../../../types/profile.types';
 import { PROFILE_ROLE_ORDER } from '../../../types/profile.types';
 
 export type RoleFieldType = 'text' | 'number' | 'chips' | 'org' | 'readonly';
@@ -70,3 +70,27 @@ export const ALL_ROLES: ProfileRole[] = PROFILE_ROLE_ORDER;
 /** The fields a role still needs before its card counts as finished */
 export const requiredFieldsFor = (role: ProfileRole): RoleField[] =>
   ROLE_CONFIG[role].fields.filter((field) => ROLE_CONFIG[role].requiredFields.includes(field.key));
+
+/** True when a text field has text or a chip list has at least one pick */
+export const isFilled = (value: RoleValue | undefined) =>
+  Array.isArray(value) ? value.length > 0 : value !== undefined && String(value).trim() !== '';
+
+/**
+ * How much of the profile has been filled in, as a whole percentage, so the panel can nudge the
+ * rest. Counts the shared bios plus every field a role card lets you edit; `readonly` fields are
+ * left out because the panel cannot change them, which keeps 100% reachable.
+ */
+export function profileCompletion(profile: AccountProfile): number {
+  const checks = [
+    isFilled(profile.basic.shortBio),
+    isFilled(profile.basic.longBio),
+    profile.roles.length > 0,
+    ...profile.roles.flatMap((details) =>
+      ROLE_CONFIG[details.role].fields
+        .filter((field) => field.type !== 'readonly')
+        .map((field) => isFilled(details.facts[field.key]))
+    ),
+  ];
+
+  return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+}

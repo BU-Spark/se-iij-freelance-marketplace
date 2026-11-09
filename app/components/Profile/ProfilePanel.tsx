@@ -7,9 +7,9 @@ import BasicInfoForm from './forms/BasicInfoForm';
 import RoleCard from './cards/RoleCard';
 import RoleForm from './forms/RoleForm';
 import AddRoleButton from './cards/AddRoleButton';
-import { ALL_ROLES, ROLE_CONFIG, requiredFieldsFor } from './config/roleConfig';
+import { ALL_ROLES, ROLE_CONFIG, isFilled, profileCompletion, requiredFieldsFor } from './config/roleConfig';
 import { missingRoles } from '../../utils/profile.utils';
-import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails, RoleValue } from '../../types/profile.types';
+import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
 import styles from './Profile.module.css';
 
 /** Saves resolve true once the server has the change, so a failed save leaves the form open */
@@ -26,10 +26,6 @@ type ProfilePanelProps = {
   onSaveAvailable?: (availableNow: boolean) => SaveResult;
 };
 
-/** Empty text, or a chip list with nothing picked */
-const isBlank = (value: RoleValue | undefined) =>
-  value === undefined || (Array.isArray(value) ? value.length === 0 : String(value).trim() === '');
-
 export default function ProfilePanel({
   profile,
   onClose,
@@ -44,9 +40,12 @@ export default function ProfilePanel({
   const unfinished = profile.roles
     .map((details) => ({
       role: details.role,
-      missing: requiredFieldsFor(details.role).filter((field) => isBlank(details.facts[field.key])),
+      missing: requiredFieldsFor(details.role).filter((field) => !isFilled(details.facts[field.key])),
     }))
     .filter((entry) => entry.missing.length > 0);
+
+  // hidden once there is nothing left to fill in
+  const completion = profileCompletion(profile);
 
   const saveBasic = async (basic: BasicInfo) => {
     if ((await onSaveBasic?.(basic)) === true) stopEditing();
@@ -59,6 +58,26 @@ export default function ProfilePanel({
   return (
     <SidePanel title="My profile" side="right" onClose={onClose}>
       <div className={styles.stack}>
+        {completion < 100 && (
+          <section className={styles.completion} aria-label="Profile completion">
+            <p className={styles.completionHead}>
+              <span>Profile completion</span>
+              <strong>{completion}%</strong>
+            </p>
+            <div
+              className={styles.completionTrack}
+              role="progressbar"
+              aria-label="Profile completion"
+              aria-valuenow={completion}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div className={styles.completionFill} style={{ width: `${completion}%` }} />
+            </div>
+            <p className={styles.completionHint}>Fill in the rest so editors and freelancers can find you.</p>
+          </section>
+        )}
+
         {editing === 'basic' && onSaveBasic ? (
           <BasicInfoForm basic={profile.basic} onSave={saveBasic} onCancel={stopEditing} />
         ) : (
