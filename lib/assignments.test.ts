@@ -2,7 +2,14 @@
  * @jest-environment node
  */
 import { db } from './db';
-import { listOpenAssignments, loadAssignmentViewer } from './assignments';
+import {
+  canViewAssignment,
+  getAssignment,
+  listOpenAssignments,
+  loadAssignmentViewer,
+  toAssignment,
+  type AssignmentViewer,
+} from './assignments';
 
 jest.mock('./db', () => ({ db: { query: jest.fn() } }));
 
@@ -118,5 +125,57 @@ describe('loadAssignmentViewer', () => {
     queryMock.mockResolvedValue({ rows: [] });
 
     await expect(loadAssignmentViewer('clerk-1')).resolves.toBeNull();
+  });
+});
+
+describe('getAssignment', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('skips the database for ids that are not UUIDs', async () => {
+    await expect(getAssignment('not-a-uuid')).resolves.toBeNull();
+    expect(queryMock).not.toHaveBeenCalled();
+  });
+
+  it('loads one assignment by id', async () => {
+    const id = '5f0c6a8e-1b2c-4d3e-8f90-1234567890ab';
+    queryMock.mockResolvedValue({ rows: [{ ...row, id }] });
+
+    const assignment = await getAssignment(id);
+
+    expect(assignment?.id).toBe(id);
+    expect(queryMock.mock.calls[0][1]).toEqual([id]);
+  });
+});
+
+describe('canViewAssignment', () => {
+  const assignment = toAssignment(row as Parameters<typeof toAssignment>[0]); // org-1, by user-1
+  const editor = (overrides: Partial<AssignmentViewer> = {}): AssignmentViewer => ({
+    userId: 'user-9',
+    roles: ['editor'],
+    organizationId: 'org-1',
+    ...overrides,
+  });
+
+  it('lets editors from the posting organization see it', () => {
+    expect(canViewAssignment(editor(), assignment)).toBe(true);
+  });
+
+  it('hides it from editors at other organizations', () => {
+    expect(canViewAssignment(editor({ organizationId: 'org-2' }), assignment)).toBe(false);
+  });
+
+  it('lets the author see it even without a matching organization', () => {
+    expect(canViewAssignment(editor({ userId: 'user-1', organizationId: null }), assignment)).toBe(true);
+  });
+
+  it("does not let two organization-less editors see each other's posts", () => {
+    const orphan = { ...assignment, organizationId: null };
+    expect(canViewAssignment(editor({ organizationId: null }), orphan)).toBe(false);
+  });
+
+  it('lets freelancers see open assignments only', () => {
+    const freelancer: AssignmentViewer = { userId: 'user-5', roles: ['freelancer'], organizationId: null };
+    expect(canViewAssignment(freelancer, assignment)).toBe(true);
+    expect(canViewAssignment(freelancer, { ...assignment, status: 'assigned' })).toBe(false);
   });
 });

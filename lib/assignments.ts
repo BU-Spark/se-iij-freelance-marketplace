@@ -33,6 +33,8 @@ export type AssignmentViewer = {
   organizationId: string | null;
 };
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /** Turns a snake_case database row into the camelCase model the app uses */
 export function toAssignment(row: AssignmentRow): Assignment {
   return {
@@ -97,4 +99,23 @@ export async function listOpenAssignments(viewer?: AssignmentViewer | null): Pro
     `SELECT ${ASSIGNMENT_COLUMNS} FROM assignments WHERE status = 'open' ORDER BY created_at DESC`
   );
   return rows.map(toAssignment);
+}
+
+/** One assignment by id, or null when it does not exist (or the id is not a UUID) */
+export async function getAssignment(id: string): Promise<Assignment | null> {
+  if (!UUID_PATTERN.test(id)) return null;
+  const { rows } = await db.query<AssignmentRow>(`SELECT ${ASSIGNMENT_COLUMNS} FROM assignments WHERE id = $1`, [id]);
+  return rows[0] ? toAssignment(rows[0]) : null;
+}
+
+/** True when the assignment belongs to the editor's desk: same organization, or their own post */
+export function belongsToViewer(viewer: AssignmentViewer, assignment: Assignment): boolean {
+  if (assignment.createdByUserId === viewer.userId) return true;
+  return Boolean(viewer.organizationId) && assignment.organizationId === viewer.organizationId;
+}
+
+/** Editors see their organization's assignments; everyone else sees open ones */
+export function canViewAssignment(viewer: AssignmentViewer | null | undefined, assignment: Assignment): boolean {
+  if (isEditor(viewer)) return belongsToViewer(viewer, assignment);
+  return assignment.status === 'open';
 }
