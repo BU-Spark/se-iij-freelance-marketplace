@@ -9,6 +9,7 @@ jest.mock('next/navigation', () => ({
   notFound: jest.fn(() => {
     throw new Error('NEXT_NOT_FOUND');
   }),
+  useRouter: () => ({ refresh: jest.fn(), push: jest.fn() }),
 }));
 jest.mock('../../../components/header/Header', () => ({ Header: () => <header>Header</header> }));
 jest.mock('../../../../lib/db', () => ({ db: { query: jest.fn() } }));
@@ -47,20 +48,22 @@ describe('Assignment detail page', () => {
     getAssignmentMock.mockResolvedValue(assignment);
   });
 
-  it('shows the assignment to editors from the posting organization', async () => {
+  it('shows the assignment with an Edit button to editors from the posting organization', async () => {
     loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
 
     await renderPage();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Election night' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
   });
 
-  it('shows freelancers open assignments', async () => {
+  it('shows freelancers the assignment without an Edit button', async () => {
     loadViewerMock.mockResolvedValue({ userId: 'user-5', roles: ['freelancer'], organizationId: null });
 
     await renderPage();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Election night' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 
   it('is a 404 for editors from another organization', async () => {
@@ -70,7 +73,7 @@ describe('Assignment detail page', () => {
     expect(notFound).toHaveBeenCalled();
   });
 
-  it('opens sample desk cards too', async () => {
+  it('opens sample desk cards read-only', async () => {
     getAssignmentMock.mockResolvedValue(null);
     loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
 
@@ -80,6 +83,7 @@ describe('Assignment detail page', () => {
     expect(screen.getByText('Point of contact: David Park, Opinion')).toBeInTheDocument();
     expect(screen.getByText(/\$85 \/ hr/)).toBeInTheDocument();
     expect(screen.getByText(/sample assignment/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 
   it('is a 404 when the assignment does not exist', async () => {

@@ -80,3 +80,62 @@
 .slug {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
+
+/* edit mode */
+.formError {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fdecec;
+  color: #a8231a;
+}
+
+.editButton,
+.primary,
+.secondary {
+  min-height: 40px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.editButton {
+  margin-left: auto;
+  border: 1px solid var(--c-blue);
+  background: transparent;
+  color: var(--c-blue);
+}
+.editButton:hover,
+.secondary:hover {
+  background: #eef2fd;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+.primary {
+  border: 1px solid var(--c-blue);
+  background: var(--c-blue);
+  color: #fff;
+}
+.secondary {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.editButton:focus-visible,
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
