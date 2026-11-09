@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import { isPhotoKeyFor } from '../../../lib/s3';
@@ -57,6 +57,28 @@ export async function POST(request: Request) {
   }
   if (!isRecord(freelancer) && roles.includes('freelancer')) {
     return NextResponse.json({ error: 'The onboarding payload is invalid.' }, { status: 400 });
+  }
+
+  // Clerk only lists an address as verified once its code has been confirmed, and refuses to
+  // attach one address to two accounts, so it owns both the proof and the uniqueness rule
+  if (roles.includes('editor')) {
+    const submitted = user.email.trim().toLowerCase();
+    let clerkUser;
+
+    try {
+      clerkUser = await currentUser();
+    } catch (error) {
+      console.error('Failed to check the work email verification.', error);
+      return NextResponse.json({ error: 'Unable to save your profile right now.' }, { status: 500 });
+    }
+
+    const verified = clerkUser?.emailAddresses.some(
+      (address) => address.emailAddress.toLowerCase() === submitted && address.verification?.status === 'verified'
+    );
+
+    if (!verified) {
+      return NextResponse.json({ error: 'Verify your work email before creating your profile.' }, { status: 400 });
+    }
   }
 
   let client: PoolClient | undefined;
