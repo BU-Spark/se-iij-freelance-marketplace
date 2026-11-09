@@ -23,3 +23,16 @@ export type VerificationStatus = 'unverified' | 'pending' | 'verified' | 'reject
 
 /** Whether an account can sign in and use the marketplace */
 export type AccountStatus = 'active' | 'suspended';
+
+/** Someone who asked the Story Match team to verify who they are */
+export type VerificationRequest = {
+  id: string;
+  name: string;
+  role: 'freelancer' | 'editor';
+  location: string;
+  /** what they sent as proof, e.g. a press card or published clips */
+  evidence: string;
+  status: Exclude<VerificationStatus, 'unverified'>;
+  /** ISO timestamp */
+  requestedAt: string;
+};
