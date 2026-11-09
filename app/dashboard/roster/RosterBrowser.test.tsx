@@ -110,6 +110,25 @@ describe('RosterBrowser', () => {
     expect(screen.getByRole('button', { name: /invite freelancers/i })).toBeDisabled();
   });
 
+  it('asks before removing someone, then offers them in the invite list again', () => {
+    renderPage(<RosterBrowser members={members} invitable={[]} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Sarah Jenkins from your roster' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(cardNames()).toContain('Sarah Jenkins');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Sarah Jenkins from your roster' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Yes, remove' }));
+    expect(cardNames()).toEqual(['Amara Diallo']);
+
+    fireEvent.click(screen.getByRole('button', { name: /invite freelancers/i }));
+    const dialog = within(screen.getByRole('dialog'));
+    expect(dialog.getByRole('checkbox', { name: /sarah jenkins/i })).not.toBeChecked();
+
+    fireEvent.change(dialog.getByLabelText('Search freelancers'), { target: { value: 'zzz' } });
+    expect(dialog.getByText(/no freelancer matches/i)).toBeInTheDocument();
+  });
+
   it('tells an empty roster apart from an empty directory and a failed load', () => {
     const first = renderPage(<RosterBrowser members={[]} invitable={[outsider]} />);
     expect(screen.getByText(/no one on your roster yet/i)).toBeInTheDocument();
