@@ -1,6 +1,6 @@
-import styles from '../admin.module.css';
+import AccountList from './AccountList';
+import { ADMIN_ACCOUNTS } from './constants';
 
 export default function AccountsPage() {
-  // To Do: search accounts and suspend or reactivate them
-  return <p className={styles.empty}>Account tools are coming soon.</p>;
+  return <AccountList accounts={ADMIN_ACCOUNTS} />;
 }

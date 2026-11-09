@@ -36,3 +36,16 @@ export type VerificationRequest = {
   /** ISO timestamp */
   requestedAt: string;
 };
+
+/** One person's account as the Story Match team sees it on the Accounts tab */
+export type AdminAccount = {
+  id: string;
+  name: string;
+  email: string;
+  role: 'freelancer' | 'editor';
+  status: AccountStatus;
+  /** why the team suspended them; only set while suspended */
+  suspensionReason?: string;
+  /** ISO timestamp */
+  joinedAt: string;
+};
