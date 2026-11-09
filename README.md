@@ -165,6 +165,27 @@ Set the app service's `DATABASE_URL` to the PostgreSQL service reference
 name). The private hostname is available from Railway services, not from a local
 computer.
 
+## Work (business) email verification
+
+An editor's work email is proven through Clerk instead of being taken at face value, and Clerk
+refuses to attach one email address to two accounts, so the same work email can never verify
+twice:
+
+1. The editor step calls `user.createEmailAddress({ email })` then
+   `emailAddress.prepareVerification({ strategy: 'email_code' })`, so Clerk emails the one-time
+   code. An address already verified on the account (for example the sign-up email) is accepted
+   straight away.
+2. **Verify** calls `emailAddress.attemptVerification({ code })`, and only a `verified` address
+   completes the step. Consumer inboxes (Gmail, Outlook, Yahoo, …) are refused in the form
+   because they don't prove a newsroom.
+3. `POST /api/onboarding` re-checks the submitted address against the account's verified Clerk
+   addresses (`currentUser()` in [`app/api/onboarding/route.ts`](./app/api/onboarding/route.ts)),
+   so the flow cannot be bypassed from the client. Editing the work email clears the flag, so a
+   new address has to be proven again.
+
+No extra configuration is needed — Clerk sends the code. Adjust the email copy in the Clerk
+Dashboard under Customization → Emails → Verification code.
+
 ## Profile photo uploads
 
 Onboarding collects an optional profile photo on the first profile step. The browser
