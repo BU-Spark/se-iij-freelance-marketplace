@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { db } from './db';
-import { listOpenAssignments } from './assignments';
+import { listOpenAssignments, loadAssignmentViewer } from './assignments';
 
 jest.mock('./db', () => ({ db: { query: jest.fn() } }));
 
@@ -66,5 +66,57 @@ describe('listOpenAssignments', () => {
     const [assignment] = await listOpenAssignments();
 
     expect(assignment.deadline).toBeNull();
+  });
+});
+
+describe('listOpenAssignments scoping', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    queryMock.mockResolvedValue({ rows: [] });
+  });
+
+  it("limits editors to their own organization's assignments", async () => {
+    await listOpenAssignments({ userId: 'user-1', roles: ['editor'], organizationId: 'org-1' });
+
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).toContain('organization_id = $1');
+    expect(params).toEqual(['org-1']);
+  });
+
+  it('limits editors with no organization yet to their own posts', async () => {
+    await listOpenAssignments({ userId: 'user-1', roles: ['editor'], organizationId: null });
+
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).toContain('organization_id IS NULL AND created_by_user_id = $1');
+    expect(params).toEqual(['user-1']);
+  });
+
+  it('shows freelancers every open assignment', async () => {
+    await listOpenAssignments({ userId: 'user-2', roles: ['freelancer'], organizationId: null });
+
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).not.toContain('organization_id =');
+    expect(params).toBeUndefined();
+  });
+});
+
+describe('loadAssignmentViewer', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns the user id, roles and organization for a Clerk id', async () => {
+    queryMock.mockResolvedValue({ rows: [{ id: 'user-1', roles: ['editor'], organization_id: 'org-1' }] });
+
+    await expect(loadAssignmentViewer('clerk-1')).resolves.toEqual({
+      userId: 'user-1',
+      roles: ['editor'],
+      organizationId: 'org-1',
+    });
+    expect(queryMock.mock.calls[0][1]).toEqual(['clerk-1']);
+  });
+
+  it('returns null before onboarding', async () => {
+    queryMock.mockResolvedValue({ rows: [] });
+
+    await expect(loadAssignmentViewer('clerk-1')).resolves.toBeNull();
   });
 });

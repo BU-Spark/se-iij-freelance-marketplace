@@ -7,7 +7,13 @@ import { listOpenAssignments } from '../../../lib/assignments';
 jest.mock('../../components/FreelancerWorkspace', () => ({
   FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
-jest.mock('../../../lib/assignments', () => ({ listOpenAssignments: jest.fn() }));
+jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
+jest.mock('../../../lib/assignments', () => ({
+  listOpenAssignments: jest.fn(),
+  loadAssignmentViewer: jest.fn(async () => viewer),
+}));
+
+const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 
 const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
 
@@ -44,6 +50,8 @@ describe('Assignment discovery page', () => {
     render(await AssignmentsPage());
 
     expect(listOpenAssignmentsMock).toHaveBeenCalledTimes(1);
+    // scoped to whoever is signed in, so editors only get their organization's posts
+    expect(listOpenAssignmentsMock).toHaveBeenCalledWith(viewer);
     expect(screen.getAllByRole('article')).toHaveLength(2);
     expect(screen.getByRole('heading', { name: /election night/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /port authority/i })).toBeInTheDocument();
