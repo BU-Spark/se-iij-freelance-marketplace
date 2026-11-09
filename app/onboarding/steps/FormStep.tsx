@@ -7,6 +7,8 @@ type FormStepProps = {
   role: OnboardingRole;
   backLabel: string;
   onBack: () => void;
+  /** profile steps go back to the role picker; preferences steps just step back */
+  onBackToRoles?: () => void;
   title: string;
   lead: string;
   data: ProfileData;
@@ -25,7 +27,7 @@ export default function FormStep(p: FormStepProps) {
   return (
     <div className={`${shared.layout} ${shared.fadeIn}`}>
       <section>
-        <button className={shared.back} onClick={p.onBack}>
+        <button className={shared.back} onClick={p.onBackToRoles ?? p.onBack}>
           {p.backLabel}
         </button>
         <p className={shared.roleTag} data-role={p.role}>

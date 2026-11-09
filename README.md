@@ -186,6 +186,23 @@ twice:
 No extra configuration is needed — Clerk sends the code. Adjust the email copy in the Clerk
 Dashboard under Customization → Emails → Verification code.
 
+## Age verification
+
+Onboarding asks for a date of birth on the step after the role picker and refuses anyone under
+`MINIMUM_AGE` (18) in [`app/utils/validation.utils.ts`](./app/utils/validation.utils.ts).
+
+The date of birth is **never stored and never sent anywhere**:
+
+- it lives only in the onboarding form state (`ProfileData.dateOfBirth`), which is not part of the
+  payload `POST /api/onboarding` accepts and is not written to any table;
+- the age check runs in the browser (`ageFrom` / `validateAge`), so the value never reaches the
+  server, the logs or the database;
+- reopening onboarding to add a role skips the step, because that person already completed it.
+
+Because a self-reported date cannot be independently confirmed, the gate is a policy and UX
+control rather than a security boundary. If it needs to be stricter later, compare the date on the
+server and discard it without writing it.
+
 ## Profile photo uploads
 
 Onboarding collects an optional profile photo on the first profile step. The browser

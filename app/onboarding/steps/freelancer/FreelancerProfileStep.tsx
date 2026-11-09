@@ -23,6 +23,8 @@ type FreelancerProfileStepProps = {
   update: ProfileUpdate;
   touch: ProfileTouch;
   onBack: () => void;
+  /** label says "Change role", so this jumps back to the picker instead of the age gate */
+  onBackToRoles?: () => void;
   onNext: () => void;
   /** Name, email and location belong to the account, so only the first profile step collects them */
   showBasics?: boolean;
@@ -48,6 +50,7 @@ export default function FreelancerProfileStep(p: FreelancerProfileStepProps) {
       role="freelancer"
       backLabel="← Change role"
       onBack={p.onBack}
+      onBackToRoles={p.onBackToRoles}
       title="Your reporting"
       lead="Editors see this when they're deciding who to assign."
       data={data}

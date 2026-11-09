@@ -8,6 +8,7 @@ import { DEFAULT_ORGS, EMPTY } from './constants';
 import type { OnboardingRole, OrgOption, ProfileData, ProfileErrors, Step, Touched } from '../types/onboarding.types';
 import { validateProfile, validateStep } from '../utils/validation.utils';
 import RoleStep from './steps/RoleStep';
+import AgeStep from './steps/AgeStep';
 import DoneStep from './steps/DoneStep';
 import EditorProfileStep from './steps/editor/EditorProfileStep';
 import EditorPreferencesStep from './steps/editor/EditorPreferencesStep';
@@ -23,9 +24,13 @@ const STEP_TITLES: Record<OnboardingRole, Record<'profile' | 'preferences', stri
   freelancer: { profile: 'Your reporting', preferences: 'Rates & availability' },
 };
 
-/** role -> a profile and preferences step per selected role -> done */
-const buildSequence = (roles: OnboardingRole[]): Step[] => [
+/**
+ * role -> age gate -> a profile and preferences step per selected role -> done.
+ * Adding a role to an existing profile skips the gate: that person already went through it.
+ */
+const buildSequence = (roles: OnboardingRole[], withAge = true): Step[] => [
   'role',
+  ...(withAge ? (['age'] as Step[]) : []),
   ...roles.flatMap((role): Step[] => [`${role}-profile`, `${role}-preferences`]),
   'done',
 ];
@@ -38,6 +43,7 @@ const stepRole = (step: Step): OnboardingRole | null => {
 
 const stepTitle = (step: Step): string => {
   if (step === 'role') return 'Who are you?';
+  if (step === 'age') return 'Your age';
   if (step === 'done') return 'All done';
 
   const role = stepRole(step) as OnboardingRole;
@@ -57,6 +63,8 @@ export default function OnboardingPage() {
   const [shake, setShake] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // a flow seeded from an existing profile is adding a role, so it is already past the age gate
+  const [seeded, setSeeded] = useState(false);
 
   // Seeded in an effect so the server and first client render agree on the value
   useEffect(() => {
@@ -83,9 +91,10 @@ export default function OnboardingPage() {
         if (cancelled) return;
 
         const nextRoles = ALL_ROLES.filter((role) => saved.includes(role) || role === requested);
+        setSeeded(true);
         setRoles(nextRoles);
         setData((d) => ({ ...d, ...answers, timezone: answers.timezone || d.timezone }));
-        setIndex(Math.max(0, buildSequence(nextRoles).indexOf(`${requested}-profile`)));
+        setIndex(Math.max(0, buildSequence(nextRoles, false).indexOf(`${requested}-profile`)));
       } catch {
         // if the seed cannot be read, the normal flow still works — just from empty
       }
@@ -98,8 +107,10 @@ export default function OnboardingPage() {
     };
   }, []);
 
-  const sequence = useMemo(() => buildSequence(roles), [roles]);
+  const sequence = useMemo(() => buildSequence(roles, !seeded), [roles, seeded]);
   const step = sequence[Math.min(index, sequence.length - 1)];
+  /** The shared account fields belong to the first profile step, whatever sits before it */
+  const firstProfileIndex = sequence.findIndex((candidate) => candidate.endsWith('-profile'));
   const errors = useMemo(() => validateStep(step, roles, data), [step, roles, data]);
 
   const update = <K extends keyof ProfileData>(key: K, value: ProfileData[K]) =>
@@ -142,6 +153,14 @@ export default function OnboardingPage() {
     scrollTop();
   };
 
+  /** "Change role" on a profile step skips the age gate it already passed */
+  const backToRoles = () => {
+    setTouched({});
+    setRoleError(null);
+    setIndex(0);
+    scrollTop();
+  };
+
   const goBack = () => {
     setTouched({});
     setRoleError(null);
@@ -174,7 +193,7 @@ export default function OnboardingPage() {
   };
 
   const handleSubmit = async () => {
-    const problems = validateProfile(roles, data);
+    const problems = validateProfile(roles, data, !seeded);
 
     if (Object.keys(problems).length > 0) {
       reject();
@@ -257,10 +276,24 @@ export default function OnboardingPage() {
           <RoleStep selected={roles} onToggle={toggleRole} onNext={goNext} error={roleError ?? undefined} />
         )}
 
+        {step === 'age' && (
+          <AgeStep
+            data={data}
+            errors={errors}
+            touched={touched}
+            shake={shake}
+            update={update}
+            touch={touch}
+            onBack={goBack}
+            onNext={goNext}
+          />
+        )}
+
         {step === 'editor-profile' && (
           <EditorProfileStep
             {...stepProps}
-            showBasics={index === 1}
+            onBackToRoles={backToRoles}
+            showBasics={index === firstProfileIndex}
             addOrg={(org) => {
               setOrgs((list) => [...list, org]);
               update('organizationId', org.id);
@@ -272,7 +305,12 @@ export default function OnboardingPage() {
         {step === 'editor-preferences' && <EditorPreferencesStep {...stepProps} {...preferencesActions} />}
 
         {step === 'freelancer-profile' && (
-          <FreelancerProfileStep {...stepProps} showBasics={index === 1} onNext={goNext} />
+          <FreelancerProfileStep
+            {...stepProps}
+            onBackToRoles={backToRoles}
+            showBasics={index === firstProfileIndex}
+            onNext={goNext}
+          />
         )}
 
         {step === 'freelancer-preferences' && <FreelancerPreferencesStep {...stepProps} {...preferencesActions} />}
@@ -283,7 +321,7 @@ export default function OnboardingPage() {
             data={data}
             org={selectedOrg}
             onEdit={() => {
-              setIndex(1);
+              setIndex(Math.max(0, firstProfileIndex));
               scrollTop();
             }}
           />

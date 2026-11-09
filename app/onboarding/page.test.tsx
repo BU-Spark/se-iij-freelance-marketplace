@@ -63,10 +63,19 @@ const pickRole = (label: RegExp) => fireEvent.click(screen.getByRole('button', {
 const next = () => fireEvent.click(screen.getByRole('button', { name: /continue/i }));
 const submit = () => fireEvent.click(screen.getByRole('button', { name: /create profile/i }));
 
+const ADULT_DOB = '1990-01-01';
+
+/** Step 2 is the 18+ gate; every flow that picks a role walks through it */
+const passAgeGate = () => {
+  type(/date of birth/i, ADULT_DOB);
+  next();
+};
+
 /** Picks roles on step 1 and moves on to the first profile step */
 const startAs = (...labels: RegExp[]) => {
   labels.forEach(pickRole);
   next();
+  passAgeGate();
 };
 
 /** The work email must be proven before the editor step will continue */
@@ -132,21 +141,90 @@ describe('Onboarding page', () => {
       expect(screen.getByRole('button', { name: /i'm an editor/i })).toHaveAttribute('aria-pressed', 'true');
       expect(screen.getByRole('button', { name: /i'm a freelancer/i })).toHaveAttribute('aria-pressed', 'true');
       // one role -> 3 steps, both roles -> 5 steps
-      expect(screen.getByText(/step 1 of 5/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 1 of 6/i)).toBeInTheDocument();
     });
 
     it('moves to the editor profile form when only the editor role is picked', () => {
       startAs(/i'm an editor/i);
 
       expect(screen.getByRole('heading', { level: 1, name: /your newsroom/i })).toBeInTheDocument();
-      expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 3 of 4/i)).toBeInTheDocument();
     });
 
     it('moves to the freelancer profile form when only the freelancer role is picked', () => {
       startAs(/i'm a freelancer/i);
 
       expect(screen.getByRole('heading', { level: 1, name: /your reporting/i })).toBeInTheDocument();
-      expect(screen.getByText(/step 2 of 3/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 3 of 4/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Age gate', () => {
+    beforeEach(() => {
+      pickRole(/i'm an editor/i);
+      next();
+    });
+
+    it('asks for a date of birth before the profile steps', () => {
+      expect(screen.getByRole('heading', { level: 1, name: /first, your age/i })).toBeInTheDocument();
+      expect(screen.getByText(/step 2 of 4 — your age/i)).toBeInTheDocument();
+      expect(screen.getByText(/never saved/i)).toBeInTheDocument();
+    });
+
+    it('asks for the date when Continue is pressed with the field empty', () => {
+      next();
+
+      expect(screen.getByText(/enter your date of birth/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /first, your age/i })).toBeInTheDocument();
+    });
+
+    it('refuses anyone under 18', () => {
+      type(/date of birth/i, '2015-01-01');
+      next();
+
+      expect(screen.getByText(/must be 18 or older/i)).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1, name: /first, your age/i })).toBeInTheDocument();
+    });
+
+    it('lets someone through on their eighteenth birthday', () => {
+      const today = new Date();
+      const birthday = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+      const value = [
+        birthday.getFullYear(),
+        String(birthday.getMonth() + 1).padStart(2, '0'),
+        String(birthday.getDate()).padStart(2, '0'),
+      ].join('-');
+
+      type(/date of birth/i, value);
+      next();
+
+      expect(screen.getByRole('heading', { level: 1, name: /your newsroom/i })).toBeInTheDocument();
+    });
+
+    it('never sends the date of birth with the profile', async () => {
+      type(/date of birth/i, ADULT_DOB);
+      next();
+      type(/first name/i, 'Sarah');
+      type(/last name/i, 'Jenkins');
+      type(/work email/i, 'sarah@newsroom.example');
+      type(/position \/ title/i, 'News Editor');
+      fireEvent.click(chip('Politics'));
+      await verifyWorkEmail();
+      next();
+      submit();
+
+      await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
+
+      const body = postedPayload();
+      expect(body).not.toHaveProperty('dateOfBirth');
+      expect(body.user).not.toHaveProperty('dateOfBirth');
+      expect(JSON.stringify(body)).not.toContain(ADULT_DOB);
+    });
+
+    it('goes back to the role picker', () => {
+      fireEvent.click(screen.getByRole('button', { name: /^back$/i }));
+
+      expect(screen.getByRole('heading', { level: 1, name: /welcome aboard/i })).toBeInTheDocument();
     });
   });
 
@@ -362,7 +440,7 @@ describe('Onboarding page', () => {
 
       it('shows the editor preference fields only', () => {
         expect(screen.getByRole('heading', { level: 1, name: /how you work/i })).toBeInTheDocument();
-        expect(screen.getByText(/step 3 of 3/i)).toBeInTheDocument();
+        expect(screen.getByText(/step 4 of 4/i)).toBeInTheDocument();
         expect(screen.getByText(/preferred pitch format/i)).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: /editorial preferences/i })).toBeInTheDocument();
         expect(screen.queryByLabelText(/your rate/i)).not.toBeInTheDocument();
@@ -414,7 +492,7 @@ describe('Onboarding page', () => {
 
       it('shows the freelancer preference fields only', () => {
         expect(screen.getByRole('heading', { level: 1, name: /rates & availability/i })).toBeInTheDocument();
-        expect(screen.getByText(/step 3 of 3/i)).toBeInTheDocument();
+        expect(screen.getByText(/step 4 of 4/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/your rate/i)).toBeInTheDocument();
         expect(screen.getByLabelText(/communities you cover/i)).toBeInTheDocument();
         expect(screen.getByRole('heading', { name: /beat tags/i })).toBeInTheDocument();
@@ -464,14 +542,14 @@ describe('Onboarding page', () => {
     });
 
     it('walks the editor steps before the freelancer steps', async () => {
-      expect(screen.getByText(/step 2 of 5 — your newsroom/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 3 of 6 — your newsroom/i)).toBeInTheDocument();
 
       await fillEditorStep();
       next();
-      expect(screen.getByText(/step 3 of 5 — how you work/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 4 of 6 — how you work/i)).toBeInTheDocument();
 
       next();
-      expect(screen.getByText(/step 4 of 5 — your reporting/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 5 of 6 — your reporting/i)).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 1, name: /your reporting/i })).toBeInTheDocument();
       // the shared account fields belong to the first profile step only
       expect(screen.queryByLabelText(/first name/i)).not.toBeInTheDocument();
@@ -479,7 +557,7 @@ describe('Onboarding page', () => {
 
       fillFreelancerRoleOnly();
       next();
-      expect(screen.getByText(/step 5 of 5 — rates & availability/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 6 of 6 — rates & availability/i)).toBeInTheDocument();
     });
 
     it('submits both records with both roles', async () => {
@@ -507,9 +585,10 @@ describe('Onboarding page', () => {
     it('drops a role from the flow when it is unticked again', () => {
       fireEvent.click(screen.getByRole('button', { name: /change role/i }));
       pickRole(/i'm a freelancer/i);
-      next();
+      next(); // role -> age gate
+      next(); // gate already passed, on to the first profile step
 
-      expect(screen.getByText(/step 2 of 3 — your newsroom/i)).toBeInTheDocument();
+      expect(screen.getByText(/step 3 of 4 — your newsroom/i)).toBeInTheDocument();
     });
   });
 });
@@ -535,6 +614,12 @@ describe('adding the other role from the profile panel', () => {
   it('skips the role picker and opens on the missing role', async () => {
     expect(await screen.findByRole('heading', { level: 1, name: /your newsroom/i })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { level: 1, name: /welcome aboard/i })).not.toBeInTheDocument();
+  });
+
+  it('does not ask for a date of birth when adding a role', async () => {
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+
+    expect(screen.queryByLabelText(/date of birth/i)).not.toBeInTheDocument();
   });
 
   it('opens with the saved answers already filled in', async () => {
