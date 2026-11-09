@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { RosterCard } from '../../components';
-import type { RosterMember } from '../../types/dashboard.types';
+import type { AvailabilityStatus, RosterMember } from '../../types/dashboard.types';
 import styles from './roster.module.css';
 
 type RosterBrowserProps = {
@@ -11,6 +11,10 @@ type RosterBrowserProps = {
   /** the load failed, which is different from an empty roster */
   loadFailed?: boolean;
 };
+
+type SortKey = 'name' | 'recent' | 'availability';
+
+const STATUS_RANK: Record<AvailabilityStatus, number> = { available: 0, busy: 1, off: 2 };
 
 const beatsOf = (member: RosterMember) => member.beats ?? [member.specialty];
 
@@ -26,23 +30,34 @@ function matchesQuery(member: RosterMember, query: string) {
   return [member.name, member.city, ...beatsOf(member)].some((value) => value.toLowerCase().includes(query));
 }
 
+function compare(sort: SortKey) {
+  return (a: RosterMember, b: RosterMember) => {
+    if (sort === 'recent') return (b.invitedAt ?? '').localeCompare(a.invitedAt ?? '');
+    if (sort === 'availability' && a.status !== b.status) return STATUS_RANK[a.status] - STATUS_RANK[b.status];
+    return a.name.localeCompare(b.name);
+  };
+}
+
 export default function RosterBrowser({ members, loadFailed = false }: RosterBrowserProps) {
   const [query, setQuery] = useState('');
   const [beat, setBeat] = useState('');
   const [city, setCity] = useState('');
   const [status, setStatus] = useState('');
+  const [sort, setSort] = useState<SortKey>('name');
 
   const beats = options(members.flatMap(beatsOf));
   const cities = options(members.map((member) => member.city));
 
   const normalizedQuery = query.trim().toLowerCase();
-  const visible = members.filter(
-    (member) =>
-      matchesQuery(member, normalizedQuery) &&
-      (!beat || beatsOf(member).includes(beat)) &&
-      (!city || member.city === city) &&
-      (!status || member.status === status)
-  );
+  const visible = members
+    .filter(
+      (member) =>
+        matchesQuery(member, normalizedQuery) &&
+        (!beat || beatsOf(member).includes(beat)) &&
+        (!city || member.city === city) &&
+        (!status || member.status === status)
+    )
+    .sort(compare(sort));
 
   const activeFilters = [query.trim(), beat, city, status].filter(Boolean).length;
 
@@ -114,6 +129,18 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
                   <option value="available">Available</option>
                   <option value="busy">Busy</option>
                   <option value="off">Off today</option>
+                </select>
+              </label>
+              <label className={styles.filterField}>
+                Sort by
+                <select
+                  value={sort}
+                  data-default={sort === 'name' || undefined}
+                  onChange={(event) => setSort(event.target.value as SortKey)}
+                >
+                  <option value="name">Name</option>
+                  <option value="recent">Recently added</option>
+                  <option value="availability">Available first</option>
                 </select>
               </label>
             </div>
