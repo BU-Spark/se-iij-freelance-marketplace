@@ -1,6 +1,6 @@
-import styles from './admin.module.css';
+import AdminInbox from './AdminInbox';
+import { FLAG_REPORTS } from './constants';
 
 export default function AdminInboxPage() {
-  // To Do: cards for reports and flags raised from the flag icon
-  return <p className={styles.empty}>No open flags. The queue is clear.</p>;
+  return <AdminInbox reports={FLAG_REPORTS} />;
 }

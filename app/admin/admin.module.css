@@ -55,3 +55,145 @@
 .empty {
   color: var(--muted);
 }
+
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  margin-bottom: 20px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter[aria-pressed='true'] {
+  border-color: var(--navy-deep);
+  background: var(--navy-deep);
+  color: var(--white);
+}
+
+.count {
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--navy-deep);
+  font-size: 12px;
+}
+
+.filter[aria-pressed='true'] .count {
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+.summary,
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row,
+.emptyCard {
+  padding: 20px 24px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+/* each status sets its tone; the row edge and the status pill both use it */
+.open {
+  --tone: var(--c-amber);
+}
+
+.reviewing {
+  --tone: var(--c-blue);
+}
+
+.row {
+  border-left: 4px solid var(--tone, var(--line));
+}
+
+.rowTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.rowTitle {
+  margin: 0;
+  color: var(--navy-deep);
+  font-size: 18px;
+}
+
+.status {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--tone) 14%, white);
+  color: color-mix(in srgb, var(--tone) 60%, black);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reason {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg);
+  line-height: 1.5;
+}
+
+.reasonLabel {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.meta strong {
+  color: var(--ink);
+}
+
+.emptyCard {
+  padding: 40px 24px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.emptyCard strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--navy-deep);
+}
