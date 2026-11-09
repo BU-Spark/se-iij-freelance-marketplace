@@ -103,7 +103,7 @@ export default function AssignmentsBrowser({ assignments, loadFailed = false }: 
           <ul className={styles.grid}>
             {visibleAssignments.map((assignment) => (
               <li key={assignment.id}>
-                <OpenAssignmentCard assignment={assignment} />
+                <OpenAssignmentCard assignment={assignment} href={`/dashboard/assignments/${assignment.id}`} />
               </li>
             ))}
           </ul>

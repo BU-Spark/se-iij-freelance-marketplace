@@ -90,6 +90,33 @@ export function toDeskAssignment(a: Assignment): DeskAssignment {
     length: a.length,
     compensation: a.compensation,
     interestedIds: [],
+    href: `/dashboard/assignments/${a.id}`,
+  };
+}
+
+/**
+ * The reverse direction, for the sample desk data: lets a sample card open the same
+ * expanded view as a posted assignment. Fields the sample data does not have are left blank.
+ */
+export function sampleToAssignment(a: DeskAssignment): Assignment {
+  const createdAt = new Date(0);
+  return {
+    id: a.id,
+    organizationId: null,
+    createdByUserId: '',
+    title: a.title,
+    description: '',
+    category: a.category,
+    slug: a.id,
+    contact: [a.contact.name, a.contact.desk].filter(Boolean).join(', '),
+    location: a.location,
+    length: a.length,
+    deadline: a.deadline,
+    // formatCompensation leaves non-numeric text as-is, so the formatted rate shows unchanged
+    compensation: a.rate ? formatRate(a.rate) : (a.compensation ?? ''),
+    status: a.status,
+    createdAt,
+    updatedAt: createdAt,
   };
 }
 

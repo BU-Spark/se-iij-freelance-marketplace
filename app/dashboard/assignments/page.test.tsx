@@ -57,6 +57,17 @@ describe('Assignment discovery page', () => {
     expect(screen.getByRole('heading', { name: /port authority/i })).toBeInTheDocument();
   });
 
+  it('links each card to its expanded view', async () => {
+    listOpenAssignmentsMock.mockResolvedValue([assignment()]);
+
+    render(await AssignmentsPage());
+
+    expect(screen.getByRole('link', { name: /election night/i })).toHaveAttribute(
+      'href',
+      '/dashboard/assignments/assignment-1'
+    );
+  });
+
   it('says so when there are no open assignments yet', async () => {
     listOpenAssignmentsMock.mockResolvedValue([]);
 

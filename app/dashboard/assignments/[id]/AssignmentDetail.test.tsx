@@ -44,4 +44,11 @@ describe('AssignmentDetail', () => {
     expect(screen.getByText('No description yet.')).toBeInTheDocument();
     expect(screen.getByText('No deadline')).toBeInTheDocument();
   });
+
+  it('links sample assignments back to the dashboard', () => {
+    render(<AssignmentDetail assignment={assignment} isSample />);
+
+    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute('href', '/dashboard');
+    expect(screen.getByText(/sample assignment/i)).toBeInTheDocument();
+  });
 });

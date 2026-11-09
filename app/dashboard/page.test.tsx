@@ -92,6 +92,16 @@ describe('Dashboard', () => {
     expect(within(card).getByText('3 interested')).toBeInTheDocument();
   });
 
+  it('links the sample cards to their expanded view too', async () => {
+    listOpenAssignmentsMock.mockResolvedValue([]);
+    await renderDashboard();
+
+    expect(screen.getByRole('link', { name: ASSIGNMENTS[0].title })).toHaveAttribute(
+      'href',
+      `/dashboard/assignments/${ASSIGNMENTS[0].id}`
+    );
+  });
+
   it('shows assignments posted to the database above the sample data', async () => {
     listOpenAssignmentsMock.mockResolvedValue([postedAssignment]);
 

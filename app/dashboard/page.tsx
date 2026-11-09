@@ -32,7 +32,8 @@ export default async function Dashboard() {
   }
 
   // Assignments posted to the database sit above the sample desk data
-  const assignments = [...posted.map(toDeskAssignment), ...ASSIGNMENTS];
+  const samples = ASSIGNMENTS.map((a) => ({ ...a, href: `/dashboard/assignments/${a.id}` }));
+  const assignments = [...posted.map(toDeskAssignment), ...samples];
   const counts = countByStatus(assignments);
 
   return (
