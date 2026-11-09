@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import Avatar from '../Avatar/Avatar';
 import type { AvailabilityStatus, RosterMember, RosterView } from '../../types/dashboard.types';
 import { DayStrip, MonthGrid, WeekStrip } from './AvailabilityStrips';
@@ -13,9 +14,11 @@ type RosterCardProps = {
   member: RosterMember;
   /** which availability strip to draw; "day" if not given */
   view?: RosterView;
+  /** extra row at the bottom, e.g. the roster page's "Remove" control */
+  footer?: ReactNode;
 };
 
-export default function RosterCard({ member, view = 'day' }: RosterCardProps) {
+export default function RosterCard({ member, view = 'day', footer }: RosterCardProps) {
   return (
     <article className={`${styles.card} ${member.status === 'off' ? styles.dimmed : ''}`}>
       <div className={styles.top}>
@@ -33,6 +36,8 @@ export default function RosterCard({ member, view = 'day' }: RosterCardProps) {
 
       {/* the note talks about today, so only show it in the day view */}
       {view === 'day' && <p className={styles.note}>{member.note}</p>}
+
+      {footer && <div className={styles.footer}>{footer}</div>}
     </article>
   );
 }
