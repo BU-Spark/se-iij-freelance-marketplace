@@ -3,6 +3,7 @@
  */
 import { db } from './db';
 import {
+  canEditAssignment,
   canViewAssignment,
   getAssignment,
   listOpenAssignments,
@@ -147,7 +148,7 @@ describe('getAssignment', () => {
   });
 });
 
-describe('canViewAssignment', () => {
+describe('assignment permissions', () => {
   const assignment = toAssignment(row as Parameters<typeof toAssignment>[0]); // org-1, by user-1
   const editor = (overrides: Partial<AssignmentViewer> = {}): AssignmentViewer => ({
     userId: 'user-9',
@@ -156,16 +157,18 @@ describe('canViewAssignment', () => {
     ...overrides,
   });
 
-  it('lets editors from the posting organization see it', () => {
+  it('lets editors from the posting organization view and edit', () => {
     expect(canViewAssignment(editor(), assignment)).toBe(true);
+    expect(canEditAssignment(editor(), assignment)).toBe(true);
   });
 
-  it('hides it from editors at other organizations', () => {
+  it('hides assignments from editors at other organizations', () => {
     expect(canViewAssignment(editor({ organizationId: 'org-2' }), assignment)).toBe(false);
+    expect(canEditAssignment(editor({ organizationId: 'org-2' }), assignment)).toBe(false);
   });
 
-  it('lets the author see it even without a matching organization', () => {
-    expect(canViewAssignment(editor({ userId: 'user-1', organizationId: null }), assignment)).toBe(true);
+  it('lets the author edit even without a matching organization', () => {
+    expect(canEditAssignment(editor({ userId: 'user-1', organizationId: null }), assignment)).toBe(true);
   });
 
   it("does not let two organization-less editors see each other's posts", () => {
@@ -173,9 +176,10 @@ describe('canViewAssignment', () => {
     expect(canViewAssignment(editor({ organizationId: null }), orphan)).toBe(false);
   });
 
-  it('lets freelancers see open assignments only', () => {
+  it('lets freelancers view open assignments but never edit', () => {
     const freelancer: AssignmentViewer = { userId: 'user-5', roles: ['freelancer'], organizationId: null };
     expect(canViewAssignment(freelancer, assignment)).toBe(true);
     expect(canViewAssignment(freelancer, { ...assignment, status: 'assigned' })).toBe(false);
+    expect(canEditAssignment(freelancer, assignment)).toBe(false);
   });
 });

@@ -1,32 +1,10 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
-import type { NewAssignment } from '../../types/assignments.types';
-import { combineLengthAndTime, validateAssignment } from '../../utils/assignment.utils';
+import { combineLengthAndTime, isRecord, parseAssignmentBody, validateAssignment } from '../../utils/assignment.utils';
 import type { PoolClient } from 'pg';
 
 export const runtime = 'nodejs';
-
-const isRecord = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value);
-
-const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
-
-/** Reads the request body defensively; anything that is not a string becomes '' */
-function toAssignment(body: Record<string, unknown>): NewAssignment {
-  return {
-    title: text(body.title),
-    description: text(body.description),
-    category: text(body.category),
-    slug: text(body.slug),
-    contact: text(body.contact),
-    location: text(body.location),
-    length: text(body.length),
-    time: text(body.time),
-    deadline: text(body.deadline),
-    compensation: text(body.compensation),
-  };
-}
 
 export async function POST(request: Request) {
   const { userId } = await auth();
@@ -46,7 +24,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'The assignment payload is invalid.' }, { status: 400 });
   }
 
-  const input = toAssignment(body);
+  const input = parseAssignmentBody(body);
   const errors = validateAssignment(input);
   if (Object.keys(errors).length > 0) {
     return NextResponse.json({ error: 'Please fix the highlighted fields.', errors }, { status: 400 });

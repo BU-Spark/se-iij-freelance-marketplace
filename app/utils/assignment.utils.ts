@@ -41,6 +41,27 @@ export function validateAssignment(input: NewAssignment): AssignmentErrors {
   return errors;
 }
 
+export const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+
+/** Reads a request body defensively; anything that is not a string becomes '' */
+export function parseAssignmentBody(body: Record<string, unknown>): NewAssignment {
+  return {
+    title: text(body.title),
+    description: text(body.description),
+    category: text(body.category),
+    slug: text(body.slug),
+    contact: text(body.contact),
+    location: text(body.location),
+    length: text(body.length),
+    time: text(body.time),
+    deadline: text(body.deadline),
+    compensation: text(body.compensation),
+  };
+}
+
 export const hasErrors = (errors: AssignmentErrors) => Object.keys(errors).length > 0;
 /** Turns a title into a URL-safe slug: "City Council Vote!" → "city-council-vote" */
 export function slugify(text: string): string {
