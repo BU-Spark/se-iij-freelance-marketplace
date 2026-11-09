@@ -33,3 +33,6 @@ export const ROSTER_MEMBERS: RosterMember[] = ROSTER.filter((m) => m.id in INVIT
   ...withExtras(m),
   invitedAt: daysAgo(INVITED_DAYS_AGO[m.id]),
 }));
+
+/** Everyone else in the directory, who can still be invited */
+export const ROSTER_INVITABLE: RosterMember[] = ROSTER.filter((m) => !(m.id in INVITED_DAYS_AGO)).map(withExtras);

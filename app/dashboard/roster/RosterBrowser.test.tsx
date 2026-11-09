@@ -1,5 +1,7 @@
+import type { ReactElement } from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import RosterBrowser from './RosterBrowser';
+import { ToastProvider } from '../../components/Toast/ToastProvider';
 import type { RosterMember } from '../../types/dashboard.types';
 
 const member = (overrides: Partial<RosterMember> = {}): RosterMember => ({
@@ -30,59 +32,48 @@ const members = [
   }),
 ];
 
+const outsider = member({ id: 'user-3', name: 'Jonah Park', status: 'off', invitedAt: undefined });
+
+const renderPage = (ui: ReactElement) => render(<ToastProvider>{ui}</ToastProvider>);
+
 const cardNames = () => screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
 
 describe('RosterBrowser', () => {
-  it('lists everyone on the roster and counts them', () => {
-    render(<RosterBrowser members={members} />);
+  it('shows only the invited freelancers, with when they were added', () => {
+    renderPage(<RosterBrowser members={members} invitable={[outsider]} />);
 
-    expect(screen.getByText('Sarah Jenkins')).toBeInTheDocument();
-    expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
-    expect(screen.getByLabelText('2 on your roster')).toBeInTheDocument();
+    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
+    expect(screen.queryByText('Jonah Park')).not.toBeInTheDocument();
+    expect(screen.getByText(/added nov 1, 2026/i)).toBeInTheDocument();
     expect(screen.getByText('Showing 2 of 2 freelancers')).toBeInTheDocument();
   });
 
   it('searches across name, beat and city', () => {
-    render(<RosterBrowser members={members} />);
+    renderPage(<RosterBrowser members={members} invitable={[]} />);
 
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'housing' } });
-    expect(screen.getByText('Sarah Jenkins')).toBeInTheDocument();
-    expect(screen.queryByText('Amara Diallo')).not.toBeInTheDocument();
+    expect(cardNames()).toEqual(['Sarah Jenkins']);
 
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'dakar' } });
-    expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
-    expect(screen.queryByText('Sarah Jenkins')).not.toBeInTheDocument();
+    expect(cardNames()).toEqual(['Amara Diallo']);
   });
 
-  it('shows when each person was added to the roster', () => {
-    render(<RosterBrowser members={[members[0], { ...members[1], invitedAt: undefined }]} />);
-
-    expect(screen.getAllByText('Added Nov 1, 2026')).toHaveLength(1);
-    expect(screen.getByText('On your roster')).toBeInTheDocument();
-  });
-
-  it('filters by any beat the person covers, not just the headline one', () => {
-    render(<RosterBrowser members={members} />);
+  it('filters by beat and location, and clears them all at once', () => {
+    renderPage(<RosterBrowser members={members} invitable={[]} />);
 
     fireEvent.change(screen.getByLabelText('Beat'), { target: { value: 'Housing' } });
+    expect(cardNames()).toEqual(['Sarah Jenkins']);
 
-    expect(screen.getByText('Sarah Jenkins')).toBeInTheDocument();
-    expect(screen.queryByText('Amara Diallo')).not.toBeInTheDocument();
-  });
-
-  it('filters by location, and clears it again', () => {
-    render(<RosterBrowser members={members} />);
-
+    fireEvent.click(screen.getByRole('button', { name: /clear filters \(1\)/i }));
     fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Dakar' } });
     expect(cardNames()).toEqual(['Amara Diallo']);
 
-    fireEvent.click(screen.getByRole('button', { name: /clear filters \(1\)/i }));
-    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
-    expect(screen.queryByRole('button', { name: /clear filters/i })).not.toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText('Beat'), { target: { value: 'Housing' } });
+    expect(screen.getByText(/no matches/i)).toBeInTheDocument();
   });
 
   it('filters by availability with chips that count what the other filters leave', () => {
-    render(<RosterBrowser members={members} />);
+    renderPage(<RosterBrowser members={members} invitable={[]} />);
     const chips = within(screen.getByRole('group', { name: 'Availability' }));
 
     expect(chips.getByRole('button', { name: /^busy 1$/i })).toBeInTheDocument();
@@ -93,9 +84,8 @@ describe('RosterBrowser', () => {
     expect(chips.getByRole('button', { name: /^busy 0$/i })).toHaveAttribute('aria-pressed', 'true');
   });
 
-  it('sorts by name, most recently added, or who is available first', () => {
-    render(<RosterBrowser members={members} />);
-    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
+  it('sorts by most recently added', () => {
+    renderPage(<RosterBrowser members={members} invitable={[]} />);
 
     fireEvent.change(screen.getByLabelText('Sort by'), { target: { value: 'recent' } });
     expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
@@ -104,19 +94,33 @@ describe('RosterBrowser', () => {
     expect(cardNames()).toEqual(['Sarah Jenkins', 'Amara Diallo']);
   });
 
-  it('says so when the filters match nobody', () => {
-    render(<RosterBrowser members={members} />);
+  it('invites people who are off today too, and adds them to the roster', () => {
+    renderPage(<RosterBrowser members={members} invitable={[outsider]} />);
 
-    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'nobody' } });
+    fireEvent.click(screen.getByRole('button', { name: /invite freelancers/i }));
+    const dialog = within(screen.getByRole('dialog'));
+    fireEvent.click(dialog.getByRole('checkbox', { name: /jonah park/i }));
+    expect(dialog.getByText('1 selected')).toBeInTheDocument();
+    fireEvent.click(dialog.getByRole('button', { name: 'Add 1 to roster' }));
 
-    expect(screen.getByText(/no matches/i)).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(cardNames()).toEqual(['Amara Diallo', 'Jonah Park', 'Sarah Jenkins']);
+    expect(screen.getByText('Added Jonah Park to your roster')).toBeInTheDocument();
+    // nobody is left to invite
+    expect(screen.getByRole('button', { name: /invite freelancers/i })).toBeDisabled();
   });
 
-  it('tells an empty roster apart from a failed load', () => {
-    const { rerender } = render(<RosterBrowser members={[]} />);
-    expect(screen.getByText(/haven't invited anyone/i)).toBeInTheDocument();
+  it('tells an empty roster apart from an empty directory and a failed load', () => {
+    const first = renderPage(<RosterBrowser members={[]} invitable={[outsider]} />);
+    expect(screen.getByText(/no one on your roster yet/i)).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: /invite freelancers/i })[0]).toBeEnabled();
+    first.unmount();
 
-    rerender(<RosterBrowser members={[]} loadFailed />);
+    const second = renderPage(<RosterBrowser members={[]} invitable={[]} />);
+    expect(screen.getByText(/no freelancers have finished setting up/i)).toBeInTheDocument();
+    second.unmount();
+
+    renderPage(<RosterBrowser members={[]} invitable={[]} loadFailed />);
     expect(screen.getByRole('alert')).toHaveTextContent(/couldn't be loaded/i);
   });
 });
