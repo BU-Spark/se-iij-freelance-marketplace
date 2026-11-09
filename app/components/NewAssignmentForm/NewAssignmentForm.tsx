@@ -10,9 +10,11 @@ type NewAssignmentFormProps = {
   /** called with just the field(s) that changed, e.g. { title: 'City council' } */
   onChange: (patch: Partial<NewAssignment>) => void;
   errors?: AssignmentErrors;
+  /** The saved slug when editing; it is fixed, so it is shown as-is instead of a preview */
+  savedSlug?: string;
 };
 
-export default function NewAssignmentForm({ draft, onChange, errors }: NewAssignmentFormProps) {
+export default function NewAssignmentForm({ draft, onChange, errors, savedSlug }: NewAssignmentFormProps) {
   // preview only; the random code is added when the editor posts
   const slugBase = slugify(draft.title);
 
@@ -42,11 +44,15 @@ export default function NewAssignmentForm({ draft, onChange, errors }: NewAssign
         />
       </Field>
 
-      {/* slug is generated from the title, not typed */}
+      {/* slug is generated from the title, not typed; once posted it never changes */}
       <Field label="Slug" error={errors?.slug}>
-        <output className={`${styles.slug} ${slugBase ? '' : styles.slugEmpty}`}>
-          {slugBase ? `${slugBase}-······` : 'Fills in from the title'}
-        </output>
+        {savedSlug ? (
+          <output className={styles.slug}>{savedSlug}</output>
+        ) : (
+          <output className={`${styles.slug} ${slugBase ? '' : styles.slugEmpty}`}>
+            {slugBase ? `${slugBase}-······` : 'Fills in from the title'}
+          </output>
+        )}
       </Field>
 
       <div className={styles.row}>

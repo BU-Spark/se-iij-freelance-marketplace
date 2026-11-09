@@ -1,4 +1,4 @@
-import type { NewAssignment } from '../types/assignments.types';
+import type { Assignment, NewAssignment } from '../types/assignments.types';
 
 /** Lowercase kebab-case, e.g. "city-council-overnight" */
 export const SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -130,4 +130,53 @@ export function combineLengthAndTime(length: string, time: string): string {
     isNumber(v) ? `${v} ${Number(v) === 1 ? singular : plural}` : v;
 
   return [withUnit(length.trim(), 'word', 'words'), withUnit(time.trim(), 'hour', 'hours')].filter(Boolean).join(' / ');
+}
+
+/**
+ * The reverse of `combineLengthAndTime`, so the edit form can be filled from the saved column:
+ * "800 words / 4 hours" → { length: "800", time: "4" }. Legacy free text stays in `length` untouched.
+ */
+export function splitLengthAndTime(combined: string): { length: string; time: string } {
+  let length = '';
+  let time = '';
+  const leftovers: string[] = [];
+
+  for (const part of combined
+    .split('/')
+    .map((p) => p.trim())
+    .filter(Boolean)) {
+    const words = part.match(/^(\d+)\s+words?$/i);
+    const hours = part.match(/^(\d+(?:\.\d+)?)\s+hours?$/i);
+    if (words && !length) length = words[1];
+    else if (hours && !time) time = hours[1];
+    else leftovers.push(part);
+  }
+
+  // Anything we could not read as words/hours is kept verbatim rather than lost
+  if (leftovers.length > 0) return { length: combined.trim(), time: '' };
+  return { length, time };
+}
+
+/** A Date as the "YYYY-MM-DDTHH:mm" value a `datetime-local` input expects, in local time */
+export function toDateTimeLocal(date: Date | null): string {
+  if (!date || Number.isNaN(date.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(
+    date.getMinutes()
+  )}`;
+}
+
+/** Fills the assignment form from a saved assignment, for editing */
+export function assignmentToDraft(a: Assignment): NewAssignment {
+  return {
+    title: a.title,
+    description: a.description,
+    category: a.category,
+    slug: a.slug,
+    contact: a.contact,
+    location: a.location,
+    ...splitLengthAndTime(a.length),
+    deadline: toDateTimeLocal(a.deadline ? new Date(a.deadline) : null),
+    compensation: a.compensation,
+  };
 }

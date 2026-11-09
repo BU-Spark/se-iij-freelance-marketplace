@@ -1,4 +1,5 @@
 import {
+  assignmentToDraft,
   combineLengthAndTime,
   cleanAmount,
   createSlug,
@@ -7,6 +8,8 @@ import {
   hasErrors,
   makeSeed,
   slugify,
+  splitLengthAndTime,
+  toDateTimeLocal,
   validateAssignment,
   validateCompensation,
 } from './assignment.utils';
@@ -146,5 +149,72 @@ describe('combineLengthAndTime', () => {
 
   it('keeps legacy free text as it was sent', () => {
     expect(combineLengthAndTime('800 words', '')).toBe('800 words');
+  });
+});
+
+describe('splitLengthAndTime', () => {
+  it('reads both numbers back out of the combined column', () => {
+    expect(splitLengthAndTime('800 words / 4 hours')).toEqual({ length: '800', time: '4' });
+    expect(splitLengthAndTime('1 word / 1.5 hours')).toEqual({ length: '1', time: '1.5' });
+  });
+
+  it('handles either half on its own', () => {
+    expect(splitLengthAndTime('800 words')).toEqual({ length: '800', time: '' });
+    expect(splitLengthAndTime('2 hours')).toEqual({ length: '', time: '2' });
+    expect(splitLengthAndTime('')).toEqual({ length: '', time: '' });
+  });
+
+  it('keeps legacy free text intact in length', () => {
+    expect(splitLengthAndTime('About a page')).toEqual({ length: 'About a page', time: '' });
+  });
+
+  it('round-trips through combineLengthAndTime', () => {
+    const { length, time } = splitLengthAndTime(combineLengthAndTime('1200', '3'));
+    expect(combineLengthAndTime(length, time)).toBe('1200 words / 3 hours');
+  });
+});
+
+describe('toDateTimeLocal', () => {
+  it('formats a date for a datetime-local input in local time', () => {
+    expect(toDateTimeLocal(new Date(2030, 0, 5, 9, 7))).toBe('2030-01-05T09:07');
+  });
+
+  it('returns empty for a missing date', () => {
+    expect(toDateTimeLocal(null)).toBe('');
+  });
+});
+
+describe('assignmentToDraft', () => {
+  it('fills the form from a saved assignment', () => {
+    const draft = assignmentToDraft({
+      id: 'a1',
+      organizationId: 'org-1',
+      createdByUserId: 'user-1',
+      title: 'Election night',
+      description: 'Live coverage',
+      category: 'Reporting/Writing',
+      slug: 'election-night-abc123',
+      contact: 'Sam Desk',
+      location: 'Remote',
+      length: '800 words / 4 hours',
+      deadline: new Date(2030, 0, 1, 23, 0),
+      compensation: '750',
+      status: 'open',
+      createdAt: new Date(2030, 0, 1),
+      updatedAt: new Date(2030, 0, 1),
+    });
+
+    expect(draft).toEqual({
+      title: 'Election night',
+      description: 'Live coverage',
+      category: 'Reporting/Writing',
+      slug: 'election-night-abc123',
+      contact: 'Sam Desk',
+      location: 'Remote',
+      length: '800',
+      time: '4',
+      deadline: '2030-01-01T23:00',
+      compensation: '750',
+    });
   });
 });
