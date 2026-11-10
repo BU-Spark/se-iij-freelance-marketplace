@@ -1,6 +1,6 @@
 import { EditorHeader } from '../../components/header/EditorHeader';
-import { searchTalent } from '../../../lib/talent';
-import type { TalentMember } from '../../types/talent.types';
+import { listTalentFilterOptions, searchTalent } from '../../../lib/talent';
+import type { TalentFilterOptions, TalentMember } from '../../types/talent.types';
 import { talentFiltersFrom } from '../../utils/talent.utils';
 import TalentSearch from './TalentSearch';
 import styles from '../roster/roster.module.css';
@@ -13,10 +13,11 @@ export default async function TalentPage({ searchParams }: TalentPageProps) {
   const filters = talentFiltersFrom(await searchParams);
 
   let results: TalentMember[] = [];
+  let options: TalentFilterOptions = { beats: [], mediums: [], locations: [] };
   let loadFailed = false;
 
   try {
-    results = await searchTalent(filters);
+    [results, options] = await Promise.all([searchTalent(filters), listTalentFilterOptions()]);
   } catch (error) {
     console.error('Failed to search the talent directory.', error);
     loadFailed = true;
@@ -25,7 +26,7 @@ export default async function TalentPage({ searchParams }: TalentPageProps) {
   return (
     <div className={styles.shell}>
       <EditorHeader />
-      <TalentSearch filters={filters} results={results} loadFailed={loadFailed} />
+      <TalentSearch filters={filters} options={options} results={results} loadFailed={loadFailed} />
     </div>
   );
 }

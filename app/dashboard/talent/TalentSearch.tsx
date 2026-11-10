@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useToast } from '../../components';
 import TalentCard from './TalentCard';
-import type { TalentFilters, TalentMember } from '../../types/talent.types';
+import type { TalentFilterOptions, TalentFilters, TalentMember } from '../../types/talent.types';
 import { TALENT_PAGE_SIZE, talentQueryString } from '../../utils/talent.utils';
 import rosterStyles from '../roster/roster.module.css';
 import talentStyles from './talent.module.css';
@@ -13,6 +13,7 @@ const styles = { ...rosterStyles, ...talentStyles };
 
 type TalentSearchProps = {
   filters: TalentFilters;
+  options: TalentFilterOptions;
   results: TalentMember[];
   loadFailed?: boolean;
 };
@@ -23,7 +24,7 @@ const TYPING_DELAY_MS = 300;
  * Invites only live in this component's state for now, like the roster page.
  * TODO: save them through the roster API once it exists.
  */
-export default function TalentSearch({ filters, results, loadFailed = false }: TalentSearchProps) {
+export default function TalentSearch({ filters, options, results, loadFailed = false }: TalentSearchProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { showToast } = useToast();
@@ -96,6 +97,27 @@ export default function TalentSearch({ filters, results, loadFailed = false }: T
               onChange={(event) => onType(event.target.value)}
             />
           </label>
+          <FilterSelect
+            label="Beat"
+            value={filters.beat ?? ''}
+            onChange={(beat) => setFilter({ beat })}
+            all="All beats"
+            values={options.beats}
+          />
+          <FilterSelect
+            label="Medium"
+            value={filters.medium ?? ''}
+            onChange={(medium) => setFilter({ medium })}
+            all="All mediums"
+            values={options.mediums}
+          />
+          <FilterSelect
+            label="Location"
+            value={filters.location ?? ''}
+            onChange={(location) => setFilter({ location })}
+            all="All locations"
+            values={options.locations}
+          />
         </form>
 
         <div className={styles.toolbar}>
@@ -145,4 +167,33 @@ export default function TalentSearch({ filters, results, loadFailed = false }: T
 function resultsLabel(count: number) {
   if (count >= TALENT_PAGE_SIZE) return `Showing the first ${count} freelancers. Narrow your search to see others.`;
   return count === 1 ? '1 freelancer' : `${count} freelancers`;
+}
+
+type FilterSelectProps = {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  all: string;
+  values: string[];
+};
+
+function FilterSelect({ label, value, onChange, all, values }: FilterSelectProps) {
+  return (
+    <label className={styles.filterField}>
+      {label}
+      <select
+        value={value}
+        data-default={!value || undefined}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={values.length === 0}
+      >
+        <option value="">{all}</option>
+        {values.map((option) => (
+          <option key={option} value={option}>
+            {option}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
 }

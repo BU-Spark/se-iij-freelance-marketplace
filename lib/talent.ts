@@ -1,5 +1,5 @@
 import { db } from './db';
-import type { TalentClip, TalentFilters, TalentMember } from '../app/types/talent.types';
+import type { TalentClip, TalentFilterOptions, TalentFilters, TalentMember } from '../app/types/talent.types';
 import { toRosterMember, type RosterRow } from '../app/utils/roster.utils';
 import { TALENT_PAGE_SIZE } from '../app/utils/talent.utils';
 
@@ -124,4 +124,31 @@ export async function searchTalent(filters: TalentFilters, now: Date = new Date(
   const { rows } = await db.query<TalentRow>(sql, params);
 
   return rows.map((row) => toTalentMember(row, now));
+}
+
+const SELECT_OPTIONS = `
+  SELECT
+    ARRAY(
+      SELECT DISTINCT b FROM freelancers f2
+      JOIN users u2 ON u2.id = f2.user_id AND 'freelancer' = ANY(u2.roles)
+      CROSS JOIN LATERAL unnest(f2.reporting_beats || f2.beat_tags) AS b
+      WHERE b <> '' ORDER BY b
+    ) AS beats,
+    ARRAY(
+      SELECT DISTINCT m FROM freelancers f2
+      JOIN users u2 ON u2.id = f2.user_id AND 'freelancer' = ANY(u2.roles)
+      CROSS JOIN LATERAL unnest(f2.work_mediums) AS m
+      WHERE m <> '' ORDER BY m
+    ) AS mediums,
+    ARRAY(
+      SELECT DISTINCT f2.location FROM freelancers f2
+      JOIN users u2 ON u2.id = f2.user_id AND 'freelancer' = ANY(u2.roles)
+      WHERE COALESCE(f2.location, '') <> '' ORDER BY f2.location
+    ) AS locations
+`;
+
+export async function listTalentFilterOptions(): Promise<TalentFilterOptions> {
+  const { rows } = await db.query<TalentFilterOptions>(SELECT_OPTIONS);
+  const row = rows[0];
+  return { beats: row?.beats ?? [], mediums: row?.mediums ?? [], locations: row?.locations ?? [] };
 }

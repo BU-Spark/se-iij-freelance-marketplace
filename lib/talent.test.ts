@@ -2,7 +2,7 @@
  * @jest-environment node
  */
 import { db } from './db';
-import { buildTalentQuery, searchTalent, toClips } from './talent';
+import { buildTalentQuery, listTalentFilterOptions, searchTalent, toClips } from './talent';
 import { TALENT_PAGE_SIZE } from '../app/utils/talent.utils';
 
 jest.mock('./db', () => ({ db: { query: jest.fn() } }));
@@ -84,6 +84,22 @@ describe('searchTalent', () => {
   it('passes database errors up so the page can show its failed state', async () => {
     queryMock.mockRejectedValue(new Error('db down'));
     await expect(searchTalent({})).rejects.toThrow('db down');
+  });
+});
+
+describe('listTalentFilterOptions', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('returns the dropdown values, or empty lists when there are none', async () => {
+    queryMock.mockResolvedValueOnce({ rows: [{ beats: ['Politics'], mediums: ['Audio'], locations: ['Leeds, UK'] }] });
+    await expect(listTalentFilterOptions()).resolves.toEqual({
+      beats: ['Politics'],
+      mediums: ['Audio'],
+      locations: ['Leeds, UK'],
+    });
+
+    queryMock.mockResolvedValueOnce({ rows: [{ beats: null, mediums: null, locations: null }] });
+    await expect(listTalentFilterOptions()).resolves.toEqual({ beats: [], mediums: [], locations: [] });
   });
 });
 
