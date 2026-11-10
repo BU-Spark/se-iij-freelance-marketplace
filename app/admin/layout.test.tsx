@@ -15,7 +15,7 @@ describe('AdminLayout', () => {
     const sidebar = screen.getByRole('navigation', { name: 'Admin sections' });
     expect(within(sidebar).getByRole('link', { name: 'Verification' })).toHaveAttribute('aria-current', 'page');
     expect(within(sidebar).getByRole('link', { name: 'Inbox' })).toHaveAttribute('href', '/admin');
-    expect(screen.getByRole('link', { name: '← Back to the app' })).toHaveAttribute('href', '/dashboard');
+    expect(screen.queryByRole('link', { name: /back to the app/i })).not.toBeInTheDocument();
   });
 
   it('opens the same sections from ☰ for small screens', async () => {
