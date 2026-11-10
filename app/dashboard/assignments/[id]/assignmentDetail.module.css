@@ -1,0 +1,82 @@
+.main {
+  max-width: 820px;
+  margin: 0 auto;
+  padding: 32px clamp(16px, 4vw, 64px) 80px;
+}
+
+/* category, status pills and the category dot come from AssignmentCard.module.css */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  margin-top: 24px;
+  padding: clamp(20px, 4vw, 36px);
+  background: #fff;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -16px rgba(15, 23, 42, 0.18);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: clamp(26px, 4vw, 34px);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--navy-deep);
+}
+.contact {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 16px 18px;
+  background: #f7f8fa;
+  border-radius: 12px;
+}
+@media (max-width: 520px) {
+  .details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.details dt {
+  font-size: 12px;
+  color: var(--muted);
+}
+.details dd {
+  margin: 2px 0 0;
+  font-weight: 500;
+}
+
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.description {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  color: var(--ink);
+}
+
+.meta {
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid #eceef2;
+  font-size: 13px;
+  color: var(--muted);
+}
+.slug {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
