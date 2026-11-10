@@ -9,6 +9,7 @@ export const NAV_ITEMS: Record<OnboardingRole, NavItem[]> = {
   editor: [
     { label: 'Desk', href: '/dashboard' },
     { label: 'Roster', href: '/dashboard/roster' },
+    { label: 'Find talent', href: '/dashboard/talent' },
     { label: 'Pitches', href: '/dashboard/pitches', badge: 2 },
   ],
   freelancer: [

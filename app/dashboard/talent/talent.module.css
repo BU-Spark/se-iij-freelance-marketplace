@@ -1,3 +1,12 @@
+.stale {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+
+.talentGrid {
+  align-items: start;
+}
+
 .footer {
   display: flex;
   flex-direction: column;
