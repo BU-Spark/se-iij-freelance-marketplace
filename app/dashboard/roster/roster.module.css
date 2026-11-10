@@ -1,4 +1,6 @@
 .shell {
+  /* one text size for every box and button on the page */
+  --control-font-size: 14px;
   min-height: 100vh;
   background: var(--bg);
 }
@@ -34,6 +36,11 @@
   font-weight: 400;
 }
 
+.description {
+  margin: 6px 0 0;
+  color: var(--muted);
+}
+
 .title {
   display: flex;
   align-items: center;
@@ -49,76 +56,155 @@
   font-size: 14px;
   font-weight: 700;
 }
-
-.description {
-  margin: 6px 0 0;
-  color: var(--muted);
-}
-.count {
-  margin: 0 0 4px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.count strong {
-  color: var(--ink);
-}
-.count span {
-  padding: 0 5px;
+/* filters sit together in one soft white panel */
+.panel {
+  margin-bottom: 24px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
 }
 
 .filters {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
 }
 
 .filterField {
+  position: relative;
   display: flex;
-  flex: 1 1 180px;
+  flex: 1 1 150px;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   min-width: 0;
-  color: var(--ink);
-  font-size: 14px;
+  color: var(--muted);
+  font-size: 12px;
   font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .filterField input,
 .filterField select {
   box-sizing: border-box;
   width: 100%;
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 1px solid var(--muted);
-  border-radius: 8px;
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
   background: var(--bg);
   color: var(--ink);
   font: inherit;
+  font-size: var(--control-font-size);
+  font-weight: 400;
+  letter-spacing: normal;
+  text-transform: none;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background-color 0.15s;
+}
+
+/* swap the browser's arrow for a quieter chevron */
+.filterField select {
+  appearance: none;
+  padding-right: 36px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6475' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-position: right 12px center;
+  background-repeat: no-repeat;
+  cursor: pointer;
+}
+
+.filterField input:hover,
+.filterField select:hover:not(:disabled) {
+  border-color: #c9d0dc;
+  background-color: var(--white);
+}
+
+/* nothing picked yet reads like the search placeholder; the open list stays dark */
+.filterField input::placeholder,
+.filterField select[data-default] {
+  color: #8a93a3;
+}
+
+.filterField option {
+  color: var(--ink);
+}
+
+.searchField {
+  flex: 2 1 260px;
+}
+
+.searchField input {
+  padding-left: 38px;
+}
+
+.searchIcon {
+  position: absolute;
+  bottom: 13px;
+  left: 13px;
+  color: #8a93a3;
+  pointer-events: none;
+}
+
+.filterField select:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 
 .filterField input:focus-visible,
-.filterField select:focus-visible,
+.filterField select:focus-visible {
+  border-color: var(--c-blue);
+  background-color: var(--white);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
 .clearButton:focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;
 }
 
 .clearButton {
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid var(--c-blue);
-  border-radius: 8px;
-  background: transparent;
+  padding: 4px 2px;
+  border: none;
+  background: none;
   color: var(--c-blue);
   font: inherit;
+  font-size: var(--control-font-size);
+  font-weight: 500;
   cursor: pointer;
 }
 
+.clearButton:hover {
+  text-decoration: underline;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.toolbarEnd {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: 16px;
+}
+
 .results {
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--muted);
+  font-size: var(--control-font-size);
 }
 
 .noMatches {
@@ -137,6 +223,12 @@
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* card footer */
+.added {
+  color: var(--muted);
+  font-size: 13px;
 }
 
 @media (max-width: 720px) {
@@ -158,10 +250,4 @@
   background: #fff;
   font-size: 15px;
   color: var(--muted);
-}
-
-/* card footer */
-.added {
-  color: var(--muted);
-  font-size: 13px;
 }

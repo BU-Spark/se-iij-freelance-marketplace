@@ -86,36 +86,51 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
         </p>
       ) : (
         <>
-          <section className={styles.filters} aria-label="Filter your roster">
-            <label className={styles.filterField}>
-              Search
-              <input
-                type="search"
-                placeholder="Name, beat or city"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-            </label>
-            <FilterSelect label="Beat" value={beat} onChange={setBeat} all="All beats" values={beats} />
-            <FilterSelect label="Location" value={city} onChange={setCity} all="All locations" values={cities} />
-            <label className={styles.filterField}>
-              Availability
-              <select value={status} onChange={(event) => setStatus(event.target.value)}>
-                <option value="">All statuses</option>
-                <option value="available">Available</option>
-                <option value="busy">Busy</option>
-                <option value="off">Off today</option>
-              </select>
-            </label>
-            {activeFilters > 0 && (
-              <button type="button" className={styles.clearButton} onClick={clearFilters}>
-                Clear filters ({activeFilters})
-              </button>
-            )}
+          <section className={styles.panel} aria-label="Filter your roster">
+            <div className={styles.filters}>
+              <label className={`${styles.filterField} ${styles.searchField}`}>
+                Search
+                <svg className={styles.searchIcon} width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2" fill="none" />
+                  <path d="M20 20l-3.5-3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <input
+                  type="search"
+                  placeholder="Name, beat or city"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                />
+              </label>
+              <FilterSelect label="Beat" value={beat} onChange={setBeat} all="All beats" values={beats} />
+              <FilterSelect label="Location" value={city} onChange={setCity} all="All locations" values={cities} />
+              <label className={styles.filterField}>
+                Availability
+                <select
+                  value={status}
+                  data-default={!status || undefined}
+                  onChange={(event) => setStatus(event.target.value)}
+                >
+                  <option value="">All statuses</option>
+                  <option value="available">Available</option>
+                  <option value="busy">Busy</option>
+                  <option value="off">Off today</option>
+                </select>
+              </label>
+            </div>
+
+            <div className={styles.toolbar}>
+              <div className={styles.toolbarEnd}>
+                <p className={styles.results} role="status">
+                  Showing {visible.length} of {members.length} freelancers
+                </p>
+                {activeFilters > 0 && (
+                  <button type="button" className={styles.clearButton} onClick={clearFilters}>
+                    Clear filters ({activeFilters})
+                  </button>
+                )}
+              </div>
+            </div>
           </section>
-          <p className={styles.results} role="status">
-            Showing {visible.length} of {members.length} freelancers
-          </p>
 
           {visible.length === 0 && (
             <p className={styles.noMatches}>No matches. Try changing or clearing your filters.</p>
@@ -154,7 +169,12 @@ function FilterSelect({ label, value, onChange, all, values }: FilterSelectProps
   return (
     <label className={styles.filterField}>
       {label}
-      <select value={value} onChange={(event) => onChange(event.target.value)} disabled={values.length === 0}>
+      <select
+        value={value}
+        data-default={!value || undefined}
+        onChange={(event) => onChange(event.target.value)}
+        disabled={values.length === 0}
+      >
         <option value="">{all}</option>
         {values.map((option) => (
           <option key={option} value={option}>
