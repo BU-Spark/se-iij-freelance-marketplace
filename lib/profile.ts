@@ -47,6 +47,23 @@ export async function hasProfile(clerkId: string): Promise<boolean> {
   return Boolean(result.rowCount);
 }
 
+/**
+ * Admins skip onboarding, so their row is only the basics Clerk already knows: name and email.
+ * `roles` stays empty (the check constraint only allows editor/freelancer) and an existing row,
+ * including a real profile, is never overwritten.
+ */
+export async function ensureBasicUser(
+  clerkId: string,
+  details: { email: string; firstName?: string; lastName?: string }
+): Promise<void> {
+  await db.query(
+    `INSERT INTO users (clerk_id, email, first_name, last_name)
+     VALUES ($1, $2, $3, $4)
+     ON CONFLICT (clerk_id) DO NOTHING`,
+    [clerkId, details.email, details.firstName ?? '', details.lastName ?? '']
+  );
+}
+
 export async function loadProfileRow(clerkId: string): Promise<ProfileRow | null> {
   const result = await db.query<ProfileRow>(PROFILE_SQL, [clerkId]);
   return result.rows[0] ?? null;

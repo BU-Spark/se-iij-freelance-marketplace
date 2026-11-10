@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { isAdminMetadata } from './lib/auth';
 
 const isAdminRoute = createRouteMatcher(['/admin(.*)']);
+const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)']);
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)']);
 const isPublicRoute = createRouteMatcher(['/', '/login(.*)', '/signup(.*)', '/forgot-password(.*)']);
 
@@ -34,6 +35,11 @@ export default clerkMiddleware(async (auth, request) => {
 
   if (isProtectedRoute(request)) {
     await auth.protect();
+  }
+
+  // Admins never onboard: their basic row is filled in from Clerk on the first admin visit
+  if (userId && isOnboardingRoute(request) && (await isAdmin(userId))) {
+    return NextResponse.redirect(new URL('/admin', request.url));
   }
 });
 
