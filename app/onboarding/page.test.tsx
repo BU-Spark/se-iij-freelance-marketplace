@@ -99,13 +99,13 @@ const fillFreelancerStep = () => {
   type(/first name/i, 'Alex');
   type(/last name/i, 'Rivera');
   type(/^email/i, 'alex@example.com');
-  fireEvent.click(chip('Climate'));
+  fireEvent.click(chip('Climate/Environment'));
   fireEvent.click(chip('Photo'));
 };
 
 /** On the second profile step the shared account fields are already collected */
 const fillFreelancerRoleOnly = () => {
-  fireEvent.click(chip('Climate'));
+  fireEvent.click(chip('Climate/Environment'));
   fireEvent.click(chip('Photo'));
 };
 
@@ -345,6 +345,7 @@ describe('Onboarding page', () => {
 
     it('shows freelancer-only fields', () => {
       expect(screen.getByRole('heading', { name: /^beats$/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /^skills$/i })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /^mediums$/i })).toBeInTheDocument();
       expect(screen.getByLabelText(/portfolio link/i)).toBeInTheDocument();
       expect(screen.queryByLabelText(/position \/ title/i)).not.toBeInTheDocument();
@@ -361,6 +362,30 @@ describe('Onboarding page', () => {
       next();
       expect(screen.getByText(/pick at least one beat/i)).toBeInTheDocument();
       expect(screen.getByText(/pick at least one medium/i)).toBeInTheDocument();
+    });
+
+    it('asks which beat when "Other/Not listed here" is picked', () => {
+      fireEvent.click(chip('Other/Not listed here'));
+      fireEvent.click(chip('Photo'));
+      next();
+
+      expect(screen.getByLabelText(/your beat/i)).toBeInTheDocument();
+      expect(screen.getByText(/tell us which beat you cover/i)).toBeInTheDocument();
+    });
+
+    it('sends the other beat and the skills with the profile', async () => {
+      fillFreelancerStep();
+      fireEvent.click(chip('Other/Not listed here'));
+      type(/your beat/i, 'Water rights in the Central Valley');
+      fireEvent.click(chip('Investigative Journalism'));
+      next();
+      submit();
+
+      await screen.findByRole('heading', { level: 1, name: /you're all set, alex/i }, { timeout: 2000 });
+
+      const body = postedPayload();
+      expect(body.freelancer.beatOther).toBe('Water rights in the Central Valley');
+      expect(body.freelancer.skills).toEqual(['Investigative Journalism']);
     });
 
     it('reaches the success screen with valid details', async () => {
@@ -578,7 +603,7 @@ describe('Onboarding page', () => {
       // the second role must not overwrite the shared details
       expect(body.user.firstName).toBe('Sarah');
       expect(body.editor.jobTitle).toBe('News Editor');
-      expect(body.freelancer.reportingBeats).toEqual(['Climate']);
+      expect(body.freelancer.reportingBeats).toEqual(['Climate/Environment']);
       expect(screen.getByText(/both profiles are live/i)).toBeInTheDocument();
     });
 
