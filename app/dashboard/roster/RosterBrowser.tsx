@@ -14,6 +14,13 @@ type RosterBrowserProps = {
 
 type SortKey = 'name' | 'recent' | 'availability';
 
+const STATUS_FILTERS: { value: '' | AvailabilityStatus; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'available', label: 'Available' },
+  { value: 'busy', label: 'Busy' },
+  { value: 'off', label: 'Off today' },
+];
+
 const STATUS_RANK: Record<AvailabilityStatus, number> = { available: 0, busy: 1, off: 2 };
 
 const beatsOf = (member: RosterMember) => member.beats ?? [member.specialty];
@@ -42,22 +49,23 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
   const [query, setQuery] = useState('');
   const [beat, setBeat] = useState('');
   const [city, setCity] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState<'' | AvailabilityStatus>('');
   const [sort, setSort] = useState<SortKey>('name');
 
   const beats = options(members.flatMap(beatsOf));
   const cities = options(members.map((member) => member.city));
 
   const normalizedQuery = query.trim().toLowerCase();
-  const visible = members
-    .filter(
-      (member) =>
-        matchesQuery(member, normalizedQuery) &&
-        (!beat || beatsOf(member).includes(beat)) &&
-        (!city || member.city === city) &&
-        (!status || member.status === status)
-    )
-    .sort(compare(sort));
+  const withoutStatus = members.filter(
+    (member) =>
+      matchesQuery(member, normalizedQuery) &&
+      (!beat || beatsOf(member).includes(beat)) &&
+      (!city || member.city === city)
+  );
+  // the status chips count what the other filters leave, so the numbers always add up
+  const statusCount = (value: '' | AvailabilityStatus) =>
+    value ? withoutStatus.filter((member) => member.status === value).length : withoutStatus.length;
+  const visible = withoutStatus.filter((member) => !status || member.status === status).sort(compare(sort));
 
   const activeFilters = [query.trim(), beat, city, status].filter(Boolean).length;
 
@@ -119,19 +127,6 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
               <FilterSelect label="Beat" value={beat} onChange={setBeat} all="All beats" values={beats} />
               <FilterSelect label="Location" value={city} onChange={setCity} all="All locations" values={cities} />
               <label className={styles.filterField}>
-                Availability
-                <select
-                  value={status}
-                  data-default={!status || undefined}
-                  onChange={(event) => setStatus(event.target.value)}
-                >
-                  <option value="">All statuses</option>
-                  <option value="available">Available</option>
-                  <option value="busy">Busy</option>
-                  <option value="off">Off today</option>
-                </select>
-              </label>
-              <label className={styles.filterField}>
                 Sort by
                 <select
                   value={sort}
@@ -146,6 +141,21 @@ export default function RosterBrowser({ members, loadFailed = false }: RosterBro
             </div>
 
             <div className={styles.toolbar}>
+              <div className={styles.chips} role="group" aria-label="Availability">
+                {STATUS_FILTERS.map((option) => (
+                  <button
+                    key={option.label}
+                    type="button"
+                    aria-pressed={status === option.value}
+                    className={`${styles.chip} ${status === option.value ? styles.chipOn : ''}`}
+                    onClick={() => setStatus(option.value)}
+                  >
+                    {option.value && <span className={`${styles.dot} ${styles[option.value]}`} aria-hidden="true" />}
+                    {option.label}
+                    <span className={styles.chipCount}>{statusCount(option.value)}</span>
+                  </button>
+                ))}
+              </div>
               <div className={styles.toolbarEnd}>
                 <p className={styles.results} role="status">
                   Showing {visible.length} of {members.length} freelancers
