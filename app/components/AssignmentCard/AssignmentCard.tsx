@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { AssignmentStatus, DeskAssignment } from '../../types/dashboard.types';
 import { formatCompensation } from '../../utils/assignment.utils';
 import { formatDeadline, formatRate } from '../../utils/dashboard.utils';
@@ -30,7 +31,7 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
   const contactLine = [a.contact.name, a.contact.desk].filter(Boolean).join(', ');
 
   return (
-    <article className={styles.card}>
+    <article className={`${styles.card} ${a.href ? styles.clickable : ''}`}>
       <div className={styles.top}>
         <span className={styles.category}>
           <span className={styles.dot} style={{ background: categoryColor(a.category) }} aria-hidden="true" />
@@ -42,7 +43,15 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
       </div>
 
       <div>
-        <h3 className={styles.title}>{a.title}</h3>
+        <h3 className={styles.title}>
+          {a.href ? (
+            <Link href={a.href} className={styles.cardLink}>
+              {a.title}
+            </Link>
+          ) : (
+            a.title
+          )}
+        </h3>
         {contactLine && <p className={styles.contact}>Point of contact: {contactLine}</p>}
       </div>
 

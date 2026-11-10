@@ -8,6 +8,8 @@ import styles from './assignmentDetail.module.css';
 
 type AssignmentDetailProps = {
   assignment: Assignment;
+  /** true for the sample desk data, which is not saved anywhere */
+  isSample?: boolean;
 };
 
 const STATUS_LABEL: Record<Assignment['status'], string> = {
@@ -32,11 +34,11 @@ const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /** The expanded view of one assignment: every field, including the description */
-export default function AssignmentDetail({ assignment: a }: AssignmentDetailProps) {
+export default function AssignmentDetail({ assignment: a, isSample = false }: AssignmentDetailProps) {
   return (
     <main className={styles.main}>
-      <Link href="/dashboard/assignments" className={listStyles.backLink}>
-        ← Back to assignments
+      <Link href={isSample ? '/dashboard' : '/dashboard/assignments'} className={listStyles.backLink}>
+        {isSample ? '← Back to dashboard' : '← Back to assignments'}
       </Link>
 
       <article className={styles.card}>
@@ -79,13 +81,17 @@ export default function AssignmentDetail({ assignment: a }: AssignmentDetailProp
           <p className={styles.description}>{a.description || 'No description yet.'}</p>
         </section>
 
-        <p className={styles.meta}>
-          Posted {formatDate(a.createdAt)}
-          {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
-            ` · Updated ${formatDate(a.updatedAt)}`}
-          {' · '}
-          <span className={styles.slug}>{a.slug}</span>
-        </p>
+        {isSample ? (
+          <p className={styles.meta}>Sample assignment for the demo desk. It isn&apos;t saved anywhere.</p>
+        ) : (
+          <p className={styles.meta}>
+            Posted {formatDate(a.createdAt)}
+            {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
+              ` · Updated ${formatDate(a.updatedAt)}`}
+            {' · '}
+            <span className={styles.slug}>{a.slug}</span>
+          </p>
+        )}
       </article>
     </main>
   );

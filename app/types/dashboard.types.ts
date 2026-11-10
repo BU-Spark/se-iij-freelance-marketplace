@@ -63,6 +63,8 @@ export type DeskAssignment = {
   compensation?: string;
   interestedIds: string[];
   invitedIds?: string[];
+  /** expanded view of the assignment; only assignments saved in the database have one */
+  href?: string;
   assignedToId?: string;
 };
 

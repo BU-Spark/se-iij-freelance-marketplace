@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Assignment } from '../../types/assignments.types';
 import { formatCompensation } from '../../utils/assignment.utils';
 import { categoryColor } from '../../utils/category.utils';
@@ -6,12 +7,14 @@ import styles from './AssignmentCard.module.css';
 
 type OpenAssignmentCardProps = {
   assignment: Assignment;
+  /** where clicking the card goes, e.g. the assignment's expanded view */
+  href?: string;
 };
 
 /** A read-only card for the assignment discovery page; no editor-only actions. */
-export default function OpenAssignmentCard({ assignment: a }: OpenAssignmentCardProps) {
+export default function OpenAssignmentCard({ assignment: a, href }: OpenAssignmentCardProps) {
   return (
-    <article className={styles.card}>
+    <article className={`${styles.card} ${href ? styles.clickable : ''}`}>
       <div className={styles.top}>
         <span className={styles.category}>
           <span className={styles.dot} style={{ background: categoryColor(a.category) }} aria-hidden="true" />
@@ -22,7 +25,15 @@ export default function OpenAssignmentCard({ assignment: a }: OpenAssignmentCard
       </div>
 
       <div>
-        <h3 className={styles.title}>{a.title}</h3>
+        <h3 className={styles.title}>
+          {href ? (
+            <Link href={href} className={styles.cardLink}>
+              {a.title}
+            </Link>
+          ) : (
+            a.title
+          )}
+        </h3>
         {a.contact && <p className={styles.contact}>Point of contact: {a.contact}</p>}
       </div>
 
