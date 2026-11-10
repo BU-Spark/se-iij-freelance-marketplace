@@ -22,6 +22,22 @@ const messageFor = (status: string | null) =>
 
 type Errors = { email?: string; password?: string; code?: string; form?: string };
 
+/** Admins land in the admin area; everyone else in the app. Falls back to the app if the check fails. */
+const landingPath = async (): Promise<string> => {
+  try {
+    const response = await fetch('/api/auth/destination', { cache: 'no-store' });
+
+    if (response.ok) {
+      const body = (await response.json()) as { redirectTo?: unknown };
+      if (body.redirectTo === '/admin' || body.redirectTo === '/dashboard') return body.redirectTo;
+    }
+  } catch (error) {
+    console.error('Could not work out where to send you after logging in.', error);
+  }
+
+  return '/dashboard';
+};
+
 function LoginForm() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState('');
@@ -42,7 +58,7 @@ function LoginForm() {
     }
 
     await setActive({ session: sessionId });
-    window.location.assign('/dashboard');
+    window.location.assign(await landingPath());
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
