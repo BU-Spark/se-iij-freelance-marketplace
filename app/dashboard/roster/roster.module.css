@@ -34,6 +34,22 @@
   font-weight: 400;
 }
 
+.title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.countBadge {
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--navy-deep);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .description {
   margin: 6px 0 0;
   color: var(--muted);
@@ -100,14 +116,18 @@
   cursor: pointer;
 }
 
-.clearButton:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
 .results {
   margin: 0 0 16px;
   color: var(--muted);
+}
+
+.noMatches {
+  margin: 0;
+  padding: 40px 16px;
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  color: var(--muted);
+  text-align: center;
 }
 
 .grid {

@@ -23,16 +23,25 @@ const members = [
 ];
 
 describe('RosterBrowser', () => {
-  it('lists everyone and counts who is around', () => {
-    render(<RosterBrowser members={members} loadFailed={false} />);
+  it('lists everyone on the roster and counts them', () => {
+    render(<RosterBrowser members={members} />);
 
     expect(screen.getByText('Sarah Jenkins')).toBeInTheDocument();
     expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
-    const count = screen.getByText(
-      (_, element) => element?.tagName === 'P' && /available or busy/i.test(element.textContent ?? '')
-    );
-    expect(count).toHaveTextContent(/^2 available or busy · 2 total$/);
+    expect(screen.getByLabelText('2 on your roster')).toBeInTheDocument();
     expect(screen.getByText('Showing 2 of 2 freelancers')).toBeInTheDocument();
+  });
+
+  it('searches across name, beat and city', () => {
+    render(<RosterBrowser members={members} />);
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'housing' } });
+    expect(screen.getByText('Sarah Jenkins')).toBeInTheDocument();
+    expect(screen.queryByText('Amara Diallo')).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'dakar' } });
+    expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
+    expect(screen.queryByText('Sarah Jenkins')).not.toBeInTheDocument();
   });
 
   it('shows when each person was added to the roster', () => {
@@ -43,7 +52,7 @@ describe('RosterBrowser', () => {
   });
 
   it('filters by any beat the person covers, not just the headline one', () => {
-    render(<RosterBrowser members={members} loadFailed={false} />);
+    render(<RosterBrowser members={members} />);
 
     fireEvent.change(screen.getByLabelText('Beat'), { target: { value: 'Housing' } });
 
@@ -52,13 +61,14 @@ describe('RosterBrowser', () => {
   });
 
   it('filters by status and location', () => {
-    render(<RosterBrowser members={members} loadFailed={false} />);
+    render(<RosterBrowser members={members} />);
 
     fireEvent.change(screen.getByLabelText('Availability'), { target: { value: 'busy' } });
     expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
     expect(screen.queryByText('Sarah Jenkins')).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /clear filters/i }));
+    fireEvent.click(screen.getByRole('button', { name: /clear filters \(1\)/i }));
+    expect(screen.queryByRole('button', { name: /clear filters/i })).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Dakar' } });
     expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
@@ -66,15 +76,15 @@ describe('RosterBrowser', () => {
   });
 
   it('says so when the filters match nobody', () => {
-    render(<RosterBrowser members={members} loadFailed={false} />);
+    render(<RosterBrowser members={members} />);
 
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'nobody' } });
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'nobody' } });
 
     expect(screen.getByText(/no matches/i)).toBeInTheDocument();
   });
 
   it('tells an empty roster apart from a failed load', () => {
-    const { rerender } = render(<RosterBrowser members={[]} loadFailed={false} />);
+    const { rerender } = render(<RosterBrowser members={[]} />);
     expect(screen.getByText(/haven't invited anyone/i)).toBeInTheDocument();
 
     rerender(<RosterBrowser members={[]} loadFailed />);
