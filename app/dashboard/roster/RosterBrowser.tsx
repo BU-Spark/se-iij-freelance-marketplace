@@ -50,7 +50,7 @@ function compare(sort: SortKey) {
 }
 
 /*
- * Invites only live in this component's state for now.
+ * Invites and removals only live in this component's state for now.
  * TODO: save them through the roster API once it exists.
  */
 export default function RosterBrowser({ members, invitable, loadFailed = false }: RosterBrowserProps) {
@@ -64,6 +64,7 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
 
   const [inviting, setInviting] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
+  const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [roster, setRoster] = useState(members);
   const [others, setOthers] = useState(invitable);
 
@@ -106,6 +107,14 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
     setOthers((list) => list.filter((member) => !picked.includes(member.id)));
     showToast(added.length === 1 ? `Added ${added[0].name} to your roster` : `Added ${added.length} freelancers`);
     setInviting(false);
+  };
+
+  const remove = (member: RosterMember) => {
+    setConfirmingId(null);
+    setRoster((list) => list.filter((m) => m.id !== member.id));
+    // they go back to the invite list, so the editor can change their mind
+    setOthers((list) => [...list, { ...member, invitedAt: undefined }].sort((a, b) => a.name.localeCompare(b.name)));
+    showToast(`Removed ${member.name} from your roster`);
   };
 
   if (loadFailed) {
@@ -224,9 +233,31 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
                 <RosterCard
                   member={member}
                   footer={
-                    <span className={styles.added}>
-                      {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
-                    </span>
+                    <>
+                      <span className={styles.added}>
+                        {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
+                      </span>
+                      {confirmingId === member.id ? (
+                        <span className={styles.confirm}>
+                          Remove?
+                          <button type="button" className={styles.dangerLink} onClick={() => remove(member)}>
+                            Yes, remove
+                          </button>
+                          <button type="button" className={styles.textButton} onClick={() => setConfirmingId(null)}>
+                            Cancel
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className={styles.textButton}
+                          aria-label={`Remove ${member.name} from your roster`}
+                          onClick={() => setConfirmingId(member.id)}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </>
                   }
                 />
               </li>

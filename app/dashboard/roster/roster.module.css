@@ -197,7 +197,8 @@
 .clearButton:focus-visible,
 .inviteButton:focus-visible,
 .chip:focus-visible,
-.textButton:focus-visible {
+.textButton:focus-visible,
+.dangerLink:focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;
 }
@@ -333,6 +334,14 @@
   font-size: 13px;
 }
 
+.confirm {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink);
+  font-size: var(--control-font-size);
+}
+
 .textButton,
 .dangerLink {
   padding: 4px 2px;
@@ -347,6 +356,14 @@
 
 .textButton:hover {
   color: var(--ink);
+  text-decoration: underline;
+}
+
+.dangerLink {
+  color: #b4233f;
+}
+
+.dangerLink:hover {
   text-decoration: underline;
 }
 
