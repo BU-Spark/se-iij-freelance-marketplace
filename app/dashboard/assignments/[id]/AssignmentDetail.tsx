@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import Link from 'next/link';
 import type { Assignment } from '../../../types/assignments.types';
 import { formatCompensation } from '../../../utils/assignment.utils';
@@ -5,9 +8,12 @@ import { categoryColor } from '../../../utils/category.utils';
 import cardStyles from '../../../components/AssignmentCard/AssignmentCard.module.css';
 import listStyles from '../assignments.module.css';
 import styles from './assignmentDetail.module.css';
+import AssignmentEditForm from './AssignmentEditForm';
 
 type AssignmentDetailProps = {
   assignment: Assignment;
+  /** true for editors from the organization that posted it */
+  canEdit?: boolean;
   /** true for the sample desk data, which is not saved anywhere */
   isSample?: boolean;
 };
@@ -34,7 +40,17 @@ const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /** The expanded view of one assignment: every field, including the description */
-export default function AssignmentDetail({ assignment: a, isSample = false }: AssignmentDetailProps) {
+export default function AssignmentDetail({ assignment: a, canEdit = false, isSample = false }: AssignmentDetailProps) {
+  const [editing, setEditing] = useState(false);
+
+  if (editing) {
+    return (
+      <main className={styles.main}>
+        <AssignmentEditForm assignment={a} onCancel={() => setEditing(false)} onSaved={() => setEditing(false)} />
+      </main>
+    );
+  }
+
   return (
     <main className={styles.main}>
       <Link href={isSample ? '/dashboard' : '/dashboard/assignments'} className={listStyles.backLink}>
@@ -48,6 +64,11 @@ export default function AssignmentDetail({ assignment: a, isSample = false }: As
             {a.category}
           </span>
           <span className={`${cardStyles.pill} ${cardStyles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
+          {canEdit && (
+            <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
+              Edit
+            </button>
+          )}
         </div>
 
         <div>
@@ -82,7 +103,9 @@ export default function AssignmentDetail({ assignment: a, isSample = false }: As
         </section>
 
         {isSample ? (
-          <p className={styles.meta}>Sample assignment for the demo desk. It isn&apos;t saved anywhere.</p>
+          <p className={styles.meta}>
+            Sample assignment for the demo desk. It isn&apos;t saved anywhere, so it can&apos;t be edited.
+          </p>
         ) : (
           <p className={styles.meta}>
             Posted {formatDate(a.createdAt)}

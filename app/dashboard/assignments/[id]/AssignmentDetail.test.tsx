@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import AssignmentDetail from './AssignmentDetail';
 import type { Assignment } from '../../../types/assignments.types';
+
+const refresh = jest.fn();
+jest.mock('next/navigation', () => ({ useRouter: () => ({ refresh, push: jest.fn() }) }));
 
 const assignment: Assignment = {
   id: 'assignment-1',
@@ -21,34 +25,85 @@ const assignment: Assignment = {
 };
 
 describe('AssignmentDetail', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    global.fetch = jest.fn();
+  });
+
   it('shows every detail of the assignment, including the description', () => {
-    render(<AssignmentDetail assignment={assignment} />);
+    render(<AssignmentDetail assignment={assignment} canEdit={false} />);
 
     expect(screen.getByRole('heading', { level: 1, name: 'Election night' })).toBeInTheDocument();
     expect(screen.getByText('Live coverage from the county clerk.')).toBeInTheDocument();
     expect(screen.getByText('800 words / 4 hours')).toBeInTheDocument();
     expect(screen.getByText('$750')).toBeInTheDocument();
     expect(screen.getByText('Point of contact: Sam Desk')).toBeInTheDocument();
+  });
+
+  it('hides the Edit button from people who cannot edit', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit={false} />);
+
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+  });
+
+  it('opens the form filled with the saved values and saves the changes', async () => {
+    const user = userEvent.setup();
+    (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ saved: true }) });
+    render(<AssignmentDetail assignment={assignment} canEdit />);
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+
+    const title = screen.getByDisplayValue('Election night');
+    expect(screen.getByDisplayValue('800')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('4')).toBeInTheDocument();
     expect(screen.getByText('election-night-abc123')).toBeInTheDocument();
+
+    await user.clear(title);
+    await user.type(title, 'Election night recount');
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(global.fetch).toHaveBeenCalledWith(
+      '/api/assignments/assignment-1',
+      expect.objectContaining({ method: 'PATCH' })
+    );
+    const body = JSON.parse((global.fetch as jest.Mock).mock.calls[0][1].body);
+    expect(body).toMatchObject({ title: 'Election night recount', length: '800', time: '4' });
+    expect(refresh).toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Save changes' })).not.toBeInTheDocument();
   });
 
-  it('shows the updated date once an assignment has been changed', () => {
-    render(<AssignmentDetail assignment={{ ...assignment, updatedAt: new Date(2030, 0, 3) }} />);
+  it('keeps the form open and shows the error when saving fails', async () => {
+    const user = userEvent.setup();
+    (global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'Assignment not found.' }),
+    });
+    render(<AssignmentDetail assignment={assignment} canEdit />);
 
-    expect(screen.getByText(/Updated Jan 3, 2030/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Save changes' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Assignment not found.');
+    expect(screen.getByRole('button', { name: 'Save changes' })).toBeInTheDocument();
   });
 
-  it('says when there is no description or deadline', () => {
-    render(<AssignmentDetail assignment={{ ...assignment, description: '', deadline: null }} />);
+  it('cancelling throws away unsaved changes', async () => {
+    const user = userEvent.setup();
+    render(<AssignmentDetail assignment={assignment} canEdit />);
 
-    expect(screen.getByText('No description yet.')).toBeInTheDocument();
-    expect(screen.getByText('No deadline')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Edit' }));
+    await user.type(screen.getByDisplayValue('Election night'), ' XYZ');
+    await user.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Election night' })).toBeInTheDocument();
+    expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it('links sample assignments back to the dashboard', () => {
-    render(<AssignmentDetail assignment={assignment} isSample />);
+  it('links sample assignments back to the dashboard without an Edit button', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit={false} isSample />);
 
     expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute('href', '/dashboard');
     expect(screen.getByText(/sample assignment/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 });

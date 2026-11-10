@@ -134,27 +134,13 @@ export function combineLengthAndTime(length: string, time: string): string {
 
 /**
  * The reverse of `combineLengthAndTime`, so the edit form can be filled from the saved column:
- * "800 words / 4 hours" → { length: "800", time: "4" }. Legacy free text stays in `length` untouched.
+ * "800 words / 4 hours" → { length: "800", time: "4" }. Only numbers come back; anything else is left blank.
  */
 export function splitLengthAndTime(combined: string): { length: string; time: string } {
-  let length = '';
-  let time = '';
-  const leftovers: string[] = [];
-
-  for (const part of combined
-    .split('/')
-    .map((p) => p.trim())
-    .filter(Boolean)) {
-    const words = part.match(/^(\d+)\s+words?$/i);
-    const hours = part.match(/^(\d+(?:\.\d+)?)\s+hours?$/i);
-    if (words && !length) length = words[1];
-    else if (hours && !time) time = hours[1];
-    else leftovers.push(part);
-  }
-
-  // Anything we could not read as words/hours is kept verbatim rather than lost
-  if (leftovers.length > 0) return { length: combined.trim(), time: '' };
-  return { length, time };
+  return {
+    length: combined.match(/(\d+) words?/)?.[1] ?? '',
+    time: combined.match(/(\d+(?:\.\d+)?) hours?/)?.[1] ?? '',
+  };
 }
 
 /** A Date as the "YYYY-MM-DDTHH:mm" value a `datetime-local` input expects, in local time */

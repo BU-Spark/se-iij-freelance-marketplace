@@ -164,8 +164,8 @@ describe('splitLengthAndTime', () => {
     expect(splitLengthAndTime('')).toEqual({ length: '', time: '' });
   });
 
-  it('keeps legacy free text intact in length', () => {
-    expect(splitLengthAndTime('About a page')).toEqual({ length: 'About a page', time: '' });
+  it('leaves both fields blank for text that is not a number', () => {
+    expect(splitLengthAndTime('About a page')).toEqual({ length: '', time: '' });
   });
 
   it('round-trips through combineLengthAndTime', () => {
