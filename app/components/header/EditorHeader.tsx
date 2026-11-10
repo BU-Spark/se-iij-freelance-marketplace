@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
@@ -11,27 +11,32 @@ import { useProfile } from '../../hooks/useProfile';
 import { fullName } from '../../utils/profile.utils';
 import styles from './editorHeader.module.css';
 
-export function EditorHeader() {
+// PR #141's shared header always offers both workspaces; profile roles are separate profile data.
+const WORKSPACE_ROLES: ProfileRole[] = ['freelancer', 'editor'];
+
+export function EditorHeader({ initialRole }: { initialRole?: ProfileRole } = {}) {
   const pathname = usePathname();
+  const router = useRouter();
   const { signOut } = useClerk();
   const { profile } = useProfile();
 
   const myName = profile ? fullName(profile) : '';
-  const myRoles: ProfileRole[] = profile?.roles.map((r) => r.role) ?? [];
 
   // people can switch which side of the desk they are working as; editors land on the desk by default
   const [workingAs, setWorkingAs] = useState<ProfileRole | null>(null);
-  const defaultRole: ProfileRole = myRoles.includes('editor') ? 'editor' : (myRoles[0] ?? 'editor');
-  const role = workingAs ?? defaultRole;
+  const role = workingAs ?? initialRole ?? 'editor';
 
   return (
     <header className={styles.headerBox}>
       {/* ☰ opens the navigation menu on the left */}
       <HamburgerMenu
         name={myName}
-        roles={myRoles}
+        roles={WORKSPACE_ROLES}
         activeRole={role}
-        onRoleChange={setWorkingAs}
+        onRoleChange={(nextRole) => {
+          setWorkingAs(nextRole);
+          router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard');
+        }}
         currentPath={pathname}
         profileHref={`${pathname}?panel=profile`}
         onSignOut={() => signOut({ redirectUrl: '/' })}
@@ -45,11 +50,9 @@ export function EditorHeader() {
             New Assignment
           </Link>
         ) : (
-          <button className={styles.newAssignment} type="button">
-            {/* To Do: Replace ! with idea icon */}
-            <span aria-hidden="true">!</span>
+          <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
             Make a Pitch
-          </button>
+          </Link>
         )}
 
         {/* avatar that opens My profile (?panel=profile) */}

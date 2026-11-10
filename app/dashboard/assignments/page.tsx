@@ -1,4 +1,4 @@
-import { Header } from '../../components/header/Header';
+import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import type { Assignment } from '../../types/assignments.types';
 import { listOpenAssignments } from '../../../lib/assignments';
 import AssignmentsBrowser from './AssignmentsBrowser';
@@ -19,9 +19,10 @@ export default async function AssignmentsPage() {
   }
 
   return (
-    <div className={styles.shell}>
-      <Header />
-      <AssignmentsBrowser assignments={assignments} loadFailed={loadFailed} />
-    </div>
+    <FreelancerWorkspace>
+      <div className={styles.shell}>
+        <AssignmentsBrowser assignments={assignments} loadFailed={loadFailed} />
+      </div>
+    </FreelancerWorkspace>
   );
 }
