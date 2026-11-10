@@ -1,5 +1,64 @@
-import type { TalentFilters } from '../app/types/talent.types';
+import { db } from './db';
+import type { TalentClip, TalentFilters, TalentMember } from '../app/types/talent.types';
+import { toRosterMember, type RosterRow } from '../app/utils/roster.utils';
 import { TALENT_PAGE_SIZE } from '../app/utils/talent.utils';
+
+type TalentRow = RosterRow & {
+  available_now: boolean | null;
+  short_bio: string | null;
+  long_bio: string | null;
+  community_covered: string | null;
+  rate: string | null;
+  tools: string[] | null;
+  portfolio: unknown;
+};
+
+const text = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
+const texts = (value: unknown) => (Array.isArray(value) ? value.map(text).filter(Boolean) : []);
+
+/** Links go straight into an href, so anything but http(s) (e.g. `javascript:`) is dropped */
+const isWebLink = (value: string) => {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol);
+  } catch {
+    return false;
+  }
+};
+
+export function toClips(raw: unknown): TalentClip[] {
+  if (!Array.isArray(raw)) return [];
+
+  return raw.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const clip = item as Record<string, unknown>;
+    const url = text(clip.url);
+    if (!isWebLink(url)) return [];
+    return [
+      {
+        title: text(clip.title) || url,
+        url,
+        type: text(clip.type) || undefined,
+        description: text(clip.description) || undefined,
+      },
+    ];
+  });
+}
+
+function toTalentMember(row: TalentRow, now: Date): TalentMember {
+  return {
+    ...toRosterMember(row, now),
+    mediums: texts(row.work_mediums),
+    availableNow: row.available_now === true,
+    profile: {
+      shortBio: text(row.short_bio),
+      longBio: text(row.long_bio),
+      communityCovered: text(row.community_covered),
+      rate: text(row.rate),
+      tools: texts(row.tools),
+      portfolio: toClips(row.portfolio),
+    },
+  };
+}
 
 /** `%` and `_` are wildcards in LIKE; a search for "50%" should mean the literal text */
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (match) => `\\${match}`);
@@ -58,4 +117,11 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
   `;
 
   return { sql, params };
+}
+
+export async function searchTalent(filters: TalentFilters, now: Date = new Date()): Promise<TalentMember[]> {
+  const { sql, params } = buildTalentQuery(filters);
+  const { rows } = await db.query<TalentRow>(sql, params);
+
+  return rows.map((row) => toTalentMember(row, now));
 }

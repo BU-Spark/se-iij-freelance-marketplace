@@ -29,7 +29,7 @@ export type RosterMember = {
   /** every beat they cover, so the roster can filter on more than the headline */
   beats?: string[];
   city: string;
-  /** ISO timestamp of when the editor added them to their roster */
+  /** ISO timestamp of when the editor added them; only set on an editor's own roster */
   invitedAt?: string;
   status: AvailabilityStatus;
   openHours: HourWindow[];

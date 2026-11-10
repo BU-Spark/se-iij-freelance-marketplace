@@ -1,8 +1,13 @@
 /**
  * @jest-environment node
  */
-import { buildTalentQuery } from './talent';
+import { db } from './db';
+import { buildTalentQuery, searchTalent, toClips } from './talent';
 import { TALENT_PAGE_SIZE } from '../app/utils/talent.utils';
+
+jest.mock('./db', () => ({ db: { query: jest.fn() } }));
+
+const queryMock = db.query as jest.Mock;
 
 describe('buildTalentQuery', () => {
   it('with no filters, lists every freelancer, people free right now first, capped', () => {
@@ -41,5 +46,68 @@ describe('buildTalentQuery', () => {
 
   it('ignores blank search text', () => {
     expect(buildTalentQuery({ q: '   ' }).params).toEqual([TALENT_PAGE_SIZE]);
+  });
+});
+
+describe('searchTalent', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('maps rows onto cards with their mediums and free-now flag', async () => {
+    queryMock.mockResolvedValue({
+      rows: [
+        {
+          id: 'user-1',
+          first_name: 'Sarah',
+          last_name: 'Jenkins',
+          available_now: true,
+          location: 'Leeds, UK',
+          reporting_beats: ['Politics'],
+          beat_tags: [],
+          work_mediums: ['Text', 'Audio'],
+          availability: null,
+        },
+      ],
+    });
+
+    const [member] = await searchTalent({ q: 'sarah' });
+
+    expect(member).toMatchObject({
+      id: 'user-1',
+      name: 'Sarah Jenkins',
+      specialty: 'Politics',
+      mediums: ['Text', 'Audio'],
+      availableNow: true,
+    });
+    expect(queryMock.mock.calls[0][1]).toEqual(['%sarah%', TALENT_PAGE_SIZE]);
+  });
+
+  it('passes database errors up so the page can show its failed state', async () => {
+    queryMock.mockRejectedValue(new Error('db down'));
+    await expect(searchTalent({})).rejects.toThrow('db down');
+  });
+});
+
+describe('toClips', () => {
+  it('keeps titled http(s) clips and drops unsafe or malformed ones', () => {
+    expect(
+      toClips([
+        { title: 'Budget explainer', url: 'https://example.com/a', type: 'article', description: ' Lead story ' },
+        { title: 'No title falls back to the link', url: 'http://example.com/b' },
+        { title: 'Script', url: 'javascript:alert(1)' },
+        { title: 'Not a link', url: 'example.com' },
+        null,
+        'nonsense',
+      ])
+    ).toEqual([
+      { title: 'Budget explainer', url: 'https://example.com/a', type: 'article', description: 'Lead story' },
+      {
+        title: 'No title falls back to the link',
+        url: 'http://example.com/b',
+        type: undefined,
+        description: undefined,
+      },
+    ]);
+    expect(toClips(null)).toEqual([]);
+    expect(toClips({})).toEqual([]);
   });
 });
