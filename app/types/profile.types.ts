@@ -71,6 +71,8 @@ export type ProfileRow = {
   rate: string | null;
   community_covered: string | null;
   reporting_beats: string[] | null;
+  beat_other: string | null;
+  skills: string[] | null;
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   tools: string[] | null;

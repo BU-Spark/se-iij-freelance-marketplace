@@ -40,6 +40,10 @@ CREATE TABLE IF NOT EXISTS freelancers (
   rate TEXT,
   community_covered TEXT,
   reporting_beats TEXT[] NOT NULL DEFAULT '{}',
+  -- The free-text answer when reporting_beats contains "Other/Not listed here"
+  beat_other TEXT,
+  -- Craft, e.g. "Investigative Journalism" or "Data Visualization"
+  skills TEXT[] NOT NULL DEFAULT '{}',
   beat_tags TEXT[] NOT NULL DEFAULT '{}',
   work_mediums TEXT[] NOT NULL DEFAULT '{}',
   tools TEXT[] NOT NULL DEFAULT '{}',
@@ -79,6 +83,8 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS available_now BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;
+ALTER TABLE freelancers ADD COLUMN IF NOT EXISTS beat_other TEXT;
+ALTER TABLE freelancers ADD COLUMN IF NOT EXISTS skills TEXT[] NOT NULL DEFAULT '{}';
 
 -- users.role (single value) became users.roles (array) so one person can be both
 ALTER TABLE users ADD COLUMN IF NOT EXISTS roles TEXT[] NOT NULL DEFAULT '{}';

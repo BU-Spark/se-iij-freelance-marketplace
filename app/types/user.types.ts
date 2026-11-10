@@ -53,6 +53,9 @@ export interface Freelancer {
   rate?: string;
   communityCovered?: string;
   reportingBeats?: string[];
+  /** filled in when the freelancer picked "Other/Not listed here" as a beat */
+  beatOther?: string;
+  skills?: string[];
   beatTags?: string[]; //todo: Expand into its own type
   workMediums?: string[];
   tools?: string[];
