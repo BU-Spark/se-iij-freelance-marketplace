@@ -13,6 +13,7 @@ export const EMPTY_ASSIGNMENT: NewAssignment = {
   contact: '',
   location: '',
   length: '',
+  time: '',
   deadline: '',
   compensation: '',
 };
@@ -90,4 +91,22 @@ export function validateCompensation(value: string): string | undefined {
 export function formatCompensation(value: string): string {
   const trimmed = value.trim();
   return /^\d+(?:\.\d+)?$/.test(trimmed) ? `$${trimmed}` : trimmed;
+}
+
+/** Keeps only digits, for whole-number fields such as a word count. "1,2a00" → "1200" */
+export function cleanWholeNumber(value: string): string {
+  return value.replace(/[^0-9]/g, '');
+}
+
+/**
+ * Joins the separate length (words) and time (hours) fields into the single
+ * `length` column, e.g. ("800", "4") → "800 words / 4 hours". A value that is
+ * not a bare number (legacy free text) is kept exactly as it was sent.
+ */
+export function combineLengthAndTime(length: string, time: string): string {
+  const isNumber = (v: string) => /^\d+(?:\.\d+)?$/.test(v);
+  const withUnit = (v: string, singular: string, plural: string) =>
+    isNumber(v) ? `${v} ${Number(v) === 1 ? singular : plural}` : v;
+
+  return [withUnit(length.trim(), 'word', 'words'), withUnit(time.trim(), 'hour', 'hours')].filter(Boolean).join(' / ');
 }

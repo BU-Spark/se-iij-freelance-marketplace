@@ -1,4 +1,5 @@
 import {
+  combineLengthAndTime,
   cleanAmount,
   createSlug,
   EMPTY_ASSIGNMENT,
@@ -128,5 +129,22 @@ describe('formatCompensation', () => {
 
   it('returns an empty string for an empty value', () => {
     expect(formatCompensation('   ')).toBe('');
+  });
+});
+
+describe('combineLengthAndTime', () => {
+  it('adds units to bare numbers', () => {
+    expect(combineLengthAndTime('800', '4')).toBe('800 words / 4 hours');
+    expect(combineLengthAndTime('1', '1')).toBe('1 word / 1 hour');
+  });
+
+  it('leaves out a blank field', () => {
+    expect(combineLengthAndTime('800', '')).toBe('800 words');
+    expect(combineLengthAndTime('', '2.5')).toBe('2.5 hours');
+    expect(combineLengthAndTime('', '')).toBe('');
+  });
+
+  it('keeps legacy free text as it was sent', () => {
+    expect(combineLengthAndTime('800 words', '')).toBe('800 words');
   });
 });
