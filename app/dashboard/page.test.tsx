@@ -15,7 +15,13 @@ jest.mock('next/navigation', () => ({
   useRouter: () => ({ push: jest.fn() }),
 }));
 
-jest.mock('../../lib/assignments', () => ({ listOpenAssignments: jest.fn() }));
+jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
+jest.mock('../../lib/assignments', () => ({
+  listOpenAssignments: jest.fn(),
+  loadAssignmentViewer: jest.fn(async () => viewer),
+}));
+
+const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 
 const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
 

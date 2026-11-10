@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { auth } from '@clerk/nextjs/server';
 import { EditorHeader } from '../components/header/EditorHeader';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
@@ -7,7 +8,7 @@ import styles from './dashboard.module.css';
 import { ASSIGNMENTS, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
-import { listOpenAssignments } from '../../lib/assignments';
+import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments';
 import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 
 /*
@@ -22,7 +23,10 @@ export const dynamic = 'force-dynamic';
 export default async function Dashboard() {
   let posted: Assignment[] = [];
   try {
-    posted = await listOpenAssignments();
+    // Only the assignments the editor's own organization posted
+    const { userId } = await auth();
+    const viewer = userId ? await loadAssignmentViewer(userId) : null;
+    posted = await listOpenAssignments(viewer);
   } catch (error) {
     console.error('Failed to load assignments.', error);
   }

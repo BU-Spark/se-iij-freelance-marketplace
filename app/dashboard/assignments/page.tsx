@@ -1,6 +1,7 @@
+import { auth } from '@clerk/nextjs/server';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import type { Assignment } from '../../types/assignments.types';
-import { listOpenAssignments } from '../../../lib/assignments';
+import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import AssignmentsBrowser from './AssignmentsBrowser';
 import styles from './assignments.module.css';
 
@@ -12,7 +13,10 @@ export default async function AssignmentsPage() {
   let loadFailed = false;
 
   try {
-    assignments = await listOpenAssignments();
+    // Editors only see their own organization's assignments; freelancers see every open one
+    const { userId } = await auth();
+    const viewer = userId ? await loadAssignmentViewer(userId) : null;
+    assignments = await listOpenAssignments(viewer);
   } catch (error) {
     console.error('Failed to load assignments.', error);
     loadFailed = true;
