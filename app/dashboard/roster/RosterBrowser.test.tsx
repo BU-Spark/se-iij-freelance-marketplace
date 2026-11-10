@@ -19,8 +19,18 @@ const member = (overrides: Partial<RosterMember> = {}): RosterMember => ({
 
 const members = [
   member(),
-  member({ id: 'user-2', name: 'Amara Diallo', specialty: 'Photo', beats: ['Photo'], city: 'Dakar', status: 'busy' }),
+  member({
+    id: 'user-2',
+    name: 'Amara Diallo',
+    specialty: 'Photo',
+    beats: ['Photo'],
+    city: 'Dakar',
+    status: 'busy',
+    invitedAt: '2026-11-05T10:00:00.000Z',
+  }),
 ];
+
+const cardNames = () => screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
 
 describe('RosterBrowser', () => {
   it('lists everyone on the roster and counts them', () => {
@@ -73,6 +83,17 @@ describe('RosterBrowser', () => {
     fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Dakar' } });
     expect(screen.getByText('Amara Diallo')).toBeInTheDocument();
     expect(screen.queryByText('Sarah Jenkins')).not.toBeInTheDocument();
+  });
+
+  it('sorts by name, most recently added, or who is available first', () => {
+    render(<RosterBrowser members={members} />);
+    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
+
+    fireEvent.change(screen.getByLabelText('Sort by'), { target: { value: 'recent' } });
+    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
+
+    fireEvent.change(screen.getByLabelText('Sort by'), { target: { value: 'availability' } });
+    expect(cardNames()).toEqual(['Sarah Jenkins', 'Amara Diallo']);
   });
 
   it('says so when the filters match nobody', () => {
