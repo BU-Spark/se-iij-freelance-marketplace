@@ -114,6 +114,11 @@ export function belongsToViewer(viewer: AssignmentViewer, assignment: Assignment
   return Boolean(viewer.organizationId) && assignment.organizationId === viewer.organizationId;
 }
 
+/** Editors may edit their organization's assignments */
+export function canEditAssignment(viewer: AssignmentViewer | null | undefined, assignment: Assignment): boolean {
+  return isEditor(viewer) && belongsToViewer(viewer, assignment);
+}
+
 /** Editors see their organization's assignments; everyone else sees open ones */
 export function canViewAssignment(viewer: AssignmentViewer | null | undefined, assignment: Assignment): boolean {
   if (isEditor(viewer)) return belongsToViewer(viewer, assignment);
