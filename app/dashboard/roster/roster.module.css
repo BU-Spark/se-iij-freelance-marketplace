@@ -6,18 +6,7 @@
 .main {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 32px clamp(16px, 4vw, 64px) 80px;
-}
-
-.backLink {
-  color: var(--c-blue);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.backLink:hover {
-  text-decoration: underline;
+  padding: 20px clamp(16px, 4vw, 64px) 64px;
 }
 
 .heading {
@@ -25,7 +14,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin: 32px 0 24px;
+  margin: 0 0 20px;
 }
 
 .eyebrow {
@@ -46,7 +35,7 @@
 }
 
 .description {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: var(--muted);
 }
 .count {
@@ -149,4 +138,10 @@
   background: #fff;
   font-size: 15px;
   color: var(--muted);
+}
+
+/* card footer */
+.added {
+  color: var(--muted);
+  font-size: 13px;
 }

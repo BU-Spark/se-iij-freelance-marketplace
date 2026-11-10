@@ -144,3 +144,13 @@
   height: 14px;
   border-radius: 4px;
 }
+/* optional bottom row, e.g. invited date + remove */
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid #eceef2;
+}

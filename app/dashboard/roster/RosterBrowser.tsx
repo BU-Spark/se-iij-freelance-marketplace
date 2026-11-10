@@ -1,19 +1,22 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { RosterCard } from '../../components';
 import { countOnRoster } from '../../utils/dashboard.utils';
 import type { RosterMember } from '../../types/dashboard.types';
 import styles from './roster.module.css';
 
 type RosterBrowserProps = {
+  /** freelancers this editor has invited onto their roster */
   members: RosterMember[];
-  /** the query failed, which is different from an empty roster */
-  loadFailed: boolean;
+  /** the load failed, which is different from an empty roster */
+  loadFailed?: boolean;
 };
 
-export default function RosterBrowser({ members, loadFailed }: RosterBrowserProps) {
+const formatAdded = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+export default function RosterBrowser({ members, loadFailed = false }: RosterBrowserProps) {
   const [query, setQuery] = useState('');
   const [beat, setBeat] = useState('');
   const [city, setCity] = useState('');
@@ -42,7 +45,6 @@ export default function RosterBrowser({ members, loadFailed }: RosterBrowserProp
   if (loadFailed) {
     return (
       <main className={styles.main}>
-        <BackLink />
         <p className={styles.notice} role="alert">
           The roster couldn&apos;t be loaded right now. Please try again in a moment.
         </p>
@@ -53,16 +55,15 @@ export default function RosterBrowser({ members, loadFailed }: RosterBrowserProp
   if (members.length === 0) {
     return (
       <main className={styles.main}>
-        <BackLink />
         <div className={styles.heading}>
           <div>
-            <p className={styles.eyebrow}>Freelancer directory</p>
+            <p className={styles.eyebrow}>Your freelancers</p>
             <h1>Roster</h1>
-            <p className={styles.description}>Browse freelancer specialties, locations, and today’s availability.</p>
+            <p className={styles.description}>Freelancers you&apos;ve invited to work with you.</p>
           </div>
         </div>
         <p className={styles.notice} role="status">
-          No freelancers have finished setting up their profile yet.
+          You haven&apos;t invited anyone to your roster yet.
         </p>
       </main>
     );
@@ -70,12 +71,11 @@ export default function RosterBrowser({ members, loadFailed }: RosterBrowserProp
 
   return (
     <main className={styles.main}>
-      <BackLink />
       <div className={styles.heading}>
         <div>
-          <p className={styles.eyebrow}>Freelancer directory</p>
+          <p className={styles.eyebrow}>Your freelancers</p>
           <h1>Roster</h1>
-          <p className={styles.description}>Browse freelancer specialties, locations, and today’s availability.</p>
+          <p className={styles.description}>Freelancers you&apos;ve invited to work with you.</p>
         </div>
         <p className={styles.count}>
           <strong>{countOnRoster(members)}</strong> available or busy <span>·</span> {members.length} total
@@ -133,18 +133,17 @@ export default function RosterBrowser({ members, loadFailed }: RosterBrowserProp
       <ul className={styles.grid}>
         {visibleRoster.map((member) => (
           <li key={member.id}>
-            <RosterCard member={member} />
+            <RosterCard
+              member={member}
+              footer={
+                <span className={styles.added}>
+                  {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
+                </span>
+              }
+            />
           </li>
         ))}
       </ul>
     </main>
-  );
-}
-
-function BackLink() {
-  return (
-    <Link href="/dashboard" className={styles.backLink}>
-      ← Back to dashboard
-    </Link>
   );
 }

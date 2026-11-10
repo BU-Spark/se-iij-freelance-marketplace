@@ -13,6 +13,7 @@ const member = (overrides: Partial<RosterMember> = {}): RosterMember => ({
   note: 'Available 09:00–17:00 today',
   weekDays: [true, true, true, true, true, false, false],
   monthDays: Array(30).fill(true),
+  invitedAt: '2026-11-01T10:00:00.000Z',
   ...overrides,
 });
 
@@ -32,6 +33,13 @@ describe('RosterBrowser', () => {
     );
     expect(count).toHaveTextContent(/^2 available or busy · 2 total$/);
     expect(screen.getByText('Showing 2 of 2 freelancers')).toBeInTheDocument();
+  });
+
+  it('shows when each person was added to the roster', () => {
+    render(<RosterBrowser members={[members[0], { ...members[1], invitedAt: undefined }]} />);
+
+    expect(screen.getAllByText('Added Nov 1, 2026')).toHaveLength(1);
+    expect(screen.getByText('On your roster')).toBeInTheDocument();
   });
 
   it('filters by any beat the person covers, not just the headline one', () => {
@@ -67,7 +75,7 @@ describe('RosterBrowser', () => {
 
   it('tells an empty roster apart from a failed load', () => {
     const { rerender } = render(<RosterBrowser members={[]} loadFailed={false} />);
-    expect(screen.getByText(/no freelancers have finished setting up/i)).toBeInTheDocument();
+    expect(screen.getByText(/haven't invited anyone/i)).toBeInTheDocument();
 
     rerender(<RosterBrowser members={[]} loadFailed />);
     expect(screen.getByRole('alert')).toHaveTextContent(/couldn't be loaded/i);
