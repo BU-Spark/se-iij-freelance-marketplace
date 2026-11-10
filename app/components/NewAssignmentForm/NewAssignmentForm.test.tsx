@@ -5,17 +5,9 @@ import { EMPTY_ASSIGNMENT } from '../../utils/assignment.utils';
 describe('NewAssignmentForm', () => {
   it('shows every field', () => {
     render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={jest.fn()} />);
-    [
-      'Title',
-      'Slug',
-      'Point of contact',
-      'Location',
-      'Length',
-      'Time',
-      'Deadline',
-      'Compensation',
-      'Description',
-    ].forEach((label) => expect(screen.getByLabelText(label)).toBeInTheDocument());
+    ['Title', 'Point of contact', 'Location', 'Length', 'Time', 'Deadline', 'Compensation', 'Description'].forEach(
+      (label) => expect(screen.getByLabelText(label)).toBeInTheDocument()
+    );
     expect(screen.getByRole('button', { name: /editing/i })).toBeInTheDocument();
   });
 
@@ -33,14 +25,10 @@ describe('NewAssignmentForm', () => {
     expect(onChange).toHaveBeenCalledWith({ title: 'City council' });
   });
 
-  it('previews the slug from the title', () => {
+  it('does not show the slug', () => {
     render(<NewAssignmentForm draft={{ ...EMPTY_ASSIGNMENT, title: 'City Council Vote!' }} onChange={jest.fn()} />);
-    expect(screen.getByLabelText('Slug')).toHaveTextContent('city-council-vote-······');
-  });
-
-  it('shows a hint in the slug box before there is a title', () => {
-    render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={jest.fn()} />);
-    expect(screen.getByLabelText('Slug')).toHaveTextContent('Fills in from the title');
+    expect(screen.queryByText('Slug')).not.toBeInTheDocument();
+    expect(screen.queryByText(/city-council-vote/)).not.toBeInTheDocument();
   });
 
   it('shows validation errors next to their fields', () => {

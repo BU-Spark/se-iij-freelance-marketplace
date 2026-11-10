@@ -38,6 +38,8 @@ describe('AssignmentDetail', () => {
     expect(screen.getByText('800 words / 4 hours')).toBeInTheDocument();
     expect(screen.getByText('$750')).toBeInTheDocument();
     expect(screen.getByText('Point of contact: Sam Desk')).toBeInTheDocument();
+    // the slug is internal, so the page never shows it
+    expect(screen.queryByText(/election-night-abc123/)).not.toBeInTheDocument();
   });
 
   it('hides the Edit button from people who cannot edit', () => {
@@ -56,7 +58,7 @@ describe('AssignmentDetail', () => {
     const title = screen.getByDisplayValue('Election night');
     expect(screen.getByDisplayValue('800')).toBeInTheDocument();
     expect(screen.getByDisplayValue('4')).toBeInTheDocument();
-    expect(screen.getByText('election-night-abc123')).toBeInTheDocument();
+    expect(screen.queryByText('election-night-abc123')).not.toBeInTheDocument();
 
     await user.clear(title);
     await user.type(title, 'Election night recount');

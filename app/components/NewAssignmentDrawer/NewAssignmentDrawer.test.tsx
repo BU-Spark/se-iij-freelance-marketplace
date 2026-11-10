@@ -78,11 +78,10 @@ describe('NewAssignmentDrawer', () => {
     expect(mockPush).toHaveBeenCalledWith('/dashboard', { scroll: false });
   });
 
-  it('keeps what you type and previews the slug', () => {
+  it('keeps what you type', () => {
     const title = screen.getByLabelText('Title');
     fireEvent.change(title, { target: { value: 'City council' } });
     expect(title).toHaveValue('City council');
-    expect(screen.getByLabelText('Slug')).toHaveTextContent('city-council-······');
   });
 
   it('starts as an open call with nobody selected', () => {
@@ -146,6 +145,16 @@ describe('NewAssignmentDrawer', () => {
   });
 
   it('stays open and shows the API error when the request fails', async () => {
+    fetchMock.mockReturnValue(jsonResponse(400, { error: 'Add a title.', errors: { title: 'Add a title.' } }));
+    fillValidDraft();
+
+    fireEvent.click(screen.getByRole('button', { name: /post assignment/i }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Add a title.');
+    expect(mockPush).not.toHaveBeenCalled();
+  });
+
+  it('never mentions the slug when the API reports a slug clash', async () => {
     fetchMock.mockReturnValue(
       jsonResponse(409, {
         error: 'That slug is already used by another assignment.',
@@ -156,8 +165,8 @@ describe('NewAssignmentDrawer', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /post assignment/i }));
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('That slug is already used by another assignment.');
-    expect(screen.getByText('That slug is already used.')).toBeInTheDocument();
+    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to create the assignment. Please try again.');
+    expect(screen.queryByText(/slug/i)).not.toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
 

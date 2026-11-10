@@ -87,6 +87,11 @@ export default function NewAssignmentDrawer({ closeHref, roster }: NewAssignment
       const payload = (await response.json().catch(() => null)) as CreateAssignmentResponse | null;
 
       if (!response.ok) {
+        // a slug clash is internal (editors never see the slug), and a retry makes a fresh one
+        if (payload?.errors?.slug) {
+          setFormError('Unable to create the assignment. Please try again.');
+          return;
+        }
         setFormError(payload?.error ?? 'Unable to create the assignment. Please try again.');
         setOnboardingRequired(payload?.code === 'onboarding_required');
         if (payload?.errors) setErrors(payload.errors);

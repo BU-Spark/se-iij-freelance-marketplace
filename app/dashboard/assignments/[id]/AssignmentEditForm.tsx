@@ -91,7 +91,7 @@ export default function AssignmentEditForm({ assignment: a, onCancel, onSaved }:
           {formError}
         </p>
       )}
-      <NewAssignmentForm draft={draft} onChange={updateDraft} errors={errors} savedSlug={a.slug} />
+      <NewAssignmentForm draft={draft} onChange={updateDraft} errors={errors} />
       <div className={styles.actions}>
         <button type="button" className={styles.secondary} onClick={onCancel} disabled={saving}>
           Cancel

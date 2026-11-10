@@ -111,8 +111,6 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
             Posted {formatDate(a.createdAt)}
             {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
               ` · Updated ${formatDate(a.updatedAt)}`}
-            {' · '}
-            <span className={styles.slug}>{a.slug}</span>
           </p>
         )}
       </article>
