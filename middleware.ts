@@ -6,7 +6,14 @@ const isAdminRoute = createRouteMatcher(['/admin(.*)']);
 const isDashboardRoute = createRouteMatcher(['/dashboard(.*)']);
 const isOnboardingRoute = createRouteMatcher(['/onboarding(.*)']);
 const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/onboarding(.*)']);
-const isPublicRoute = createRouteMatcher(['/', '/login(.*)', '/signup(.*)', '/forgot-password(.*)']);
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/login(.*)',
+  '/signup(.*)',
+  '/forgot-password(.*)',
+  // A ban blocks sign-in, so the appeal form has to work without a session
+  '/appeal(.*)',
+]);
 
 /** Admin is kept in public metadata, which is not on the session token by default */
 const isAdmin = async (userId: string) => {
