@@ -1,4 +1,3 @@
-import Avatar from '../../Avatar/Avatar';
 import InfoCard from '../../InfoCard/InfoCard';
 import DetailList from '../../DetailList/DetailList';
 import EditButton from './EditButton';
@@ -14,18 +13,8 @@ type BasicInfoCardProps = {
 };
 
 export default function BasicInfoCard({ basic, onEdit, onToggleAvailable }: BasicInfoCardProps) {
-  const name = `${basic.firstName} ${basic.lastName}`.trim();
-
   return (
     <InfoCard title="Basic info" action={onEdit && <EditButton label="Edit basic info" onClick={onEdit} />}>
-      <div className={styles.who}>
-        {basic.photoUrl ? (
-          <img src={basic.photoUrl} alt="" className={styles.photo} />
-        ) : (
-          <Avatar name={name} size={64} available={basic.availableNow} />
-        )}
-        <p className={styles.name}>{name || 'Your name'}</p>
-      </div>
       {onToggleAvailable && (
         <button
           type="button"

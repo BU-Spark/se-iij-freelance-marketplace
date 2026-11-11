@@ -78,6 +78,12 @@ describe('ProfilePanel', () => {
     expect(screen.getByRole('link', { name: /open settings/i })).toHaveAttribute('href', '/dashboard/settings');
   });
 
+  it('shows the photo circle and name in the header', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.getByRole('heading', { name: 'My profile' })).toBeInTheDocument();
+    expect(screen.getByText('Marcus Thorne')).toBeInTheDocument();
+  });
+
   it('shows one card per role with its own fields', () => {
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
     expect(screen.getByText('Freelancer')).toBeInTheDocument();

@@ -4,18 +4,6 @@
   gap: 16px;
 }
 
-.who {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.name {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ink);
-}
-
 /* small uppercase labels: "MY ROLES", "BIO" */
 .label {
   margin: 0;
@@ -261,4 +249,45 @@ textarea.input {
   font-size: 12px;
   line-height: 1.4;
   color: var(--muted);
+}
+
+/* photo + name in the navy header of My profile */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-top: 18px;
+  text-align: center;
+}
+.heroPhoto {
+  display: inline-flex;
+  margin-bottom: 10px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18);
+}
+/* the shared Avatar is a rounded square; here it is a circle like the photo */
+.heroPhoto > span {
+  border-radius: 50%;
+  font-size: 26px;
+}
+.heroPhoto > span > span {
+  right: 4px;
+  bottom: 4px;
+  width: 16px;
+  height: 16px;
+  border-width: 3px;
+  border-color: var(--navy-deep);
+}
+.heroPhoto .photo {
+  width: 84px;
+  height: 84px;
+}
+
+.heroName {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
 }
