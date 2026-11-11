@@ -9,8 +9,10 @@ import { US_STATE_NAMES, matchesLocation, usStateOf } from '../../utils/location
 import styles from './roster.module.css';
 
 type RosterBrowserProps = {
-  /** freelancers this editor has invited onto their roster */
+  /** freelancers who accepted the invitation and are on the roster */
   members: RosterMember[];
+  /** invitations still waiting on an answer, or turned down */
+  pending?: RosterMember[];
   /** everyone else, who can still be invited */
   invitable: RosterMember[];
   /** the load failed, which is different from an empty roster */
@@ -54,7 +56,7 @@ function compare(sort: SortKey) {
  * Invites and removals are saved through the roster API; the list only changes once the server confirms
  * them, so a failed request shows an error instead of a roster that is not really there.
  */
-export default function RosterBrowser({ members, invitable, loadFailed = false }: RosterBrowserProps) {
+export default function RosterBrowser({ members, pending = [], invitable, loadFailed = false }: RosterBrowserProps) {
   const { showToast } = useToast();
 
   const [query, setQuery] = useState('');
@@ -67,6 +69,7 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
   const [picked, setPicked] = useState<string[]>([]);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [roster, setRoster] = useState(members);
+  const [waiting, setWaiting] = useState(pending);
   const [others, setOthers] = useState(invitable);
   /** true while an invite or a removal is in flight */
   const [saving, setSaving] = useState(false);
@@ -130,11 +133,17 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
       const added = chosen.map((member) => ({
         ...member,
         invitedAt: invitedAt.get(member.id) ?? new Date().toISOString(),
+        inviteStatus: 'pending' as const,
       }));
 
-      setRoster((list) => [...list, ...added]);
+      // an invitation only reaches the roster once the freelancer accepts
+      setWaiting((list) => [...list, ...added]);
       setOthers((list) => list.filter((member) => !picked.includes(member.id)));
-      showToast(added.length === 1 ? `Added ${added[0].name} to your roster` : `Added ${added.length} freelancers`);
+      showToast(
+        added.length === 1
+          ? `Invited ${added[0].name} — they will appear once they accept`
+          : `Invited ${added.length} freelancers — they will appear once they accept`
+      );
       setInviting(false);
     } catch (error) {
       console.error('Could not add freelancers to the roster.', error);
@@ -158,9 +167,18 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
       }
 
       setRoster((list) => list.filter((m) => m.id !== member.id));
+      setWaiting((list) => list.filter((m) => m.id !== member.id));
       // they go back to the invite list, so the editor can change their mind
-      setOthers((list) => [...list, { ...member, invitedAt: undefined }].sort((a, b) => a.name.localeCompare(b.name)));
-      showToast(`Removed ${member.name} from your roster`);
+      setOthers((list) =>
+        [...list, { ...member, invitedAt: undefined, inviteStatus: undefined }].sort((a, b) =>
+          a.name.localeCompare(b.name)
+        )
+      );
+      showToast(
+        member.inviteStatus === 'pending'
+          ? `Cancelled the invitation to ${member.name}`
+          : `Removed ${member.name} from your roster`
+      );
     } catch (error) {
       console.error('Could not remove the freelancer from the roster.', error);
       showToast('Could not remove them from your roster right now.', 'error');
@@ -202,6 +220,45 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
         </div>
         <div className={styles.headingSide}>{inviteButton}</div>
       </div>
+
+      {waiting.length > 0 && (
+        <section className={styles.pending} aria-labelledby="pending-heading">
+          <div className={styles.pendingIntro}>
+            <h2 id="pending-heading" className={styles.pendingTitle}>
+              Waiting on a response
+              <span className={styles.countBadge}>{waiting.length}</span>
+            </h2>
+            <p>They join your roster once they accept the invitation.</p>
+          </div>
+          <ul className={styles.pendingList}>
+            {waiting.map((member) => (
+              <li key={member.id} className={styles.pendingRow}>
+                <div className={styles.pendingWho}>
+                  <strong>{member.name}</strong>
+                  <span>{[member.specialty, member.city].filter(Boolean).join(' · ')}</span>
+                </div>
+                <span
+                  className={
+                    member.inviteStatus === 'declined'
+                      ? `${styles.pendingStatus} ${styles.pendingDeclined}`
+                      : styles.pendingStatus
+                  }
+                >
+                  {member.inviteStatus === 'declined' ? 'Declined' : 'Pending response'}
+                </span>
+                <button
+                  type="button"
+                  className={styles.textButton}
+                  disabled={saving}
+                  onClick={() => void remove(member)}
+                >
+                  {member.inviteStatus === 'declined' ? 'Remove' : 'Cancel invite'}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {roster.length === 0 ? (
         <div className={styles.empty} role="status">
