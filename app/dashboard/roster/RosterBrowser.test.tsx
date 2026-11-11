@@ -72,6 +72,24 @@ describe('RosterBrowser', () => {
     expect(screen.getByText(/no matches/i)).toBeInTheDocument();
   });
 
+  it('lists every US state under Location, and filters by the state a city is in', () => {
+    const texan = member({ id: 'user-4', name: 'Rosa Vega', city: 'Austin, TX' });
+    renderPage(<RosterBrowser members={[...members, texan]} invitable={[]} />);
+    const location = screen.getByLabelText('Location');
+
+    expect(within(location).getByRole('group', { name: 'US states' }).querySelectorAll('option')).toHaveLength(51);
+    expect(within(location).getByRole('option', { name: 'Wyoming' })).toBeInTheDocument();
+    // places outside the US keep their own option
+    expect(within(location).getByRole('option', { name: 'Dakar' })).toBeInTheDocument();
+    expect(within(location).queryByRole('option', { name: 'Austin, TX' })).not.toBeInTheDocument();
+
+    fireEvent.change(location, { target: { value: 'Texas' } });
+    expect(cardNames()).toEqual(['Rosa Vega']);
+
+    fireEvent.change(location, { target: { value: 'Alaska' } });
+    expect(screen.getByText(/no matches/i)).toBeInTheDocument();
+  });
+
   it('filters by availability with chips that count what the other filters leave', () => {
     renderPage(<RosterBrowser members={members} invitable={[]} />);
     const chips = within(screen.getByRole('group', { name: 'Availability' }));
