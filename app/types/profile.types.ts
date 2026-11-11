@@ -1,3 +1,5 @@
+import type { AvailabilityException } from './availability.types';
+
 /** The roles a person can have. One person can have both. */
 export type ProfileRole = 'editor' | 'freelancer';
 
@@ -44,6 +46,7 @@ export type StoredAvailability = {
   days?: string[];
   timezone?: string;
   typicalWorkingWindow?: { startsAt?: string; endsAt?: string };
+  exceptions?: AvailabilityException[];
 };
 
 /** One row of users LEFT JOIN editors LEFT JOIN freelancers, as the profile needs it */

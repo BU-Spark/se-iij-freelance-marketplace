@@ -1,7 +1,6 @@
 .shell {
   /* one text size for every box and button on the page */
   --control-font-size: 14px;
-  min-height: 100vh;
   background: var(--bg);
 }
 
@@ -431,7 +430,7 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin: 24px 0 0;
+  margin: 24px 0;
   padding: 18px 20px;
   border: 1px solid var(--line);
   border-radius: 14px;

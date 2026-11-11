@@ -406,6 +406,8 @@ export const toAvailability = (d: ProfileData): Availability | undefined => {
       startsAt: d.workdayStart || '09:00',
       endsAt: d.workdayEnd || '17:00',
     },
+    // onboarding only asks for the weekly pattern; dated exceptions are added later
+    exceptions: [],
     updatedAt: new Date(),
   };
 };

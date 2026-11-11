@@ -9,9 +9,8 @@ function setup(overrides: Partial<React.ComponentProps<typeof NavMenu>> = {}) {
     activeRole: 'editor' as const,
     onRoleChange: jest.fn(),
     currentPath: '/dashboard',
-    profileHref: '/dashboard?panel=profile',
+    settingsHref: '/dashboard/settings',
     onClose: jest.fn(),
-    onSignOut: jest.fn(),
     ...overrides,
   };
   render(<NavMenu {...props} roles={[...props.roles]} />);
@@ -56,14 +55,18 @@ describe('NavMenu', () => {
     expect(screen.getByRole('link', { name: /pitches/i })).toHaveTextContent('2');
   });
 
-  it('links to my profile', () => {
+  it('has no settings item of its own', () => {
     setup();
-    expect(screen.getByRole('link', { name: /my profile/i })).toHaveAttribute('href', '/dashboard?panel=profile');
+    expect(screen.queryByRole('link', { name: 'Settings' })).not.toBeInTheDocument();
   });
 
-  it('signs out', async () => {
-    const props = setup();
-    await userEvent.click(screen.getByRole('button', { name: /sign out/i }));
-    expect(props.onSignOut).toHaveBeenCalled();
+  it('sends you to settings when you click yourself', () => {
+    setup();
+    expect(screen.getByRole('link', { name: /my settings/i })).toHaveAttribute('href', '/dashboard/settings');
+  });
+
+  it('has no sign out of its own', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
   });
 });

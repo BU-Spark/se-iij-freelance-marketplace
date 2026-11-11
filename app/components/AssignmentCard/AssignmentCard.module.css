@@ -76,6 +76,13 @@
   font-size: 14px;
   color: var(--muted);
 }
+/* the organization that posted the assignment, above the point of contact */
+.organization {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5468;
+}
 
 /* grey box with Location / Length / Type / Rate */
 .details {
