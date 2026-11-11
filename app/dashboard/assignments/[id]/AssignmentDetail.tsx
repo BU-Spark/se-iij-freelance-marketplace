@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Assignment } from '../../../types/assignments.types';
 import { formatCompensation } from '../../../utils/assignment.utils';
 import { categoryColor } from '../../../utils/category.utils';
+import { organizationName } from '../../../utils/organization.utils';
 import cardStyles from '../../../components/AssignmentCard/AssignmentCard.module.css';
 import styles from './assignmentDetail.module.css';
 import AssignmentEditForm from './AssignmentEditForm';
@@ -12,6 +13,8 @@ type AssignmentDetailProps = {
   assignment: Assignment;
   /** true for editors from the organization that posted it */
   canEdit?: boolean;
+  /** shows which organization posted it; the editor desk asks for it, the freelance browser does not yet */
+  showOrganization?: boolean;
 };
 
 const STATUS_LABEL: Record<Assignment['status'], string> = {
@@ -36,8 +39,13 @@ const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /** The expanded view of one assignment, shown in the assignment drawer: every field, including the description */
-export default function AssignmentDetail({ assignment: a, canEdit = false }: AssignmentDetailProps) {
+export default function AssignmentDetail({
+  assignment: a,
+  canEdit = false,
+  showOrganization = false,
+}: AssignmentDetailProps) {
   const [editing, setEditing] = useState(false);
+  const organization = showOrganization ? organizationName(a.organizationId) : null;
 
   if (editing) {
     return <AssignmentEditForm assignment={a} onCancel={() => setEditing(false)} onSaved={() => setEditing(false)} />;
@@ -64,6 +72,12 @@ export default function AssignmentDetail({ assignment: a, canEdit = false }: Ass
       </div>
 
       <dl className={styles.details}>
+        {organization && (
+          <div>
+            <dt>Organization</dt>
+            <dd>{organization}</dd>
+          </div>
+        )}
         <div>
           <dt>Deadline</dt>
           <dd>{formatDateTime(a.deadline)}</dd>

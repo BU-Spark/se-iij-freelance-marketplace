@@ -99,7 +99,14 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
         <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
       </Suspense>
 
-      {opened && <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard" />}
+      {opened && (
+        <AssignmentDrawer
+          assignment={opened.assignment}
+          canEdit={opened.canEdit}
+          showOrganization
+          closeHref="/dashboard"
+        />
+      )}
     </div>
   );
 }
