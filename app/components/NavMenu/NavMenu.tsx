@@ -17,7 +17,8 @@ type NavMenuProps = {
   activeRole: ProfileRole;
   onRoleChange: (role: ProfileRole) => void;
   currentPath: string;
-  profileHref: string;
+  /** Where clicking yourself goes: the settings page that holds your profile */
+  settingsHref: string;
   /** Small number bubbles, e.g. { pitches: 2 } */
   badges?: Record<string, number>;
   onClose: () => void;
@@ -30,7 +31,7 @@ export default function NavMenu({
   activeRole,
   onRoleChange,
   currentPath,
-  profileHref,
+  settingsHref,
   badges = {},
   onClose,
   onSignOut,
@@ -40,9 +41,16 @@ export default function NavMenu({
 
   const footer = (
     <div className={styles.footer}>
-      <Link href={profileHref} scroll={false} className={styles.footerLink} onClick={onClose}>
+      {/* clicking yourself leads to settings; the side panel has no Settings item of its own */}
+      <Link href={settingsHref} className={styles.footerLink} onClick={onClose} aria-label="My settings">
         <Avatar name={name} size={32} />
-        My profile
+        <span className={styles.who}>
+          <span className={styles.whoName}>{name || 'My settings'}</span>
+          <span className={styles.whoHint}>Profile and availability</span>
+        </span>
+        <span className={styles.chevron} aria-hidden="true">
+          ›
+        </span>
       </Link>
       <button type="button" className={styles.signOut} onClick={onSignOut}>
         <span aria-hidden="true">⇤</span>

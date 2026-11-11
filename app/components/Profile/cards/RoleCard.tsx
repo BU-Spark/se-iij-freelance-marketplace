@@ -1,8 +1,7 @@
 import InfoCard from '../../InfoCard/InfoCard';
 import DetailList from '../../DetailList/DetailList';
 import EditButton from './EditButton';
-import { ROLE_CONFIG } from '../config/roleConfig';
-import { DEFAULT_ORGS } from '../../../onboarding/constants';
+import { ROLE_CONFIG, organizationName } from '../config/roleConfig';
 import { factText } from '../../../utils/profile.utils';
 import type { RoleDetails } from '../../../types/profile.types';
 import styles from '../Profile.module.css';
@@ -11,9 +10,6 @@ type RoleCardProps = {
   details: RoleDetails;
   onEdit?: () => void;
 };
-
-/** The row stores the organisation id; people recognise the name */
-const organizationName = (id: string) => DEFAULT_ORGS.find((org) => org.id === id)?.name ?? id;
 
 export default function RoleCard({ details, onEdit }: RoleCardProps) {
   const config = ROLE_CONFIG[details.role];

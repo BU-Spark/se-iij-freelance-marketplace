@@ -99,15 +99,11 @@ describe('AssignmentDetail', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it('links back to the assignments list and hides Edit from people who cannot edit', () => {
+  it('hides Edit from people who cannot edit and has no back link (the drawer has a close button)', () => {
     render(<AssignmentDetail assignment={assignment} canEdit={false} />);
 
-    expect(screen.getByRole('link', { name: /back to assignments/i })).toHaveAttribute(
-      'href',
-      '/dashboard/assignments'
-    );
+    expect(screen.queryByRole('link')).not.toBeInTheDocument();
     expect(screen.getByText(/posted jan 1, 2030/i)).toBeInTheDocument();
-    expect(screen.queryByText(/sample assignment/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 });
