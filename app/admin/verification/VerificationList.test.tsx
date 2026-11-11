@@ -44,6 +44,8 @@ describe('VerificationList', () => {
     expect(row).toHaveTextContent('Amara Okafor');
     expect(row).toHaveTextContent('Freelancer · Lagos, Nigeria');
     expect(row).toHaveTextContent('Press card and three clips');
+    // the tab already says Pending, so the row does not repeat it
+    expect(row).not.toHaveTextContent('Pending');
   });
 
   it('approves a pending request and confirms it', async () => {
@@ -61,7 +63,7 @@ describe('VerificationList', () => {
 
     await click('Amara Okafor', 'Reject');
     await userEvent.click(filter('Rejected'));
-    expect(within(screen.getByRole('listitem')).getByText('Rejected')).toBeInTheDocument();
+    expect(screen.getByRole('listitem')).toHaveTextContent('Amara Okafor');
 
     await click('Amara Okafor', 'Move back to pending');
     await userEvent.click(filter('Pending'));

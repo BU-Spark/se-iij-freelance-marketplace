@@ -379,3 +379,134 @@
   font-size: 26px;
   font-weight: 400;
 }
+
+
+/* ------------------------------------------------------------------ */
+/*  Inbox: one list of everything waiting on the team                  */
+/* ------------------------------------------------------------------ */
+
+.inbox {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* To do / Done: underlined tabs, the one big choice on the page */
+.views {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.viewTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -1px;
+  padding: 10px 2px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.viewTab:hover {
+  color: var(--ink);
+}
+
+.viewTab[aria-pressed='true'] {
+  border-bottom-color: var(--navy-deep);
+  color: var(--navy-deep);
+}
+
+.viewCount {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--navy-deep);
+  font-size: 12px;
+  text-align: center;
+}
+
+.viewTab[aria-pressed='true'] .viewCount {
+  background: var(--navy-deep);
+  color: var(--white);
+}
+
+/* one line telling the reviewer what the buttons do */
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Verification: one compact row per person in a single panel         */
+/* ------------------------------------------------------------------ */
+
+.people {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #eceef2;
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.person + .person {
+  border-top: 1px solid #eceef2;
+}
+
+.personBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.personName {
+  margin: 0;
+  color: var(--navy-deep);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* the proof they sent, in plain text under their details */
+.proof {
+  margin: 6px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.person .actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .person {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .person .actions {
+    grid-column: 1 / -1;
+  }
+
+  .person .action {
+    flex: 1;
+  }
+}
