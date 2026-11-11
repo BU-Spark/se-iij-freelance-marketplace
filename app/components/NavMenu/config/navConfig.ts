@@ -12,7 +12,9 @@ export const NAV_ITEMS: Record<ProfileRole, NavItem[]> = {
   editor: [
     { key: 'desk', label: 'Desk', href: '/dashboard', exact: true },
     { key: 'roster', label: 'Roster', href: '/dashboard/roster' },
+    { key: 'talent', label: 'Find talent', href: '/dashboard/talent' },
     { key: 'pitches', label: 'Pitches', href: '/dashboard/pitches' },
+    { key: 'availability', label: 'My availability', href: '/dashboard/desk-availability' },
   ],
   freelancer: [
     { key: 'assignments', label: 'Available assignments', href: '/dashboard/freelancer', exact: true },
