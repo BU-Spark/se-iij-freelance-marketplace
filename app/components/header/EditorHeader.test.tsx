@@ -50,11 +50,8 @@ describe('EditorHeader', () => {
     await userEvent.click(await screen.findByRole('radio', { name: /freelancer/i }));
 
     const pitchLinks = screen.getAllByRole('link', { name: /make a pitch/i });
-    expect(pitchLinks).toHaveLength(2); // Header action and the open menu item.
-    expect(pitchLinks.map((link) => link.getAttribute('href'))).toEqual([
-      '/dashboard/freelancer/make-a-pitch',
-      '/dashboard/freelancer/make-a-pitch',
-    ]);
+    expect(pitchLinks).toHaveLength(1); // The header action remains; the sidebar item was removed.
+    expect(pitchLinks[0]).toHaveAttribute('href', '/dashboard/freelancer/make-a-pitch');
     expect(mockPush).toHaveBeenCalledWith('/dashboard/freelancer');
   });
 

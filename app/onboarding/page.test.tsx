@@ -1,6 +1,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import OnboardingPage from './page';
 
+// This suite exercises the full multi-step flow and can exceed Jest's 5s
+// per-test default when it runs alongside the rest of the suite.
+jest.setTimeout(15000);
+
 type FakeAddress = {
   emailAddress: string;
   verification: { status: string };
