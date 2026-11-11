@@ -51,7 +51,8 @@ it('paginates and resets to the first page when search or status changes', () =>
 it('handles an empty feed with disabled pagination', () => {
   render(<FreelancerDashboard assignments={[]} freelancerId="me" />);
   expect(screen.getByText('No assignments in progress.')).toBeInTheDocument();
-  expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
+  // an empty feed is not the same as filters hiding everything
+  expect(screen.getByRole('status')).toHaveTextContent('No open assignments yet');
   expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
 });
