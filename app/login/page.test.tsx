@@ -105,6 +105,17 @@ describe('Login page', () => {
     consoleMock.mockRestore();
   });
 
+  it('offers the appeal form when Clerk says the account is banned', async () => {
+    mockCreate.mockRejectedValue({
+      errors: [{ code: 'user_banned', message: 'This user has been banned.' }],
+    });
+
+    fillCredentials();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/this account is suspended/i);
+    expect(screen.getByRole('link', { name: /appeal this decision/i })).toHaveAttribute('href', '/appeal');
+  });
+
   it('asks for an emailed code when this device is not trusted yet', async () => {
     mockCreate.mockResolvedValue(clientTrustAttempt);
     mockPrepareFirstFactor.mockResolvedValue(clientTrustAttempt);

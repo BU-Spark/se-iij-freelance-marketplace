@@ -3,6 +3,7 @@
  */
 import { auth } from '@clerk/nextjs/server';
 import { getAccount, reactivateAccount, suspendAccount } from '../../../../../lib/accounts';
+import { resolveAppeals } from '../../../../../lib/appeals';
 import { isSignedInUserAdmin } from '../../../../../lib/auth';
 import { PATCH } from './route';
 import type { AccountRow } from '../../../../../lib/accounts';
@@ -10,6 +11,7 @@ import type { AdminAccount } from '../../../../types/admin.types';
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn() }));
 jest.mock('../../../../../lib/auth', () => ({ isSignedInUserAdmin: jest.fn() }));
+jest.mock('../../../../../lib/appeals', () => ({ resolveAppeals: jest.fn() }));
 jest.mock('../../../../../lib/accounts', () => ({
   getAccount: jest.fn(),
   suspendAccount: jest.fn(),
@@ -21,6 +23,7 @@ const adminMock = isSignedInUserAdmin as unknown as jest.Mock;
 const getAccountMock = getAccount as unknown as jest.Mock;
 const suspendMock = suspendAccount as unknown as jest.Mock;
 const reactivateMock = reactivateAccount as unknown as jest.Mock;
+const resolveMock = resolveAppeals as unknown as jest.Mock;
 const consoleMock = jest.spyOn(console, 'error').mockImplementation(() => {});
 
 const account: AccountRow = {
@@ -62,6 +65,7 @@ beforeEach(() => {
   authMock.mockResolvedValue({ userId: 'clerk-1' });
   adminMock.mockResolvedValue(true);
   getAccountMock.mockResolvedValue(account);
+  resolveMock.mockResolvedValue(undefined);
 });
 
 describe('PATCH /api/admin/accounts/[id]', () => {
@@ -135,16 +139,18 @@ describe('PATCH /api/admin/accounts/[id]', () => {
 
     expect(response.status).toBe(200);
     expect(suspendMock).toHaveBeenCalledWith('user-1', 'Spam pitches');
+    expect(resolveMock).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ account: suspended });
   });
 
-  it('reactivates without needing a reason', async () => {
+  it('reactivates without needing a reason, closing any open appeal', async () => {
     reactivateMock.mockResolvedValue({ ...suspended, status: 'active', suspensionReason: undefined });
 
     const response = await patch({ status: 'active' });
 
     expect(response.status).toBe(200);
     expect(reactivateMock).toHaveBeenCalledWith('user-1');
+    expect(resolveMock).toHaveBeenCalledWith('user-1');
     expect(await response.json()).toMatchObject({ account: { status: 'active' } });
   });
 

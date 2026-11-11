@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { getAccount, reactivateAccount, suspendAccount } from '../../../../../lib/accounts';
+import { resolveAppeals } from '../../../../../lib/appeals';
 import { isSignedInUserAdmin } from '../../../../../lib/auth';
 
 export const runtime = 'nodejs';
@@ -82,6 +83,15 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     if (!updated) {
       return NextResponse.json({ error: 'Account not found.' }, { status: 404 });
+    }
+
+    // Reactivating is also the answer to an appeal, so settle any that are still waiting
+    if (status === 'active') {
+      try {
+        await resolveAppeals(account.id);
+      } catch (error) {
+        console.error('Could not close the appeals for this account.', error);
+      }
     }
 
     return NextResponse.json({ account: updated });
