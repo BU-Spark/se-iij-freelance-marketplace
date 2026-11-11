@@ -3,7 +3,7 @@ import shared from '../../onboarding.module.css';
 import FormStep from '../FormStep';
 import PhotoField from '../../fields/PhotoField';
 import ShortBioField from '../../fields/ShortBioField';
-import { MEDIUMS, TOPICS } from '../../constants';
+import { BEAT_OTHER, BEATS, MEDIUMS, SKILLS } from '../../constants';
 import { fieldError, toggleValue } from '../../helpers';
 import type {
   OrgOption,
@@ -77,14 +77,39 @@ export default function FreelancerProfileStep(p: FreelancerProfileStepProps) {
         </Section>
       )}
 
-      <Section title="Beats" hint="What do you cover?" color="var(--c-amber)" error={err('reportingBeats')}>
+      <Section
+        title="Beats"
+        hint="What do you cover? Pick as many as apply."
+        color="var(--c-amber)"
+        error={err('reportingBeats')}
+      >
         <ChipGroup
-          options={TOPICS}
+          options={BEATS}
           selected={data.reportingBeats}
           onToggle={(value) => {
             update('reportingBeats', toggleValue(data.reportingBeats, value));
             touch('reportingBeats');
           }}
+        />
+        {data.reportingBeats.includes(BEAT_OTHER) && (
+          <div className={shared.spaced}>
+            <Field label="Your beat" error={err('beatOther')}>
+              <input
+                value={data.beatOther}
+                placeholder="Water rights in the Central Valley"
+                onChange={(e) => update('beatOther', e.target.value)}
+                onBlur={() => touch('beatOther')}
+              />
+            </Field>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Skills" hint="How do you do it?" color="var(--c-sky)">
+        <ChipGroup
+          options={SKILLS}
+          selected={data.skills}
+          onToggle={(value) => update('skills', toggleValue(data.skills, value))}
         />
       </Section>
 
