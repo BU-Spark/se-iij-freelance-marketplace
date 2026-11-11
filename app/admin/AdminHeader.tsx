@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import SidePanel from '../components/SidePanel/SidePanel';
 import menu from '../components/NavMenu/NavMenu.module.css';
 import { AdminBrand, AdminNavLinks } from './AdminNav';
@@ -27,16 +26,7 @@ export default function AdminHeader() {
       <AdminBrand />
 
       {open && (
-        <SidePanel
-          title="Admin"
-          side="left"
-          onClose={() => setOpen(false)}
-          footer={
-            <Link href="/dashboard" className={menu.footerLink}>
-              ← Back to the app
-            </Link>
-          }
-        >
+        <SidePanel title="Admin" side="left" onClose={() => setOpen(false)}>
           <AdminNavLinks onNavigate={() => setOpen(false)} />
         </SidePanel>
       )}
