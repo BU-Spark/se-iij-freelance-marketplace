@@ -364,3 +364,17 @@ textarea.input {
   color: var(--row-accent);
   transform: translateX(2px);
 }
+
+/* the panel is the quick view; settings shows the same profile on a full page */
+.settingsLink {
+  display: inline-block;
+  margin-top: 16px;
+  color: var(--navy-deep);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.settingsLink:hover {
+  text-decoration: underline;
+}

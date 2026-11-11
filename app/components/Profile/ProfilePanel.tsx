@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import SidePanel from '../SidePanel/SidePanel';
 import ProfileContent from './ProfileContent';
 import ProfileHero from './cards/ProfileHero';
 import BasicInfoDrawer from './BasicInfoDrawer';
 import RoleDrawer from './RoleDrawer';
 import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
+import styles from './Profile.module.css';
 
 /** Saves resolve true once the server has the change, so a failed save leaves the form open */
 type SaveResult = Promise<boolean> | boolean;
@@ -50,6 +52,9 @@ export default function ProfilePanel({
           onOpenBasic={() => setOpen('basic')}
           onOpenRole={setOpen}
         />
+        <Link href="/dashboard/settings" className={styles.settingsLink}>
+          Open settings →
+        </Link>
       </SidePanel>
 
       {/* siblings, not children, so they are never clipped or moved by this panel's slide-in */}
