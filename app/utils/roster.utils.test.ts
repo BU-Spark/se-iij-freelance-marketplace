@@ -1,6 +1,7 @@
 import {
   availabilityStatus,
   beatsOf,
+  monthDayDates,
   monthDays,
   openHours,
   parseAvailability,
@@ -42,6 +43,20 @@ describe('parseAvailability', () => {
     expect(parseAvailability({ ...weekday, days: [] })).toBeNull();
     expect(parseAvailability(null)).toBeNull();
   });
+
+  it('keeps only the dated overrides that are real dates and a yes/no', () => {
+    const stored = {
+      ...weekday,
+      exceptions: [
+        { date: '2026-12-25', available: false },
+        { date: '25/12/2026', available: false },
+        { date: '2026-12-26' },
+        'nonsense',
+      ],
+    } as unknown as RosterAvailability;
+
+    expect(parseAvailability(stored)?.exceptions).toEqual([{ date: '2026-12-25', available: false }]);
+  });
 });
 
 describe('availabilityStatus', () => {
@@ -64,6 +79,19 @@ describe('availabilityStatus', () => {
 
   it('falls back to the server clock when the time zone is unusable', () => {
     expect(availabilityStatus({ ...weekday, timezone: 'Mars/Olympus' }, LOCAL_WEDNESDAY_NOON)).toBe('available');
+  });
+
+  it('takes a dated override over the weekly pattern', () => {
+    const offToday = { ...weekday, exceptions: [{ date: '2026-11-04', available: false }] };
+    expect(availabilityStatus(offToday, WEDNESDAY_NOON)).toBe('off');
+
+    // Saturday, when the pattern has them off, but they said they are working
+    const extraDay = { ...weekday, exceptions: [{ date: '2026-11-07', available: true }] };
+    expect(availabilityStatus(extraDay, new Date('2026-11-07T12:00:00.000Z'))).toBe('available');
+
+    // an override for another date leaves today alone
+    const otherDay = { ...weekday, exceptions: [{ date: '2026-11-05', available: false }] };
+    expect(availabilityStatus(otherDay, WEDNESDAY_NOON)).toBe('available');
   });
 });
 
@@ -88,6 +116,27 @@ describe('strips', () => {
 
   it('has an empty month when there is no pattern', () => {
     expect(monthDays(null, WEDNESDAY_NOON).every((free) => free === false)).toBe(true);
+  });
+
+  it('lets dated exceptions win over the projected pattern', () => {
+    const days = monthDays(
+      {
+        ...weekday,
+        exceptions: [
+          { date: '2026-11-05', available: false }, // a Thursday they took off
+          { date: '2026-11-07', available: true }, // a Saturday they are working
+        ],
+      },
+      WEDNESDAY_NOON
+    );
+
+    // Wed, Thu, Fri, Sat either side of the overrides
+    expect(days.slice(0, 4)).toEqual([true, false, true, true]);
+  });
+
+  it('carries the real dates behind the month boxes', () => {
+    expect(monthDayDates(weekday, WEDNESDAY_NOON).slice(0, 3)).toEqual(['2026-11-04', '2026-11-05', '2026-11-06']);
+    expect(monthDayDates(null, WEDNESDAY_NOON)).toHaveLength(30);
   });
 });
 
@@ -129,6 +178,7 @@ describe('toRosterMember', () => {
       note: 'Available 09:00–17:00 today',
       weekDays: [true, true, true, true, true, false, false],
       monthDays: monthDays(weekday, WEDNESDAY_NOON),
+      monthDayDates: monthDayDates(weekday, WEDNESDAY_NOON),
     });
   });
 
