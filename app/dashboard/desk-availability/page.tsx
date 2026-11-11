@@ -2,8 +2,8 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
-import AvailabilityForm from '../availability/AvailabilityForm';
-import styles from '../availability/availability.module.css';
+import AvailabilityForm from '../../components/Availability/AvailabilityForm';
+import styles from '../../components/Availability/availability.module.css';
 
 /** The editor's version of the availability page: their hours at the desk, not working hours */
 export default function DeskAvailabilityPage() {
