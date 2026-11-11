@@ -8,7 +8,7 @@ import styles from './admin.module.css';
 
 /** The admin sections, shared by the sidebar, the phone menu and the page heading */
 export const ADMIN_TABS = [
-  { label: 'Inbox', href: '/admin', description: 'Review what people have flagged across the marketplace.' },
+  { label: 'Inbox', href: '/admin', description: 'Appeals and flags waiting on the team, newest first.' },
   { label: 'Verification', href: '/admin/verification', description: 'Check who people say they are.' },
   { label: 'Accounts', href: '/admin/accounts', description: 'Find people and suspend or reactivate them.' },
 ];
