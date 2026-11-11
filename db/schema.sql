@@ -137,13 +137,30 @@ CREATE INDEX IF NOT EXISTS account_appeals_status_created_idx ON account_appeals
 CREATE INDEX IF NOT EXISTS account_appeals_user_idx ON account_appeals (user_id);
 
 -- An editor's roster: the freelancers they have invited to work with them. The row *is* the invite,
--- so inviting again is a no-op and removing someone deletes it.
+-- so inviting again is a no-op and removing someone deletes it. Only an accepted invite puts the
+-- person on the roster; asking again after a decline re-opens the same row.
 CREATE TABLE IF NOT EXISTS roster_invites (
   editor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined')),
+  responded_at TIMESTAMPTZ,
   PRIMARY KEY (editor_user_id, freelancer_user_id),
   CONSTRAINT roster_invites_not_self CHECK (editor_user_id <> freelancer_user_id)
 );
 
 CREATE INDEX IF NOT EXISTS roster_invites_freelancer_idx ON roster_invites (freelancer_user_id);
+
+-- Columns added after roster_invites shipped: the invite used to count as accepted on creation
+ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
+ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'roster_invites_status_allowed'
+  ) THEN
+    ALTER TABLE roster_invites
+      ADD CONSTRAINT roster_invites_status_allowed CHECK (status IN ('pending', 'accepted', 'declined'));
+  END IF;
+END $$;
