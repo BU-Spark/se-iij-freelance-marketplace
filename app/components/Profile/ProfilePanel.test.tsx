@@ -205,4 +205,33 @@ describe('ProfilePanel', () => {
       )
     );
   });
+
+  it('suggests beats and mediums from the shared lists while editing a freelancer', async () => {
+    const onSaveRole = jest.fn().mockResolvedValue(true);
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={onSaveRole} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Freelancer details' }));
+
+    const beats = screen.getByRole('combobox', { name: 'Reporting beats' });
+    fireEvent.change(beats, { target: { value: 'photo' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Photography' }));
+
+    const mediums = screen.getByRole('combobox', { name: 'Work mediums' });
+    fireEvent.change(mediums, { target: { value: 'ill' } });
+    fireEvent.click(screen.getByRole('option', { name: 'Illustration' }));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() =>
+      expect(onSaveRole).toHaveBeenCalledWith(
+        expect.objectContaining({
+          role: 'freelancer',
+          facts: expect.objectContaining({
+            reportingBeats: ['Local government', 'Housing', 'Photography'],
+            workMediums: ['Reporting', 'Explainers', 'Illustration'],
+          }),
+        })
+      )
+    );
+  });
 });

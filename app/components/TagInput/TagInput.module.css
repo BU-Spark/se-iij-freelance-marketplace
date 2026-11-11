@@ -1,4 +1,8 @@
 /* TagInput: type a value and press Enter to add a tag */
+.wrap {
+  width: 100%;
+}
+
 .tagInput {
   width: 100%;
   padding: 14px 16px;
@@ -60,4 +64,28 @@
   50% {
     transform: scale(1.08);
   }
+}
+
+/* type-ahead matches, shown under the field */
+.suggestions {
+  margin: 6px 0 0;
+  padding: 4px;
+  max-height: 232px;
+  overflow-y: auto;
+  list-style: none;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.1);
+}
+.suggestion {
+  padding: 8px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.suggestion:hover,
+.suggestion[aria-selected='true'] {
+  background: #eef2fd;
 }
