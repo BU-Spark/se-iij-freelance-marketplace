@@ -19,13 +19,17 @@ describe('PitchDetail', () => {
 
   it('shows the summary and the four quick facts', () => {
     expect(screen.getByText(pitch.summary)).toBeInTheDocument();
-    ['Location', 'Length', 'Deadline', 'Rate'].forEach((label) => expect(screen.getByText(label)).toBeInTheDocument());
+    ['Deadline', 'Location', 'Length', 'Compensation'].forEach((label) =>
+      expect(screen.getByText(label)).toBeInTheDocument()
+    );
     expect(screen.getByText(pitch.rate)).toBeInTheDocument();
   });
 
-  it('shows every longer answer', () => {
-    [pitch.sources, pitch.audience, pitch.assets, pitch.whyFit, pitch.whyMe].forEach((text) =>
-      expect(screen.getByText(text)).toBeInTheDocument()
+  it('shows the description instead of the old per-question answers', () => {
+    expect(screen.getByRole('heading', { name: 'Description' })).toBeInTheDocument();
+    expect(screen.getByText(pitch.description)).toBeInTheDocument();
+    ['Potential sources', 'Audience', 'Assets'].forEach((label) =>
+      expect(screen.queryByText(label)).not.toBeInTheDocument()
     );
   });
 });

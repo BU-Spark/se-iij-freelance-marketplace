@@ -119,7 +119,9 @@ export default function FreelancerDashboard({
         <p role="status">
           {matching.length
             ? `Showing ${start + 1}–${Math.min(start + PAGE_SIZE, matching.length)} of ${matching.length} tasks`
-            : 'No matching tasks. Try changing or clearing your filters.'}
+            : relevant.length === 0
+              ? 'No open assignments yet. New work shows up here as editors post it.'
+              : 'No matching tasks. Try changing or clearing your filters.'}
         </p>
         <ul className={styles.grid}>
           {visible.map((task) => (

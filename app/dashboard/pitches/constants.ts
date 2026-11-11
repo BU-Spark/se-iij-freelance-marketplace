@@ -22,11 +22,8 @@ export const PITCHES: Pitch[] = [
     length: '2,000 words / 3 weeks',
     deadline: 'Three weeks from greenlight',
     rate: '$2,200 flat',
-    sources: 'Named councillor + FOI documents in hand',
-    audience: 'Local ratepayers, watchdog readers',
-    assets: 'Contract PDFs, two named sources',
-    whyFit: "Continues the accountability beat we've been building.",
-    whyMe: 'I broke the initial procurement story in March.',
+    description:
+      "Sources: Named councillor + FOI documents in hand. Audience: Local ratepayers, watchdog readers. Assets: Contract PDFs, two named sources. Continues the accountability beat we've been building. I broke the initial procurement story in March.",
   },
   {
     id: 'diaspora-newsletter',
@@ -42,11 +39,8 @@ export const PITCHES: Pitch[] = [
     length: '6-week pilot',
     deadline: 'First issue in two weeks',
     rate: '$85 / hr',
-    sources: 'Three community organisers, reader survey',
-    audience: 'Diaspora readers in the UK and US',
-    assets: 'Draft template, sign-up flow mockup',
-    whyFit: 'Grows a reader group we under-serve today.',
-    whyMe: 'I ran a 20k-subscriber community newsletter for two years.',
+    description:
+      'Sources: Three community organisers, reader survey. Audience: Diaspora readers in the UK and US. Assets: Draft template, sign-up flow mockup. Grows a reader group we under-serve today. I ran a 20k-subscriber community newsletter for two years.',
   },
   {
     id: 'grant-local-news',
@@ -61,11 +55,8 @@ export const PITCHES: Pitch[] = [
     length: '10-page proposal',
     deadline: 'Fund closes in 4 weeks',
     rate: '$1,200 flat',
-    sources: 'Past coverage metrics, editor interviews',
-    audience: 'Grant committee',
-    assets: 'Last year’s budget, audience numbers',
-    whyFit: 'Funds the beat this desk wants to grow.',
-    whyMe: 'I’ve written three successful journalism grants.',
+    description:
+      'Sources: Past coverage metrics, editor interviews. Audience: Grant committee. Assets: Last year’s budget, audience numbers. Funds the beat this desk wants to grow. I’ve written three successful journalism grants.',
   },
   {
     id: 'transit-fare',
@@ -81,11 +72,8 @@ export const PITCHES: Pitch[] = [
     length: '1,400 words / 2 weeks',
     deadline: 'Two weeks from greenlight',
     rate: '$1.10 / word',
-    sources: 'Transit board member, union rep, three named riders',
-    audience: 'Daily commuters, transit-dependent readers',
-    assets: 'Board modeling spreadsheet, 6 rider interviews lined up',
-    whyFit: "Service journalism on a change that hits every reader's wallet.",
-    whyMe: 'I covered the last two fare reviews for a regional daily.',
+    description:
+      "Sources: Transit board member, union rep, three named riders. Audience: Daily commuters, transit-dependent readers. Assets: Board modeling spreadsheet, 6 rider interviews lined up. Service journalism on a change that hits every reader's wallet. I covered the last two fare reviews for a regional daily.",
   },
   {
     id: 'harbour-photo',
@@ -100,11 +88,8 @@ export const PITCHES: Pitch[] = [
     length: '12–15 images',
     deadline: 'Three weeks from greenlight',
     rate: '$650 flat',
-    sources: 'Three families, residents’ association',
-    audience: 'Local readers, weekend edition',
-    assets: 'Location scouting shots',
-    whyFit: 'Gives a human face to the development story.',
-    whyMe: 'I’ve photographed the harbour area for five years.',
+    description:
+      'Sources: Three families, residents’ association. Audience: Local readers, weekend edition. Assets: Location scouting shots. Gives a human face to the development story. I’ve photographed the harbour area for five years.',
   },
   {
     id: 'ai-founder',
@@ -119,11 +104,8 @@ export const PITCHES: Pitch[] = [
     length: '1,200 words / 1 week',
     deadline: 'Next week',
     rate: '$0.80 / word',
-    sources: 'Founder, two investors',
-    audience: 'Tech and business readers',
-    assets: 'Interview already booked',
-    whyFit: 'Business coverage the desk asked for.',
-    whyMe: 'I cover the Tokyo startup scene.',
+    description:
+      'Sources: Founder, two investors. Audience: Tech and business readers. Assets: Interview already booked. Business coverage the desk asked for. I cover the Tokyo startup scene.',
   },
   {
     id: 'county-fair',
@@ -138,10 +120,7 @@ export const PITCHES: Pitch[] = [
     length: '3-minute video + gallery',
     deadline: 'End of the month',
     rate: '$900 flat',
-    sources: 'Fair organisers, exhibitors',
-    audience: 'Weekend readers',
-    assets: 'Camera kit, drone',
-    whyFit: 'Light seasonal content for the weekend.',
-    whyMe: 'I shot last year’s fair coverage.',
+    description:
+      'Sources: Fair organisers, exhibitors. Audience: Weekend readers. Assets: Camera kit, drone. Light seasonal content for the weekend. I shot last year’s fair coverage.',
   },
 ];

@@ -1,15 +1,5 @@
-import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useAuth } from '@clerk/nextjs';
-import AvailabilityPage from './page';
-
-jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
-jest.mock('../../components/FreelancerWorkspace', () => ({
-  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
-
-const auth = jest.mocked(useAuth);
-const account = (userId: string) => auth.mockReturnValue({ userId, isLoaded: true } as ReturnType<typeof useAuth>);
+import AvailabilityForm from './AvailabilityForm';
 
 const originalFetch = global.fetch;
 const fetchMock = jest.fn();
@@ -28,23 +18,45 @@ const SAVED = {
 
 const EMPTY = { availableNow: false, timezone: 'UTC', days: WEEKDAYS, startsAt: '09:00', endsAt: '17:00' };
 
+/** Today, keyed the way the calendar keys it, so the day buttons can be found */
+const TODAY = (() => {
+  const now = new Date();
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return {
+    date,
+    label: new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(`${date}T12:00:00Z`)),
+    weekday: now.getDay() >= 1 && now.getDay() <= 5,
+  };
+})();
+
+const dayButton = (label: string) => screen.getByRole('button', { name: (name) => name.startsWith(label) });
+
 const save = () => fireEvent.click(screen.getByRole('button', { name: /save availability/i }));
 
 beforeEach(() => {
   fetchMock.mockReset();
   fetchMock.mockResolvedValue(ok(EMPTY));
   global.fetch = fetchMock as unknown as typeof fetch;
-  account('user-a');
 });
 
 afterAll(() => {
   global.fetch = originalFetch;
 });
 
-describe('Availability page', () => {
+describe('AvailabilityForm', () => {
   it('starts from what was saved for this account', async () => {
     fetchMock.mockResolvedValue(ok(SAVED));
-    render(<AvailabilityPage />);
+    render(<AvailabilityForm userId="user-a" />);
 
     expect(await screen.findByLabelText('Time zone')).toHaveValue('Europe/London');
     expect(screen.getByLabelText(/free right now/i)).toBeChecked();
@@ -54,8 +66,22 @@ describe('Availability page', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/profile/availability', { cache: 'no-store' });
   });
 
+  it("asks for one role's pattern and saves only that one", async () => {
+    render(<AvailabilityForm userId="user-a" role="editor" />);
+    await screen.findByLabelText('Time zone');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/profile/availability?role=editor', { cache: 'no-store' });
+
+    fetchMock.mockResolvedValueOnce(ok({ saved: true }));
+    save();
+    await screen.findByText(/availability saved/i);
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({ role: 'editor', timezone: 'UTC' });
+  });
+
   it('saves the switch and the hours to the account', async () => {
-    render(<AvailabilityPage />);
+    render(<AvailabilityForm userId="user-a" />);
     await screen.findByLabelText('Time zone');
 
     fireEvent.click(screen.getByLabelText(/free right now/i));
@@ -76,12 +102,43 @@ describe('Availability page', () => {
         days: [...WEEKDAYS, 'saturday'],
         startsAt: '10:00',
         endsAt: '17:00',
+        exceptions: [],
       }),
     });
   });
 
+  it('marks a single date the other way round from the usual week', async () => {
+    render(<AvailabilityForm userId="user-a" />);
+    await screen.findByLabelText('Time zone');
+
+    fireEvent.click(dayButton(TODAY.label));
+    expect(screen.getByText('1 date differs from your usual week.')).toBeInTheDocument();
+
+    fetchMock.mockResolvedValueOnce(ok({ saved: true }));
+    save();
+    await screen.findByText(/availability saved/i);
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      days: WEEKDAYS,
+      exceptions: [{ date: TODAY.date, available: !TODAY.weekday }],
+    });
+  });
+
+  it('puts a date back on the usual week when it is clicked through', async () => {
+    render(<AvailabilityForm userId="user-a" />);
+    await screen.findByLabelText('Time zone');
+
+    // a working day goes off, then on, then back; a weekend day only goes on, then back
+    for (let click = 0; click < (TODAY.weekday ? 3 : 2); click += 1) {
+      fireEvent.click(dayButton(TODAY.label));
+    }
+
+    expect(screen.getByText('Every date follows your usual week.')).toBeInTheDocument();
+  });
+
   it('rejects reversed times, a dayless week, and an invalid time zone', async () => {
-    render(<AvailabilityPage />);
+    render(<AvailabilityForm userId="user-a" />);
     await screen.findByLabelText('Time zone');
 
     fireEvent.change(screen.getByLabelText('End time'), { target: { value: '08:00' } });
@@ -111,7 +168,7 @@ describe('Availability page', () => {
   });
 
   it('shows the server message when the save is refused', async () => {
-    render(<AvailabilityPage />);
+    render(<AvailabilityForm userId="user-a" />);
     await screen.findByLabelText('Time zone');
 
     fetchMock.mockResolvedValueOnce({
@@ -131,19 +188,18 @@ describe('Availability page', () => {
       status: 500,
       json: async () => ({ error: 'Unable to load your availability right now.' }),
     });
-    render(<AvailabilityPage />);
+    render(<AvailabilityForm userId="user-a" />);
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/unable to load your availability/i);
     expect(screen.getByLabelText('Time zone')).toBeInTheDocument();
   });
 
   it('loads the new account when the signed-in person changes', async () => {
-    const view = render(<AvailabilityPage />);
+    const view = render(<AvailabilityForm key="user-a" userId="user-a" />);
     await screen.findByLabelText('Time zone');
     expect(fetchMock).toHaveBeenCalledTimes(1);
 
-    account('user-b');
-    view.rerender(<AvailabilityPage />);
+    view.rerender(<AvailabilityForm key="user-b" userId="user-b" />);
 
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
   });

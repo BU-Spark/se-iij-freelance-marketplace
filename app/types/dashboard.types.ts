@@ -48,6 +48,8 @@ export type RosterMember = {
   note: string;
   weekDays: boolean[];
   monthDays: boolean[];
+  /** the dates behind `monthDays`, today first; absent on hand-built samples */
+  monthDayDates?: string[];
 };
 
 export type Rate = {
@@ -98,9 +100,6 @@ export type Pitch = {
   length: string;
   deadline: string;
   rate: string;
-  sources: string;
-  audience: string;
-  assets: string;
-  whyFit: string;
-  whyMe: string;
+  /** the full pitch: angle, reporting plan and sources */
+  description: string;
 };
