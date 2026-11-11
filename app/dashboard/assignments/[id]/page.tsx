@@ -25,7 +25,9 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
   return (
     <div className={styles.shell}>
       <EditorHeader initialRole={role} />
-      <AssignmentDetail assignment={assignment} canEdit={canEditAssignment(viewer, assignment)} />
+      <main className={styles.main}>
+        <AssignmentDetail assignment={assignment} canEdit={canEditAssignment(viewer, assignment)} />
+      </main>
     </div>
   );
 }
