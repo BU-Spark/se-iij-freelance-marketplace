@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import InfoCard from '../../InfoCard/InfoCard';
 import Field from '../../Field/Field';
@@ -16,6 +17,8 @@ type RoleFormProps = {
   /** resolves true once the change is saved, so the panel knows whether to close the form */
   onSave: (details: RoleDetails) => Promise<unknown> | unknown;
   onCancel: () => void;
+  /** false in the quick panel: the hours are only edited on the settings page */
+  editAvailability?: boolean;
 };
 
 const asTags = (value: RoleValue | undefined): string[] =>
@@ -24,7 +27,7 @@ const asTags = (value: RoleValue | undefined): string[] =>
 const asText = (value: RoleValue | undefined): string =>
   Array.isArray(value) ? value.join(', ') : typeof value === 'number' ? String(value) : (value ?? '');
 
-export default function RoleForm({ details, onSave, onCancel }: RoleFormProps) {
+export default function RoleForm({ details, onSave, onCancel, editAvailability = true }: RoleFormProps) {
   const config = ROLE_CONFIG[details.role];
   const [facts, setFacts] = useState<Record<string, RoleValue>>(details.facts);
   const [saving, setSaving] = useState(false);
@@ -85,10 +88,23 @@ export default function RoleForm({ details, onSave, onCancel }: RoleFormProps) {
           ))}
           <FormActions onCancel={onCancel} saving={saving} />
         </form>
+
+        {/* the quick panel is a preview: availability is edited on the settings page */}
+        {editsAvailability && !editAvailability && (
+          <div className={styles.availability}>
+            <div className={styles.availabilityText}>
+              <p className={styles.availabilityLabel}>Availability</p>
+              <p className={styles.availabilityValue}>{asText(details.facts.availability) || 'Not set yet'}</p>
+            </div>
+            <Link href="/dashboard/settings" className={styles.availabilityAction}>
+              Edit availability in settings →
+            </Link>
+          </div>
+        )}
       </InfoCard>
 
       {/* the hours for this role are edited here, next to the rest of the role, and nowhere else */}
-      {editsAvailability && <AvailabilityCard role={details.role} />}
+      {editsAvailability && editAvailability && <AvailabilityCard role={details.role} />}
     </>
   );
 }

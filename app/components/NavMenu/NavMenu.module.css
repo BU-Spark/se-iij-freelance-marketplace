@@ -102,6 +102,28 @@
 }
 
 .footerLink,
+/* the person's own row: avatar, name and what the row leads to */
+.who {
+  flex: 1;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.whoName {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.whoHint {
+  font-size: 13px;
+  color: #6b7280;
+}
+.chevron {
+  font-size: 18px;
+  color: #9aa1ad;
+}
+
 .signOut {
   display: flex;
   align-items: center;
