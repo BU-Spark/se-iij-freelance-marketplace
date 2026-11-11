@@ -36,7 +36,7 @@ describe('buildTalentQuery', () => {
       availableNow: true,
     });
 
-    expect(sql).toContain('$2 = ANY(f.reporting_beats) OR $2 = ANY(f.beat_tags)');
+    expect(sql).toContain('$2 = ANY(f.beats) OR $2 = ANY(f.beat_tags)');
     expect(sql).toContain('$3 = ANY(f.work_mediums)');
     expect(sql).toContain('f.location = $4');
     expect(sql).toContain('u.available_now = true');
@@ -61,7 +61,7 @@ describe('searchTalent', () => {
           last_name: 'Jenkins',
           available_now: true,
           location: 'Leeds, UK',
-          reporting_beats: ['Politics'],
+          beats: ['Politics'],
           beat_tags: [],
           work_mediums: ['Text', 'Audio'],
           availability: null,

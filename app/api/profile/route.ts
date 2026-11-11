@@ -185,7 +185,7 @@ export async function PATCH(request: Request) {
         const freelancer = cleaned.value;
         await connection.query(
           `INSERT INTO freelancers
-             (user_id, location, rate, community_covered, reporting_beats, beat_other, skills, beat_tags, work_mediums, tools)
+             (user_id, location, rate, community_covered, beats, beat_other, skills, beat_tags, work_mediums, tools)
            SELECT u.id, $2, $3, $4, $5::text[], $6, $7::text[], $8::text[], $9::text[], $10::text[]
            FROM users u
            WHERE u.clerk_id = $1
@@ -193,7 +193,7 @@ export async function PATCH(request: Request) {
              location = EXCLUDED.location,
              rate = EXCLUDED.rate,
              community_covered = EXCLUDED.community_covered,
-             reporting_beats = EXCLUDED.reporting_beats,
+             beats = EXCLUDED.beats,
              beat_other = EXCLUDED.beat_other,
              skills = EXCLUDED.skills,
              beat_tags = EXCLUDED.beat_tags,

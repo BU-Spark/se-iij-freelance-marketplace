@@ -14,7 +14,7 @@ export type RosterRow = {
   first_name: string;
   last_name: string;
   location: string | null;
-  reporting_beats: string[] | null;
+  beats: string[] | null;
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   availability: RosterAvailability | null;
@@ -134,12 +134,12 @@ export function rosterNote(availability: RosterAvailability | null, status: Avai
 
 /** The first beat they report on, falling back to the next thing we know about them */
 export function specialtyOf(row: RosterRow): string {
-  return list(row.reporting_beats)[0] ?? list(row.beat_tags)[0] ?? list(row.work_mediums)[0] ?? 'Freelancer';
+  return list(row.beats)[0] ?? list(row.beat_tags)[0] ?? list(row.work_mediums)[0] ?? 'Freelancer';
 }
 
 /** Every beat this person covers, for the filter dropdown */
 export function beatsOf(row: RosterRow): string[] {
-  const beats = [...list(row.reporting_beats), ...list(row.beat_tags)];
+  const beats = [...list(row.beats), ...list(row.beat_tags)];
   return [...new Set(beats)];
 }
 

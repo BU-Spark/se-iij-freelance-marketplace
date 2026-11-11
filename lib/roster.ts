@@ -13,7 +13,7 @@ const SELECT_FREELANCERS = `
     u.last_name,
     u.available_now,
     f.location,
-    f.reporting_beats,
+    f.beats,
     f.beat_tags,
     f.work_mediums,
     f.availability
@@ -42,7 +42,7 @@ const SELECT_EDITOR_ROSTER = `
     u.last_name,
     u.available_now,
     f.location,
-    f.reporting_beats,
+    f.beats,
     f.beat_tags,
     f.work_mediums,
     f.availability,

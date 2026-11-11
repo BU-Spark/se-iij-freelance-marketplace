@@ -22,7 +22,7 @@ const row: RosterRow = {
   first_name: 'Sarah',
   last_name: 'Jenkins',
   location: 'Leeds, UK',
-  reporting_beats: ['Politics'],
+  beats: ['Politics'],
   beat_tags: [],
   work_mediums: ['Text'],
   availability: {
