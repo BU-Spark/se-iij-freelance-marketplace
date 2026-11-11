@@ -11,6 +11,7 @@ export const NAV_ITEMS: Record<OnboardingRole, NavItem[]> = {
     { label: 'Roster', href: '/dashboard/roster' },
     { label: 'Find talent', href: '/dashboard/talent' },
     { label: 'Pitches', href: '/dashboard/pitches', badge: 2 },
+    { label: 'My availability', href: '/dashboard/desk-availability' },
   ],
   freelancer: [
     { label: 'Assignments', href: '/dashboard/assignments' },
