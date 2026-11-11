@@ -1,6 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
+import { dateKeyIn, isDateKey, sanitizeExceptions } from '../../../utils/availability.utils';
+import type { AvailabilityException } from '../../../types/availability.types';
 import type { ProfileRole, StoredAvailability } from '../../../types/profile.types';
 
 export const runtime = 'nodejs';
@@ -38,6 +40,8 @@ type AvailabilityPayload = {
   days: string[];
   startsAt: string | null;
   endsAt: string | null;
+  /** dates that do not follow the weekly pattern */
+  exceptions: AvailabilityException[];
 };
 
 /**
@@ -65,6 +69,7 @@ const toPayload = (
   days: stored?.days ?? [],
   startsAt: stored?.typicalWorkingWindow?.startsAt ?? null,
   endsAt: stored?.typicalWorkingWindow?.endsAt ?? null,
+  exceptions: sanitizeExceptions(stored?.exceptions),
 });
 
 const SELECT_AVAILABILITY = `
@@ -155,10 +160,30 @@ export async function PATCH(request: Request) {
     );
   }
 
+  if (body.exceptions !== undefined) {
+    const entries = body.exceptions;
+    const valid =
+      Array.isArray(entries) &&
+      entries.every((entry) => isRecord(entry) && isDateKey(entry.date) && typeof entry.available === 'boolean');
+
+    if (!valid) {
+      return NextResponse.json(
+        { error: 'Each date you mark needs a real date (YYYY-MM-DD) and whether you are free.' },
+        { status: 400 }
+      );
+    }
+  }
+
+  // past dates are dropped so an old booking does not sit in the blob forever
+  const today = dateKeyIn(new Date(), timezone.trim());
+  const exceptions = sanitizeExceptions(body.exceptions).filter((entry) => entry.date >= today);
+
   const availability: StoredAvailability = {
     timezone: timezone.trim(),
     days: [...new Set(days as string[])],
     typicalWorkingWindow: { startsAt, endsAt },
+    // an empty list is left out so the blob keeps its old shape for people who never mark a date
+    ...(exceptions.length ? { exceptions } : {}),
   };
 
   let client;
