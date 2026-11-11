@@ -77,6 +77,9 @@ describe('searchTalent', () => {
       specialty: 'Politics',
       mediums: ['Text', 'Audio'],
       availableNow: true,
+      // free right now, even though they have no weekly pattern
+      status: 'available',
+      note: 'Free right now',
     });
     expect(queryMock.mock.calls[0][1]).toEqual(['%sarah%', TALENT_PAGE_SIZE]);
   });

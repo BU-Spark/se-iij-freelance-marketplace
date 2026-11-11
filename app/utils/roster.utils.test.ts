@@ -140,6 +140,26 @@ describe('toRosterMember', () => {
     expect(member.note).toBe('Off today');
   });
 
+  it('says someone is available when they have said they are free right now', () => {
+    // a Saturday, when the weekly pattern has them off
+    const weekend = new Date('2026-11-07T12:00:00.000Z');
+    const freeNow = toRosterMember({ ...row, available_now: true }, weekend);
+
+    expect(freeNow.status).toBe('available');
+    expect(freeNow.note).toBe('Free right now');
+
+    // and it does not turn being busy into being free
+    expect(toRosterMember({ ...row, available_now: false }, weekend).status).toBe('off');
+  });
+
+  it('marks someone free right now even without a weekly pattern', () => {
+    const member = toRosterMember({ ...row, availability: null, available_now: true }, WEDNESDAY_NOON);
+
+    expect(member.status).toBe('available');
+    expect(member.note).toBe('Free right now');
+    expect(member.openHours).toEqual([]);
+  });
+
   it('still renders someone with no availability, or no name', () => {
     const unknown = toRosterMember({ ...row, availability: null }, WEDNESDAY_NOON);
     expect(unknown).toMatchObject({ name: 'Sarah Jenkins', status: 'off', openHours: [] });

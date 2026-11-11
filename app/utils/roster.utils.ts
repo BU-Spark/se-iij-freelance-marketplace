@@ -18,6 +18,8 @@ export type RosterRow = {
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   availability: RosterAvailability | null;
+  /** the person's own "free right now" flag, which beats the weekly pattern */
+  available_now?: boolean | null;
 };
 
 /** Monday-first, matching the week strip and `availability.days` */
@@ -143,7 +145,9 @@ export function beatsOf(row: RosterRow): string[] {
 
 export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMember {
   const availability = parseAvailability(row.availability);
-  const status = availabilityStatus(availability, now);
+  // saying "I'm free right now" outranks whatever the weekly pattern says about this hour
+  const freeNow = row.available_now === true;
+  const status = freeNow ? 'available' : availabilityStatus(availability, now);
 
   return {
     id: row.id,
@@ -153,7 +157,7 @@ export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMe
     city: str(row.location),
     status,
     openHours: status === 'off' ? [] : openHours(availability),
-    note: rosterNote(availability, status),
+    note: freeNow ? 'Free right now' : rosterNote(availability, status),
     weekDays: weekDays(availability),
     monthDays: monthDays(availability, now),
   };

@@ -43,6 +43,8 @@ describe('listRoster', () => {
     const [sql] = queryMock.mock.calls[0] as [string];
     expect(sql).toContain('JOIN freelancers');
     expect(sql).toContain("'freelancer' = ANY(u.roles)");
+    // editors see someone as available when they have marked themselves free right now
+    expect(sql).toContain('u.available_now');
 
     queryMock.mockRejectedValue(new Error('db down'));
     await expect(listRoster()).rejects.toThrow('db down');
@@ -89,6 +91,7 @@ describe('loadEditorRoster', () => {
 
     const [joinSql, params] = queryMock.mock.calls[1] as [string, unknown[]];
     expect(joinSql).toContain('LEFT JOIN roster_invites');
+    expect(joinSql).toContain('u.available_now');
     expect(params).toEqual(['editor-1']);
   });
 
