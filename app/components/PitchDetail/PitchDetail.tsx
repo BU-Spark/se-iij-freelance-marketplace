@@ -3,7 +3,7 @@ import type { Pitch } from '../../types/dashboard.types';
 import { categoryColor } from '../../utils/category.utils';
 import { timeAgo } from '../../utils/dashboard.utils';
 import styles from './PitchDetail.module.css';
-import { PITCH_FACTS, PITCH_SECTIONS } from './pitchFields';
+import { PITCH_FACTS } from './pitchFields';
 
 type PitchDetailProps = {
   pitch: Pitch;
@@ -42,19 +42,17 @@ export default function PitchDetail({ pitch }: PitchDetailProps) {
         {PITCH_FACTS.map((f) => (
           <div key={f.key}>
             <dt>{f.label}</dt>
-            <dd>{String(pitch[f.key])}</dd>
+            <dd>{String(pitch[f.key]) || 'Not specified'}</dd>
           </div>
         ))}
       </dl>
 
-      <dl className={styles.sections}>
-        {PITCH_SECTIONS.map((s) => (
-          <div key={s.key}>
-            <dt>{s.label}</dt>
-            <dd>{String(pitch[s.key])}</dd>
-          </div>
-        ))}
-      </dl>
+      <section aria-labelledby="pitch-description">
+        <h3 id="pitch-description" className={styles.sectionTitle}>
+          Description
+        </h3>
+        <p className={styles.description}>{pitch.description || 'No description yet.'}</p>
+      </section>
     </article>
   );
 }

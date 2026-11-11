@@ -8,15 +8,17 @@ export const workspaceHome = (roles: ProfileRole[]): '/dashboard' | '/dashboard/
   roles.includes('editor') ? '/dashboard' : '/dashboard/freelancer';
 
 /** Pages that belong to the freelancer side; everything else under /dashboard is the editor desk */
-const FREELANCER_PATHS = ['/dashboard/freelancer', '/dashboard/assignments', '/dashboard/availability'];
+const FREELANCER_PATHS = ['/dashboard/freelancer', '/dashboard/assignments'];
+
+/** Pages both sides share: one assignment's page and settings */
+const SHARED_PATHS = ['/dashboard/assignments/', '/dashboard/settings'];
 
 /**
  * Which workspace a dashboard URL belongs to, so the shared header opens on that side.
- * One assignment's page is shared by both sides: editors see it from the desk, and people who
- * only freelance see it from their workspace.
+ * Shared pages open on the desk for editors, and in the workspace for people who only freelance.
  */
 export const workspaceForPath = (pathname: string, heldRoles: ProfileRole[]): ProfileRole => {
-  if (pathname.startsWith('/dashboard/assignments/')) {
+  if (SHARED_PATHS.some((path) => pathname.startsWith(path))) {
     return heldRoles.length > 0 && !heldRoles.includes('editor') ? 'freelancer' : 'editor';
   }
 

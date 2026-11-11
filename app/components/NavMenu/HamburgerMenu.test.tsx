@@ -9,7 +9,7 @@ function setup() {
     activeRole: 'editor' as const,
     onRoleChange: jest.fn(),
     currentPath: '/dashboard',
-    profileHref: '/dashboard?panel=profile',
+    settingsHref: '/dashboard/settings',
     onSignOut: jest.fn(),
   };
   render(<HamburgerMenu {...props} />);

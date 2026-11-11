@@ -87,7 +87,7 @@ describe('EditorHeader workspaces', () => {
 
   it('sends an editor-only person away from the freelancer workspace', async () => {
     signedInAs('editor');
-    mockPathname = '/dashboard/availability';
+    mockPathname = '/dashboard/assignments';
     render(<EditorHeader />);
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/dashboard'));

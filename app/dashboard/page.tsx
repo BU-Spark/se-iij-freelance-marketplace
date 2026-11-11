@@ -13,17 +13,22 @@ import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments
 import { loadEditorRoster } from '../../lib/roster';
 import { requireWorkspace } from '../../lib/workspace';
 import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
+import AssignmentDrawer from '../components/AssignmentDrawer/AssignmentDrawer';
+import { loadAssignmentView, type AssignmentView } from './assignments/loadAssignmentView';
 
 /*
  * Dashboard: availability (day / week / month) on the left,
  * assignments (All / Open / Invited / Assigned) on the right.
- * The New Assignment drawer opens when the URL has ?new=assignment.
+ * The New Assignment drawer opens when the URL has ?new=assignment,
+ * and clicking an assignment opens it in a drawer at ?assignment=<id>.
  */
 
 // New posts have to appear as soon as the drawer sends the editor back here
 export const dynamic = 'force-dynamic';
 
-export default async function Dashboard() {
+type DashboardProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
+
+export default async function Dashboard({ searchParams }: DashboardProps) {
   // The editor desk is only for people with the editor role
   await requireWorkspace('editor');
 
@@ -49,6 +54,15 @@ export default async function Dashboard() {
   } catch (error) {
     console.error('Failed to load the roster for the desk.', error);
     rosterFailed = true;
+  }
+
+  // The assignment drawer, when a card was clicked
+  const openId = (await searchParams)?.assignment;
+  let opened: AssignmentView | null = null;
+  try {
+    opened = await loadAssignmentView(typeof openId === 'string' ? openId : undefined);
+  } catch (error) {
+    console.error('Failed to load the assignment for the drawer.', error);
   }
 
   // Everything in the desk comes from the database: no sample cards sit under the real posts
@@ -87,6 +101,8 @@ export default async function Dashboard() {
       <Suspense fallback={null}>
         <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
       </Suspense>
+
+      {opened && <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard" />}
     </div>
   );
 }

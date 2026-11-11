@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import Dashboard from './page';
 import type { Assignment } from '../types/assignments.types';
 import { ROSTER } from './constants';
-import { listOpenAssignments } from '../../lib/assignments';
+import { getAssignment, listOpenAssignments } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 
 // EditorHeader has its own tests; swap it for a simple stand-in so these tests only check the dashboard
@@ -18,8 +18,11 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
 jest.mock('../../lib/workspace', () => ({ requireWorkspace: jest.fn() }));
+jest.mock('../../lib/db', () => ({ db: { query: jest.fn() } }));
 jest.mock('../../lib/assignments', () => ({
+  ...jest.requireActual('../../lib/assignments'),
   listOpenAssignments: jest.fn(),
+  getAssignment: jest.fn(async () => null),
   loadAssignmentViewer: jest.fn(async () => viewer),
 }));
 jest.mock('../../lib/roster', () => ({ loadEditorRoster: jest.fn() }));
@@ -29,7 +32,10 @@ const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
 const loadEditorRosterMock = loadEditorRoster as jest.Mock;
 
-const renderDashboard = async () => render(await Dashboard());
+const getAssignmentMock = getAssignment as jest.Mock;
+
+const renderDashboard = async (params: Record<string, string> = {}) =>
+  render(await Dashboard({ searchParams: Promise.resolve(params) }));
 
 const postedAssignment: Assignment = {
   id: 'posted-1',
@@ -61,6 +67,7 @@ describe('Dashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     listOpenAssignmentsMock.mockResolvedValue([]);
+    getAssignmentMock.mockResolvedValue(null);
     loadEditorRosterMock.mockResolvedValue({
       members: ROSTER.slice(0, 2),
       pending: [ROSTER[2]],
@@ -143,7 +150,30 @@ describe('Dashboard', () => {
     expect(within(filters).getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('lists the posted assignments with their details and a link to each one', async () => {
+  it('has no assignment drawer open by default', async () => {
+    await renderDashboard();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('opens a posted assignment in a drawer that closes back to the desk', async () => {
+    getAssignmentMock.mockResolvedValue(postedAssignment);
+    await renderDashboard({ assignment: postedAssignment.id });
+
+    const drawer = screen.getByRole('dialog', { name: postedAssignment.title });
+    expect(within(drawer).getByRole('heading', { level: 1, name: postedAssignment.title })).toBeInTheDocument();
+    // the editor's own organization posted it, so it can be edited from the drawer
+    expect(within(drawer).getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('link', { name: 'Close' })).toHaveAttribute('href', '/dashboard');
+  });
+
+  it('does not open a drawer for an assignment the editor cannot see', async () => {
+    getAssignmentMock.mockResolvedValue({ ...postedAssignment, organizationId: 'org-2', createdByUserId: 'user-9' });
+    await renderDashboard({ assignment: postedAssignment.id });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('lists the posted assignments with their details and a link that opens each one in the drawer', async () => {
     listOpenAssignmentsMock.mockResolvedValue([postedAssignment, post({ id: 'posted-9', title: 'Second post' })]);
 
     await renderDashboard();
@@ -159,7 +189,7 @@ describe('Dashboard', () => {
 
     expect(screen.getByRole('link', { name: /posted to the database/i })).toHaveAttribute(
       'href',
-      '/dashboard/assignments/posted-1'
+      '/dashboard?assignment=posted-1'
     );
   });
 

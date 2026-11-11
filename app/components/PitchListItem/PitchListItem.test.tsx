@@ -15,11 +15,7 @@ const pitch: Pitch = {
   length: '',
   deadline: '',
   rate: '',
-  sources: '',
-  audience: '',
-  assets: '',
-  whyFit: '',
-  whyMe: '',
+  description: '',
 };
 
 describe('PitchListItem', () => {

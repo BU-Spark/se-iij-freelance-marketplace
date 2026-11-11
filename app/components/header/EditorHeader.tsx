@@ -55,7 +55,7 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
         activeRole={role}
         onRoleChange={(nextRole) => router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard')}
         currentPath={pathname}
-        profileHref={`${pathname}?panel=profile`}
+        settingsHref="/dashboard/settings"
         onSignOut={() => signOut({ redirectUrl: '/' })}
       />
 

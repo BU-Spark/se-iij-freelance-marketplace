@@ -94,6 +94,7 @@ describe('ProfileFromUrl', () => {
     renderPanel();
 
     expect(screen.getByText('Marcus Thorne')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Open Basic info' }));
     expect(screen.getByRole('button', { name: 'Edit basic info' })).toBeInTheDocument();
   });
 });
