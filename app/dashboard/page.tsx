@@ -9,6 +9,7 @@ import { ASSIGNMENTS, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments';
+import { requireWorkspace } from '../../lib/workspace';
 import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 
 /*
@@ -21,6 +22,9 @@ import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashbo
 export const dynamic = 'force-dynamic';
 
 export default async function Dashboard() {
+  // The editor desk is only for people with the editor role
+  await requireWorkspace('editor');
+
   let posted: Assignment[] = [];
   try {
     // Only the assignments the editor's own organization posted
