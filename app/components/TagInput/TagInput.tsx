@@ -12,12 +12,23 @@ type TagInputProps = {
   suggestions?: string[];
   /** names the text box for screen readers, which the surrounding tags would otherwise muddle */
   ariaLabel?: string;
+  /** false to accept only values from `suggestions`, for a fixed taxonomy like the beat list */
+  allowCustom?: boolean;
 };
 
 /** More than this and the list stops being a shortcut */
 const MAX_SUGGESTIONS = 8;
+/** A fixed list is the whole point of the field, so show enough of it to browse */
+const MAX_FIXED_SUGGESTIONS = 50;
 
-export default function TagInput({ tags, onChange, placeholder, suggestions, ariaLabel }: TagInputProps) {
+export default function TagInput({
+  tags,
+  onChange,
+  placeholder,
+  suggestions,
+  ariaLabel,
+  allowCustom = true,
+}: TagInputProps) {
   const [value, setValue] = useState('');
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(-1);
@@ -28,12 +39,21 @@ export default function TagInput({ tags, onChange, placeholder, suggestions, ari
   // values already picked are not offered again
   const matches = (suggestions ?? [])
     .filter((option) => !tags.includes(option) && option.toLowerCase().includes(query))
-    .slice(0, MAX_SUGGESTIONS);
+    .slice(0, allowCustom ? MAX_SUGGESTIONS : MAX_FIXED_SUGGESTIONS);
   const showSuggestions = open && matches.length > 0;
 
   const add = (tag: string) => {
-    const trimmed = tag.trim();
-    if (trimmed && !tags.includes(trimmed)) onChange([...tags, trimmed]);
+    const typed = tag.trim();
+    if (!typed) return;
+
+    // keep the list's spelling when the typed text is one of the options
+    const option = suggestions?.find((value) => value.toLowerCase() === typed.toLowerCase());
+    const chosen = option ?? (allowCustom ? typed : '');
+
+    // a fixed list refuses anything it does not offer, and stays open so they can keep typing
+    if (!chosen) return;
+    if (!tags.includes(chosen)) onChange([...tags, chosen]);
+
     setValue('');
     setHighlighted(-1);
     setOpen(false);
@@ -50,9 +70,7 @@ export default function TagInput({ tags, onChange, placeholder, suggestions, ari
       setOpen(false);
     } else if ((e.key === 'Enter' || e.key === ',') && (value.trim() || highlighted >= 0)) {
       e.preventDefault();
-      // keep the list's spelling when what they typed is already one of the options
-      const typed = suggestions?.find((option) => option.toLowerCase() === query) ?? value;
-      add(highlighted >= 0 ? matches[highlighted] : typed);
+      add(highlighted >= 0 ? matches[highlighted] : value);
     } else if (e.key === 'Backspace' && !value && tags.length) {
       onChange(tags.slice(0, -1));
     }

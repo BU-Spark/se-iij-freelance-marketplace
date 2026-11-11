@@ -72,4 +72,36 @@ describe('TagInput', () => {
 
     expect(screen.queryByRole('listbox')).not.toBeInTheDocument();
   });
+
+  it('shows the whole list on focus when only listed values are allowed', () => {
+    render(<TagInput tags={[]} onChange={jest.fn()} suggestions={SUGGESTIONS} allowCustom={false} />);
+
+    fireEvent.focus(screen.getByRole('combobox'));
+
+    expect(screen.getAllByRole('option')).toHaveLength(SUGGESTIONS.length);
+  });
+
+  it('refuses a value outside the list when custom values are off', () => {
+    const onChange = jest.fn();
+    render(<TagInput tags={[]} onChange={onChange} suggestions={SUGGESTIONS} allowCustom={false} />);
+    const input = screen.getByRole('combobox');
+
+    fireEvent.change(input, { target: { value: 'Local government' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(onChange).not.toHaveBeenCalled();
+    // the text stays, so they can keep searching
+    expect(input).toHaveValue('Local government');
+  });
+
+  it('adds the list spelling when the typed text matches only by case', () => {
+    const onChange = jest.fn();
+    render(<TagInput tags={[]} onChange={onChange} suggestions={SUGGESTIONS} allowCustom={false} />);
+    const input = screen.getByRole('combobox');
+
+    fireEvent.change(input, { target: { value: 'health/wellness' } });
+    fireEvent.keyDown(input, { key: 'Enter' });
+
+    expect(onChange).toHaveBeenCalledWith(['Health/Wellness']);
+  });
 });

@@ -53,6 +53,14 @@ beforeEach(() => {
 
 const chip = (label: string) => screen.getByRole('button', { name: new RegExp(`^[+✓]\\s*${label}$`, 'i') });
 
+/** Type into a searchable tag picker and choose the matching option from its list */
+const addTag = (label: RegExp, value: string) => {
+  const input = screen.getByLabelText(label);
+  fireEvent.focus(input);
+  fireEvent.change(input, { target: { value } });
+  fireEvent.click(screen.getByRole('option', { name: value }));
+};
+
 const type = (label: RegExp, value: string) => {
   const input = screen.getByLabelText(label);
   fireEvent.change(input, { target: { value } });
@@ -91,7 +99,7 @@ const fillEditorStep = async () => {
   type(/last name/i, 'Jenkins');
   type(/work email/i, 'sarah@newsroom.example');
   type(/position \/ title/i, 'News Editor');
-  fireEvent.click(chip('Politics'));
+  addTag(/search desks/i, 'Politics');
   await verifyWorkEmail();
 };
 
@@ -99,14 +107,14 @@ const fillFreelancerStep = () => {
   type(/first name/i, 'Alex');
   type(/last name/i, 'Rivera');
   type(/^email/i, 'alex@example.com');
-  fireEvent.click(chip('Climate/Environment'));
-  fireEvent.click(chip('Photo'));
+  addTag(/search beats/i, 'Climate/Environment');
+  addTag(/search mediums/i, 'Photo');
 };
 
 /** On the second profile step the shared account fields are already collected */
 const fillFreelancerRoleOnly = () => {
-  fireEvent.click(chip('Climate/Environment'));
-  fireEvent.click(chip('Photo'));
+  addTag(/search beats/i, 'Climate/Environment');
+  addTag(/search mediums/i, 'Photo');
 };
 
 /** The JSON body posted to /api/onboarding by the most recent submit */
@@ -208,7 +216,7 @@ describe('Onboarding page', () => {
       type(/last name/i, 'Jenkins');
       type(/work email/i, 'sarah@newsroom.example');
       type(/position \/ title/i, 'News Editor');
-      fireEvent.click(chip('Politics'));
+      addTag(/search desks/i, 'Politics');
       await verifyWorkEmail();
       next();
       submit();
@@ -252,7 +260,7 @@ describe('Onboarding page', () => {
       type(/last name/i, 'Jenkins');
       type(/work email/i, 'sarah@newsroom.example');
       type(/position \/ title/i, 'News Editor');
-      fireEvent.click(chip('Politics'));
+      addTag(/search desks/i, 'Politics');
 
       next();
 
@@ -365,8 +373,8 @@ describe('Onboarding page', () => {
     });
 
     it('asks which beat when "Other/Not listed here" is picked', () => {
-      fireEvent.click(chip('Other/Not listed here'));
-      fireEvent.click(chip('Photo'));
+      addTag(/search beats/i, 'Other/Not listed here');
+      addTag(/search mediums/i, 'Photo');
       next();
 
       expect(screen.getByLabelText(/your beat/i)).toBeInTheDocument();
@@ -375,9 +383,9 @@ describe('Onboarding page', () => {
 
     it('sends the other beat and the skills with the profile', async () => {
       fillFreelancerStep();
-      fireEvent.click(chip('Other/Not listed here'));
+      addTag(/search beats/i, 'Other/Not listed here');
       type(/your beat/i, 'Water rights in the Central Valley');
-      fireEvent.click(chip('Investigative Journalism'));
+      addTag(/search skills/i, 'Investigative Journalism');
       next();
       submit();
 

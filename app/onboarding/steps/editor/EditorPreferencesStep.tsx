@@ -5,7 +5,7 @@ import AvailabilityFields from '../../fields/AvailabilityFields';
 import LongBioField from '../../fields/LongBioField';
 import NotificationFields from '../../fields/NotificationFields';
 import { PITCH_FORMATS, TOPICS } from '../../constants';
-import { fieldError, toggleValue } from '../../helpers';
+import { fieldError } from '../../helpers';
 import type {
   OrgOption,
   ProfileData,
@@ -80,13 +80,16 @@ export default function EditorPreferencesStep(p: EditorPreferencesStepProps) {
       </Section>
 
       <Section title="Topics you want" hint="What should freelancers bring you?" color="var(--c-amber)">
-        <ChipGroup
-          options={TOPICS}
-          selected={data.interestedTopics}
-          onToggle={(value) => {
-            update('interestedTopics', toggleValue(data.interestedTopics, value));
+        <TagInput
+          tags={data.interestedTopics}
+          onChange={(tags) => {
+            update('interestedTopics', tags);
             touch('interestedTopics');
           }}
+          suggestions={TOPICS}
+          allowCustom={false}
+          ariaLabel="Search topics"
+          placeholder="Search topics…"
         />
       </Section>
 
