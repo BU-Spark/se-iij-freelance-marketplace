@@ -78,7 +78,10 @@ export function countByStatus(assignments: DeskAssignment[]): Record<AssignmentS
  * Invites, interest and a structured rate only exist in the sample desk data,
  * so those fields are left empty and the raw compensation text is shown instead.
  */
-export function toDeskAssignment(a: Assignment): DeskAssignment {
+export function toDeskAssignment(a: Assignment): DeskAssignment | null {
+  // Completed work no longer belongs in the active assignment desk.
+  if (a.status === 'completed') return null;
+
   return {
     id: a.id,
     title: a.title,

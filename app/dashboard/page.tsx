@@ -8,6 +8,7 @@ import styles from './dashboard.module.css';
 import { ASSIGNMENTS, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
+import type { DeskAssignment } from '../types/dashboard.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments';
 import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 
@@ -33,7 +34,10 @@ export default async function Dashboard() {
 
   // Assignments posted to the database sit above the sample desk data
   const samples = ASSIGNMENTS.map((a) => ({ ...a, href: `/dashboard/assignments/${a.id}` }));
-  const assignments = [...posted.map(toDeskAssignment), ...samples];
+  const postedCards = posted
+    .map(toDeskAssignment)
+    .filter((assignment): assignment is DeskAssignment => assignment !== null);
+  const assignments = [...postedCards, ...samples];
   const counts = countByStatus(assignments);
 
   return (

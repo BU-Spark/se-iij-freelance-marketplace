@@ -118,6 +118,28 @@ describe('dashboard utils', () => {
         href: '/dashboard/assignments/a1',
       });
     });
+
+    it('omits completed work from the active desk', () => {
+      const completed = {
+        id: 'a2',
+        organizationId: 'org-1',
+        createdByUserId: 'u1',
+        title: 'Election night',
+        description: '',
+        category: 'Reporting/Writing',
+        slug: 'election-night',
+        contact: 'Sam Desk',
+        location: 'Remote',
+        length: '800 words',
+        deadline: null,
+        compensation: '750',
+        status: 'completed' as const,
+        createdAt: new Date(2030, 0, 1),
+        updatedAt: new Date(2030, 0, 1),
+      };
+
+      expect(toDeskAssignment(completed)).toBeNull();
+    });
   });
 
   it('counts everyone not marked off as on the roster', () => {
