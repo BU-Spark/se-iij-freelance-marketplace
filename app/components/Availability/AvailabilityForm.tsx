@@ -230,7 +230,9 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
           <input type="time" required value={draft.endsAt} onChange={(event) => update('endsAt', event.target.value)} />
         </label>
       </div>
-      <p>Working times use your selected time zone. Choose a start and end within the same day.</p>
+      <p className={styles.hint}>
+        Working times use your selected time zone. Choose a start and end within the same day.
+      </p>
       <fieldset className={styles.dates}>
         <legend>Dates that differ</legend>
         <p className={styles.hint}>
@@ -249,8 +251,16 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
             : 'Every date follows your usual week.'}
         </p>
       </fieldset>
-      {error && <p role="alert">{error}</p>}
-      {message && <p role="status">{message}</p>}
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className={styles.note} role="status">
+          {message}
+        </p>
+      )}
       <button type="submit" className={styles.save} disabled={saving}>
         {saving ? 'Saving…' : 'Save availability'}
       </button>
