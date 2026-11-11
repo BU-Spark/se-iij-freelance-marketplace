@@ -27,7 +27,7 @@ export default function OpenAssignmentCard({ assignment: a, href }: OpenAssignme
       <div>
         <h3 className={styles.title}>
           {href ? (
-            <Link href={href} className={styles.cardLink}>
+            <Link href={href} className={styles.cardLink} scroll={false}>
               {a.title}
             </Link>
           ) : (
