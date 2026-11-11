@@ -5,6 +5,7 @@ import BasicInfoCard from './cards/BasicInfoCard';
 import BasicInfoForm from './forms/BasicInfoForm';
 import RoleCard from './cards/RoleCard';
 import RoleForm from './forms/RoleForm';
+import RoleRow from './cards/RoleRow';
 import AddRoleButton from './cards/AddRoleButton';
 import { ALL_ROLES, ROLE_CONFIG, isFilled, profileCompletion, requiredFieldsFor } from './config/roleConfig';
 import { missingRoles } from '../../utils/profile.utils';
@@ -22,13 +23,21 @@ type ProfileContentProps = {
   onSaveRole?: (details: RoleDetails) => SaveResult;
   /** if given, basic info gets the "free right now" switch */
   onSaveAvailable?: (availableNow: boolean) => SaveResult;
+  /** if given, each role is a row that opens its own drawer instead of an expanded card */
+  onOpenRole?: (role: ProfileRole) => void;
 };
 
 /**
  * The profile's cards and forms. The side panel and the settings page show the same thing, so
  * the panel is this in a drawer and the settings page is this on a page.
  */
-export default function ProfileContent({ profile, onSaveBasic, onSaveRole, onSaveAvailable }: ProfileContentProps) {
+export default function ProfileContent({
+  profile,
+  onSaveBasic,
+  onSaveRole,
+  onSaveAvailable,
+  onOpenRole,
+}: ProfileContentProps) {
   // which card is open as a form: 'basic', a role, or nothing
   const [editing, setEditing] = useState<'basic' | ProfileRole | null>(null);
   const stopEditing = () => setEditing(null);
@@ -97,7 +106,9 @@ export default function ProfileContent({ profile, onSaveBasic, onSaveRole, onSav
         </p>
       ))}
       {profile.roles.map((r) =>
-        editing === r.role && onSaveRole ? (
+        onOpenRole ? (
+          <RoleRow key={r.role} details={r} onOpen={() => onOpenRole(r.role)} />
+        ) : editing === r.role && onSaveRole ? (
           <RoleForm key={r.role} details={r} onSave={saveRole} onCancel={stopEditing} />
         ) : (
           <RoleCard key={r.role} details={r} onEdit={onSaveRole && (() => setEditing(r.role))} />

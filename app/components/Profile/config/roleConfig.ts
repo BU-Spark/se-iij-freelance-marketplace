@@ -1,6 +1,6 @@
 import type { AccountProfile, ProfileRole, RoleValue } from '../../../types/profile.types';
 import { PROFILE_ROLE_ORDER } from '../../../types/profile.types';
-import { BEATS, MEDIUMS, SKILLS } from '../../../onboarding/constants';
+import { BEATS, DEFAULT_ORGS, MEDIUMS, SKILLS } from '../../../onboarding/constants';
 
 export type RoleFieldType = 'text' | 'number' | 'chips' | 'org' | 'readonly' | 'availability';
 
@@ -73,6 +73,9 @@ export const ROLE_CONFIG: Record<ProfileRole, RoleConfig> = {
     requiredFields: ['jobTitle'],
   },
 };
+
+/** The row stores the organisation id; people recognise the name */
+export const organizationName = (id: string) => DEFAULT_ORGS.find((org) => org.id === id)?.name ?? id;
 
 /** The roles in the order we show them */
 export const ALL_ROLES: ProfileRole[] = PROFILE_ROLE_ORDER;
