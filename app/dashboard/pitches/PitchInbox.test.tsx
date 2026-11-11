@@ -33,12 +33,14 @@ describe('PitchInbox', () => {
     expect(within(detail).getByText(second.slug)).toBeInTheDocument();
   });
 
-  it('accepting a pitch updates the list, the panel and the new count', () => {
-    // the first pitch is new and open by default
-    fireEvent.click(screen.getByRole('button', { name: 'Accept pitch' }));
-    expect(screen.getByRole('button', { name: 'Accepted ✓' })).toBeDisabled();
+  it('submitting accepted feedback updates the list, the panel and the new count', () => {
+    fireEvent.change(screen.getByLabelText('Decision'), { target: { value: 'accepted' } });
+    fireEvent.change(screen.getByLabelText('Comments'), { target: { value: 'Strong proposal.' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit feedback' }));
     expect(screen.getByText(`${newCount - 1} new`)).toBeInTheDocument();
     expect(within(cardFor(PITCHES[0].slug)!).getByText('Accepted')).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Latest pitch feedback' })).toHaveTextContent('Accepted');
+    expect(screen.getByRole('region', { name: 'Latest pitch feedback' })).toHaveTextContent('Strong proposal.');
   });
 
   it('shows only the pitches for the chosen tab', () => {

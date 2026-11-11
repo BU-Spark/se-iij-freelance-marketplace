@@ -18,6 +18,13 @@ export type RateUnit = 'word' | 'hour' | 'flat';
 /** Where a pitch is in the editor's review */
 export type PitchStatus = 'new' | 'reviewed' | 'negotiating' | 'accepted' | 'declined';
 
+export type PitchFeedback = {
+  decision: 'accepted' | 'rejected' | 'revision_requested';
+  comments: string;
+  strengths: string;
+  improvements: string;
+};
+
 /** The tabs above the inbox: every status, plus "all" */
 export type PitchFilter = 'all' | PitchStatus;
 
