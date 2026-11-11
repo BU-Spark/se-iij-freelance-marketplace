@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
-import { Header } from '../../../components/header/Header';
+import { EditorHeader } from '../../../components/header/EditorHeader';
 import { canEditAssignment, canViewAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
 import AssignmentDetail from './AssignmentDetail';
 import styles from '../assignments.module.css';
@@ -15,6 +15,8 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
   const { userId } = await auth();
 
   const [viewer, assignment] = await Promise.all([userId ? loadAssignmentViewer(userId) : null, getAssignment(id)]);
+  const role =
+    viewer && !viewer.roles.includes('editor') && viewer.roles.includes('freelancer') ? 'freelancer' : 'editor';
 
   if (!assignment) notFound();
 
@@ -22,7 +24,7 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
 
   return (
     <div className={styles.shell}>
-      <Header />
+      <EditorHeader initialRole={role} />
       <AssignmentDetail assignment={assignment} canEdit={canEditAssignment(viewer, assignment)} />
     </div>
   );
