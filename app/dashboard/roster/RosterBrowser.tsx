@@ -5,6 +5,7 @@ import { RosterCard, useToast } from '../../components';
 import Modal from '../../components/Modal/Modal';
 import InvitePicker from './InvitePicker';
 import type { AvailabilityStatus, RosterMember } from '../../types/dashboard.types';
+import { US_STATE_NAMES, matchesLocation, usStateOf } from '../../utils/location.utils';
 import styles from './roster.module.css';
 
 type RosterBrowserProps = {
@@ -69,14 +70,15 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
   const [others, setOthers] = useState(invitable);
 
   const beats = options(roster.flatMap(beatsOf));
-  const cities = options(roster.map((member) => member.city));
+  // places outside the US still get their own option, after the states
+  const otherPlaces = options(roster.map((member) => member.city).filter((place) => !usStateOf(place)));
 
   const normalizedQuery = query.trim().toLowerCase();
   const withoutStatus = roster.filter(
     (member) =>
       matchesQuery(member, normalizedQuery) &&
       (!beat || beatsOf(member).includes(beat)) &&
-      (!city || member.city === city)
+      matchesLocation(member.city, city)
   );
   // the status chips count what the other filters leave, so the numbers always add up
   const statusCount = (value: '' | AvailabilityStatus) =>
@@ -179,7 +181,32 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
                 />
               </label>
               <FilterSelect label="Beat" value={beat} onChange={setBeat} all="All beats" values={beats} />
-              <FilterSelect label="Location" value={city} onChange={setCity} all="All locations" values={cities} />
+              <label className={styles.filterField}>
+                Location
+                <select
+                  value={city}
+                  data-default={!city || undefined}
+                  onChange={(event) => setCity(event.target.value)}
+                >
+                  <option value="">All locations</option>
+                  <optgroup label="US states">
+                    {US_STATE_NAMES.map((state) => (
+                      <option key={state} value={state}>
+                        {state}
+                      </option>
+                    ))}
+                  </optgroup>
+                  {otherPlaces.length > 0 && (
+                    <optgroup label="Other places">
+                      {otherPlaces.map((place) => (
+                        <option key={place} value={place}>
+                          {place}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </label>
               <label className={styles.filterField}>
                 Sort by
                 <select
