@@ -66,6 +66,20 @@ describe('AvailabilityForm', () => {
     expect(fetchMock).toHaveBeenCalledWith('/api/profile/availability', { cache: 'no-store' });
   });
 
+  it("asks for one role's pattern and saves only that one", async () => {
+    render(<AvailabilityForm userId="user-a" role="editor" />);
+    await screen.findByLabelText('Time zone');
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/profile/availability?role=editor', { cache: 'no-store' });
+
+    fetchMock.mockResolvedValueOnce(ok({ saved: true }));
+    save();
+    await screen.findByText(/availability saved/i);
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({ role: 'editor', timezone: 'UTC' });
+  });
+
   it('saves the switch and the hours to the account', async () => {
     render(<AvailabilityForm userId="user-a" />);
     await screen.findByLabelText('Time zone');
