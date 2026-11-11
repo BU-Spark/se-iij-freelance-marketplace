@@ -74,39 +74,43 @@
   color: var(--ink);
 }
 
-/* Location / Length / Deadline / Rate in a grey box */
+/* Deadline / Location / Length / Compensation in a grey box, laid out like an assignment's details */
 .facts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin: 0;
-  padding: 14px 16px;
+  padding: 16px 18px;
   background: #f7f8fa;
   border-radius: 12px;
 }
-.facts dt,
-.sections dt {
+@media (max-width: 520px) {
+  .facts {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.facts dt {
   font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   color: var(--muted);
 }
 .facts dd {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   font-weight: 500;
   color: var(--ink);
 }
 
-/* the longer answers, one per row */
-.sections {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  margin: 0;
+/* the full pitch, under a small heading like an assignment's description */
+.sectionTitle {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
-.sections dd {
-  margin: 4px 0 0;
-  line-height: 1.5;
+.description {
+  margin: 0;
+  line-height: 1.6;
+  white-space: pre-wrap;
   color: var(--ink);
 }
