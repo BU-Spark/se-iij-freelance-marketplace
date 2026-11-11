@@ -1,4 +1,5 @@
-import { ASSIGNMENTS, ROSTER } from '../dashboard/constants';
+import { ROSTER } from '../dashboard/constants';
+import { SAMPLE_ASSIGNMENTS } from '../../test/fixtures/assignments';
 import {
   countByStatus,
   countOnRoster,
@@ -70,18 +71,18 @@ describe('dashboard utils', () => {
   });
   describe('filterAssignments', () => {
     it('keeps everything for "all"', () => {
-      expect(filterAssignments(ASSIGNMENTS, 'all')).toHaveLength(ASSIGNMENTS.length);
+      expect(filterAssignments(SAMPLE_ASSIGNMENTS, 'all')).toHaveLength(SAMPLE_ASSIGNMENTS.length);
     });
 
     it('keeps only the chosen status', () => {
-      const open = filterAssignments(ASSIGNMENTS, 'open');
+      const open = filterAssignments(SAMPLE_ASSIGNMENTS, 'open');
       expect(open.length).toBeGreaterThan(0);
       expect(open.every((a) => a.status === 'open')).toBe(true);
     });
   });
 
   it('counts assignments by status', () => {
-    expect(countByStatus(ASSIGNMENTS)).toEqual({ open: 2, invited: 1, assigned: 1 });
+    expect(countByStatus(SAMPLE_ASSIGNMENTS)).toEqual({ open: 2, invited: 1, assigned: 1 });
   });
 
   describe('toDeskAssignment', () => {
@@ -124,7 +125,7 @@ describe('dashboard utils', () => {
     expect(countOnRoster(ROSTER)).toBe(ROSTER.length - 1);
   });
   describe('candidatesFor', () => {
-    const byId = (id: string) => ASSIGNMENTS.find((a) => a.id === id)!;
+    const byId = (id: string) => SAMPLE_ASSIGNMENTS.find((a) => a.id === id)!;
 
     it('lists everyone invited or interested, interested first', () => {
       const list = candidatesFor(byId('election-d4'), ROSTER);
