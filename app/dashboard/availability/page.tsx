@@ -2,8 +2,8 @@
 
 import { useAuth } from '@clerk/nextjs';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
-import AvailabilityForm from './AvailabilityForm';
-import styles from './availability.module.css';
+import AvailabilityForm from '../../components/Availability/AvailabilityForm';
+import styles from '../../components/Availability/availability.module.css';
 
 export default function AvailabilityPage() {
   const { userId, isLoaded } = useAuth();
