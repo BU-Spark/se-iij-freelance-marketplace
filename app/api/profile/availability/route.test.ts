@@ -31,6 +31,22 @@ const validBody = {
   endsAt: '17:00',
 };
 
+const stored = {
+  timezone: 'Europe/London',
+  days: ['monday', 'tuesday'],
+  typicalWorkingWindow: { startsAt: '09:00', endsAt: '17:00' },
+};
+
+const row = (overrides: Record<string, unknown> = {}) => ({
+  available_now: true,
+  roles: ['freelancer'],
+  freelancer_id: 'freelancer-1',
+  freelancer_availability: stored,
+  editor_id: null,
+  editor_availability: null,
+  ...overrides,
+});
+
 afterAll(() => consoleMock.mockRestore());
 
 beforeEach(() => {
@@ -47,24 +63,14 @@ describe('GET /api/profile/availability', () => {
     expect((await GET()).status).toBe(401);
   });
 
-  it('returns what the freelancer last saved', async () => {
-    queryMock.mockResolvedValue({
-      rows: [
-        {
-          available_now: true,
-          availability: {
-            timezone: 'Europe/London',
-            days: ['monday', 'tuesday'],
-            typicalWorkingWindow: { startsAt: '09:00', endsAt: '17:00' },
-          },
-        },
-      ],
-    });
+  it("returns the freelancer's saved hours", async () => {
+    queryMock.mockResolvedValue({ rows: [row()] });
 
     const response = await GET();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
+      role: 'freelancer',
       availableNow: true,
       timezone: 'Europe/London',
       days: ['monday', 'tuesday'],
@@ -73,10 +79,37 @@ describe('GET /api/profile/availability', () => {
     });
   });
 
+  it("returns an editor's desk hours from the editor row", async () => {
+    queryMock.mockResolvedValue({
+      rows: [
+        row({
+          roles: ['editor'],
+          freelancer_id: null,
+          freelancer_availability: null,
+          editor_id: 'editor-1',
+          editor_availability: { ...stored, timezone: 'America/New_York' },
+        }),
+      ],
+    });
+
+    expect(await (await GET()).json()).toMatchObject({ role: 'editor', timezone: 'America/New_York' });
+  });
+
+  it('prefers the freelancer hours when the person holds both roles', async () => {
+    queryMock.mockResolvedValue({
+      rows: [row({ roles: ['editor', 'freelancer'], editor_id: 'editor-1', editor_availability: stored })],
+    });
+
+    expect(await (await GET()).json()).toMatchObject({ role: 'freelancer' });
+  });
+
   it('gives nulls when nothing has been set yet', async () => {
-    queryMock.mockResolvedValue({ rows: [{ available_now: null, availability: null }] });
+    queryMock.mockResolvedValue({
+      rows: [row({ available_now: null, freelancer_availability: null, roles: ['freelancer'] })],
+    });
 
     expect(await (await GET()).json()).toEqual({
+      role: 'freelancer',
       availableNow: false,
       timezone: null,
       days: [],
@@ -120,11 +153,11 @@ describe('PATCH /api/profile/availability', () => {
     expect(connectMock).not.toHaveBeenCalled();
   });
 
-  it('saves the switch and the weekly pattern together', async () => {
+  it('writes the switch and the pattern for both role rows', async () => {
     const response = await patch(validBody);
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ saved: true, availableNow: true, timezone: 'Europe/London' });
+    expect(await response.json()).toEqual({ saved: true });
 
     const [begin] = client.query.mock.calls[0] as [string];
     expect(begin).toBe('BEGIN');
@@ -134,12 +167,11 @@ describe('PATCH /api/profile/availability', () => {
     expect(userParams).toEqual(['clerk-1', true]);
 
     const [freelancerSql, freelancerParams] = client.query.mock.calls[2] as [string, unknown[]];
-    expect(freelancerSql).toContain('SET availability = $2::jsonb');
-    expect(JSON.parse(freelancerParams[1] as string)).toEqual({
-      timezone: 'Europe/London',
-      days: ['monday', 'tuesday'],
-      typicalWorkingWindow: { startsAt: '09:00', endsAt: '17:00' },
-    });
+    expect(freelancerSql).toContain('UPDATE freelancers');
+    expect(JSON.parse(freelancerParams[1] as string)).toEqual(stored);
+
+    const [editorSql] = client.query.mock.calls[3] as [string];
+    expect(editorSql).toContain('UPDATE editors');
 
     expect(client.query).toHaveBeenLastCalledWith('COMMIT');
     expect(client.release).toHaveBeenCalled();
@@ -156,17 +188,29 @@ describe('PATCH /api/profile/availability', () => {
     expect(client.release).toHaveBeenCalled();
   });
 
-  it('refuses editors, who have no freelancer row', async () => {
+  it('asks for a finished role when neither role row exists', async () => {
     client.query
       .mockResolvedValueOnce({ rowCount: null })
       .mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 'user-1' }] })
+      .mockResolvedValueOnce({ rowCount: 0 })
       .mockResolvedValueOnce({ rowCount: 0 });
 
     const response = await patch(validBody);
 
     expect(response.status).toBe(400);
-    expect(await response.json()).toMatchObject({ code: 'freelancer_required' });
+    expect(await response.json()).toMatchObject({ code: 'role_required' });
     expect(client.query).toHaveBeenCalledWith('ROLLBACK');
+  });
+
+  it('still saves when only the editor row exists', async () => {
+    client.query
+      .mockResolvedValueOnce({ rowCount: null })
+      .mockResolvedValueOnce({ rowCount: 1, rows: [{ id: 'user-1' }] })
+      .mockResolvedValueOnce({ rowCount: 0 })
+      .mockResolvedValueOnce({ rowCount: 1 });
+
+    expect((await patch(validBody)).status).toBe(200);
+    expect(client.query).toHaveBeenLastCalledWith('COMMIT');
   });
 
   it('rolls back and reports a failure when the write blows up', async () => {
