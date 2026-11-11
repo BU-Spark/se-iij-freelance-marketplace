@@ -1,0 +1,134 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px;
+  border: 1px solid #eceef2;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.panel h2,
+.saved h3 {
+  margin: 0;
+  color: var(--navy-deep);
+}
+
+.intro,
+.saved p,
+.footer p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rating {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.rating legend,
+.comments > span {
+  margin-bottom: 8px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.options label {
+  position: relative;
+  cursor: pointer;
+}
+
+.options input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.options span {
+  display: grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 1px solid #d5dae3;
+  border-radius: 50%;
+  color: var(--ink);
+}
+
+.options input:checked + span {
+  border-color: var(--c-blue);
+  background: #eef2fd;
+  color: var(--c-blue);
+  font-weight: 700;
+}
+
+.options input:focus-visible + span {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.scale {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.comments {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comments textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d5dae3;
+  border-radius: 10px;
+  color: var(--ink);
+  font: inherit;
+  resize: vertical;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.footer button {
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 1px solid var(--c-blue);
+  border-radius: 10px;
+  background: var(--c-blue);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saved {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f7f8fa;
+}
