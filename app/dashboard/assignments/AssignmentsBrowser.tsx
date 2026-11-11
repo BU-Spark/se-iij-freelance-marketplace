@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import OpenAssignmentCard from '../../components/AssignmentCard/OpenAssignmentCard';
 import type { Assignment } from '../../types/assignments.types';
+import { assignmentDrawerHref } from '../../utils/dashboard.utils';
 import styles from './assignments.module.css';
 
 type AssignmentsBrowserProps = {
@@ -103,7 +104,10 @@ export default function AssignmentsBrowser({ assignments, loadFailed = false }: 
           <ul className={styles.grid}>
             {visibleAssignments.map((assignment) => (
               <li key={assignment.id}>
-                <OpenAssignmentCard assignment={assignment} href={`/dashboard/assignments/${assignment.id}`} />
+                <OpenAssignmentCard
+                  assignment={assignment}
+                  href={assignmentDrawerHref('/dashboard/assignments', assignment.id)}
+                />
               </li>
             ))}
           </ul>

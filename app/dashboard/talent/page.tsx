@@ -1,5 +1,4 @@
 import { auth } from '@clerk/nextjs/server';
-import { EditorHeader } from '../../components/header/EditorHeader';
 import { listInvitedIds } from '../../../lib/roster';
 import { listTalentFilterOptions, searchTalent } from '../../../lib/talent';
 import type { TalentFilterOptions, TalentMember } from '../../types/talent.types';
@@ -36,7 +35,6 @@ export default async function TalentPage({ searchParams }: TalentPageProps) {
 
   return (
     <div className={styles.shell}>
-      <EditorHeader />
       <TalentSearch
         filters={filters}
         options={options}

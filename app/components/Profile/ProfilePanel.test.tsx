@@ -1,8 +1,40 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useAuth } from '@clerk/nextjs';
 import ProfilePanel from './ProfilePanel';
 import { MOCK_PROFILE } from './config/constants';
 
+const mockSignOut = jest.fn();
+
+jest.mock('@clerk/nextjs', () => ({
+  useAuth: jest.fn(),
+  useClerk: () => ({ signOut: mockSignOut }),
+}));
+
 const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
+const originalFetch = global.fetch;
+
+beforeEach(() => {
+  mockSignOut.mockClear();
+  // editing a role mounts its availability card, which asks for that role's saved pattern
+  jest.mocked(useAuth).mockReturnValue({ userId: 'user-a', isLoaded: true } as ReturnType<typeof useAuth>);
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      role: 'editor',
+      availableNow: false,
+      timezone: 'UTC',
+      days: [],
+      startsAt: null,
+      endsAt: null,
+    }),
+  }) as unknown as typeof fetch;
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 describe('ProfilePanel completion bar', () => {
   const blankBios = { ...MOCK_PROFILE, basic: { ...MOCK_PROFILE.basic, shortBio: '', longBio: '' } };
@@ -40,21 +72,58 @@ describe('ProfilePanel completion bar', () => {
 });
 
 describe('ProfilePanel', () => {
-  it('shows the basic info', () => {
+  it('opens the basic info in its own drawer', () => {
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.queryByText(MOCK_PROFILE.basic.email)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Basic info' }));
+
+    const drawer = screen.getByRole('dialog', { name: 'Basic info' });
+    expect(within(drawer).getByText(MOCK_PROFILE.basic.email)).toBeInTheDocument();
+    expect(within(drawer).getByText(MOCK_PROFILE.basic.shortBio)).toBeInTheDocument();
     expect(screen.getByRole('dialog', { name: 'My profile' })).toBeInTheDocument();
-    expect(screen.getByText('Marcus Thorne')).toBeInTheDocument();
-    expect(screen.getByText(MOCK_PROFILE.basic.email)).toBeInTheDocument();
-    expect(screen.getByText(MOCK_PROFILE.basic.shortBio)).toBeInTheDocument();
   });
 
-  it('shows one card per role with its own fields', () => {
+  it('expands to the settings page', () => {
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
-    expect(screen.getByText('Freelancer')).toBeInTheDocument();
-    expect(screen.getByText('Editor')).toBeInTheDocument();
-    expect(screen.getByText('Usual rate')).toBeInTheDocument();
-    expect(screen.getByText('Job title')).toBeInTheDocument();
-    expect(screen.getByText('Reporting beats')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open settings/i })).toHaveAttribute('href', '/dashboard/settings');
+  });
+
+  it('lists each role as one row by name, without its details', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Open Freelancer details' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open Editor details' })).toBeInTheDocument();
+    expect(screen.queryByText('$1.10 / word')).not.toBeInTheDocument();
+    expect(screen.queryByText('Reporting beats')).not.toBeInTheDocument();
+  });
+
+  it('shows the photo circle and name in the header', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.getByRole('heading', { name: 'My profile' })).toBeInTheDocument();
+    expect(screen.getByText('Marcus Thorne')).toBeInTheDocument();
+  });
+
+  it('opens a role in its own drawer with all of its fields', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Freelancer details' }));
+
+    const drawer = screen.getByRole('dialog', { name: 'Freelancer details' });
+    expect(within(drawer).getByText('Usual rate')).toBeInTheDocument();
+    expect(within(drawer).getByText('Reporting beats')).toBeInTheDocument();
+    expect(within(drawer).queryByText('Job title')).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'My profile' })).toBeInTheDocument();
+  });
+
+  it('closing the role drawer goes back to My profile', () => {
+    const onClose = jest.fn();
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={onClose} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Editor details' }));
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(screen.queryByRole('dialog', { name: 'Editor details' })).not.toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'My profile' })).toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('prompts for a role when the profile has none yet', () => {
@@ -136,6 +205,10 @@ describe('ProfilePanel', () => {
 
   it('has no Edit buttons when it cannot save', () => {
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open Editor details' }));
+    expect(screen.queryByRole('button', { name: /^edit/i })).not.toBeInTheDocument();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Open Basic info' }));
     expect(screen.queryByRole('button', { name: /^edit/i })).not.toBeInTheDocument();
   });
 
@@ -143,6 +216,7 @@ describe('ProfilePanel', () => {
     const onSaveBasic = jest.fn().mockResolvedValue(true);
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open Basic info' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
     fireEvent.change(screen.getByLabelText('Short bio'), { target: { value: 'New short bio' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -152,14 +226,15 @@ describe('ProfilePanel', () => {
         expect.objectContaining({ ...MOCK_PROFILE.basic, shortBio: 'New short bio' })
       )
     );
-    // back to the normal card
     expect(await screen.findByRole('button', { name: 'Edit basic info' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Basic info' })).toBeInTheDocument();
   });
 
   it('keeps the form open when the save fails', async () => {
     const onSaveBasic = jest.fn().mockResolvedValue(false);
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open Basic info' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
 
@@ -171,6 +246,7 @@ describe('ProfilePanel', () => {
     const onSaveBasic = jest.fn().mockResolvedValue(true);
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveBasic={onSaveBasic} />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open Basic info' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit basic info' }));
     fireEvent.change(screen.getByLabelText(/first name/i), { target: { value: '' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -179,22 +255,40 @@ describe('ProfilePanel', () => {
     expect(onSaveBasic).not.toHaveBeenCalled();
   });
 
+  it('points availability at the settings page instead of editing it here', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={jest.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Open Editor details' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
+
+    expect(screen.getByRole('link', { name: /edit availability in settings/i })).toHaveAttribute(
+      'href',
+      '/dashboard/settings'
+    );
+    // the hours themselves are only editable on the settings page
+    expect(screen.queryByText('Editor availability')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Time zone')).not.toBeInTheDocument();
+  });
+
   it('cancelling a role edit changes nothing', () => {
     const onSaveRole = jest.fn();
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={onSaveRole} />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open Freelancer details' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit Freelancer details' }));
     fireEvent.change(screen.getByLabelText('Usual rate'), { target: { value: '$2 / word' } });
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
     expect(onSaveRole).not.toHaveBeenCalled();
-    expect(screen.getByText('$1.10 / word')).toBeInTheDocument();
+    const drawer = screen.getByRole('dialog', { name: 'Freelancer details' });
+    expect(within(drawer).getByText('$1.10 / word')).toBeInTheDocument();
   });
 
   it('saves a role with its own fields', async () => {
     const onSaveRole = jest.fn().mockResolvedValue(true);
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={onSaveRole} />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open Editor details' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
     fireEvent.change(screen.getByLabelText('Job title'), { target: { value: 'Managing editor' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -204,12 +298,14 @@ describe('ProfilePanel', () => {
         expect.objectContaining({ role: 'editor', facts: expect.objectContaining({ jobTitle: 'Managing editor' }) })
       )
     );
+    expect(await screen.findByRole('button', { name: 'Edit Editor details' })).toBeInTheDocument();
   });
 
   it('suggests beats and mediums from the shared lists while editing a freelancer', async () => {
     const onSaveRole = jest.fn().mockResolvedValue(true);
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={onSaveRole} />);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Open Freelancer details' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit Freelancer details' }));
 
     const beats = screen.getByRole('combobox', { name: 'Reporting beats' });
@@ -233,5 +329,13 @@ describe('ProfilePanel', () => {
         })
       )
     );
+  });
+
+  it('signs out from the panel', async () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /sign out/i }));
+
+    expect(mockSignOut).toHaveBeenCalledWith({ redirectUrl: '/' });
   });
 });

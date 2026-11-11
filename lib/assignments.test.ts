@@ -167,8 +167,18 @@ describe('assignment permissions', () => {
     expect(canEditAssignment(editor({ organizationId: 'org-2' }), assignment)).toBe(false);
   });
 
-  it('lets the author edit even without a matching organization', () => {
-    expect(canEditAssignment(editor({ userId: 'user-1', organizationId: null }), assignment)).toBe(true);
+  it('stops an author from editing once they belong to another organization', () => {
+    expect(canEditAssignment(editor({ userId: 'user-1', organizationId: 'org-2' }), assignment)).toBe(false);
+  });
+
+  it('stops an author without an organization from editing an organization post', () => {
+    expect(canEditAssignment(editor({ userId: 'user-1', organizationId: null }), assignment)).toBe(false);
+  });
+
+  it('still lets the author edit a post made before they had an organization', () => {
+    const orphan = { ...assignment, organizationId: null };
+    expect(canEditAssignment(editor({ userId: 'user-1', organizationId: null }), orphan)).toBe(true);
+    expect(canEditAssignment(editor({ userId: 'user-9', organizationId: 'org-1' }), orphan)).toBe(false);
   });
 
   it("does not let two organization-less editors see each other's posts", () => {

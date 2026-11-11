@@ -38,7 +38,7 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
     // the re-check above runs on open, so say "loading" rather than flashing the setup prompt
     if (loading) {
       return (
-        <SidePanel title="My profile" side="right" onClose={close}>
+        <SidePanel title="My profile" side="right" tone="navy" onClose={close}>
           <p className={styles.status} role="status">
             Loading your profile…
           </p>
@@ -48,7 +48,7 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
 
     if (needsOnboarding) {
       return (
-        <SidePanel title="My profile" side="right" onClose={close}>
+        <SidePanel title="My profile" side="right" tone="navy" onClose={close}>
           <p className={styles.notice}>
             You haven&apos;t set up your profile yet. Onboarding is where it gets created — it only takes a minute.
           </p>
@@ -60,7 +60,7 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
     }
 
     return (
-      <SidePanel title="My profile" side="right" onClose={close}>
+      <SidePanel title="My profile" side="right" tone="navy" onClose={close}>
         <p className={styles.status} role="status">
           {error ?? 'Your profile is unavailable right now.'}
         </p>

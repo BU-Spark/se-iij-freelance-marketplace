@@ -38,6 +38,16 @@ describe('AssignmentCard', () => {
     expect(screen.getByText('3 interested')).toBeInTheDocument();
   });
 
+  it('says which organization posted the assignment', () => {
+    render(<AssignmentCard assignment={{ ...election, organizationId: 'meridian' }} />);
+    expect(screen.getByText('The Meridian Post')).toBeInTheDocument();
+  });
+
+  it('leaves the organization off sample cards that have none', () => {
+    render(<AssignmentCard assignment={election} />);
+    expect(screen.queryByText('The Meridian Post')).not.toBeInTheDocument();
+  });
+
   it('says when nobody is interested yet', () => {
     render(<AssignmentCard assignment={{ ...election, urgent: false, interestedIds: [] }} />);
     expect(screen.getByText('No one interested yet')).toBeInTheDocument();

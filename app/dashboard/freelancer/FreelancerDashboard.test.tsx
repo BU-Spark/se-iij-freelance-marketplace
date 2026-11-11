@@ -1,20 +1,20 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import FreelancerDashboard from './FreelancerDashboard';
-import { ASSIGNMENTS } from '../constants';
+import { SAMPLE_ASSIGNMENTS } from '../../../test/fixtures/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
 
 const tasks: DeskAssignment[] = [
   ...Array.from({ length: 6 }, (_, index) => ({
-    ...ASSIGNMENTS[0],
+    ...SAMPLE_ASSIGNMENTS[0],
     id: `open-${index}`,
     title: `Opportunity ${index}`,
     invitedIds: [],
     deadline: new Date(2030, 0, index + 1),
   })),
-  { ...ASSIGNMENTS[2], id: 'mine-invited', title: 'My invitation', invitedIds: ['me'] },
-  { ...ASSIGNMENTS[2], id: 'other-invited', title: 'Other invitation', invitedIds: ['other'] },
-  { ...ASSIGNMENTS[3], id: 'mine-active', title: 'My ongoing work', assignedToId: 'me' },
-  { ...ASSIGNMENTS[3], id: 'other-active', title: 'Other ongoing work', assignedToId: 'other' },
+  { ...SAMPLE_ASSIGNMENTS[2], id: 'mine-invited', title: 'My invitation', invitedIds: ['me'] },
+  { ...SAMPLE_ASSIGNMENTS[2], id: 'other-invited', title: 'Other invitation', invitedIds: ['other'] },
+  { ...SAMPLE_ASSIGNMENTS[3], id: 'mine-active', title: 'My ongoing work', assignedToId: 'me' },
+  { ...SAMPLE_ASSIGNMENTS[3], id: 'other-active', title: 'Other ongoing work', assignedToId: 'other' },
 ];
 const feed = () => within(screen.getByRole('region', { name: 'Task feed' }));
 
@@ -51,7 +51,8 @@ it('paginates and resets to the first page when search or status changes', () =>
 it('handles an empty feed with disabled pagination', () => {
   render(<FreelancerDashboard assignments={[]} freelancerId="me" />);
   expect(screen.getByText('No assignments in progress.')).toBeInTheDocument();
-  expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
+  // an empty feed is not the same as filters hiding everything
+  expect(screen.getByRole('status')).toHaveTextContent('No open assignments yet');
   expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
   expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
 });

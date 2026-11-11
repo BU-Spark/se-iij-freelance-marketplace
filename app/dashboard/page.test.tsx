@@ -1,14 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import Dashboard from './page';
 import type { Assignment } from '../types/assignments.types';
-import { ASSIGNMENTS, ROSTER } from './constants';
-import { listOpenAssignments } from '../../lib/assignments';
+import { ROSTER } from './constants';
+import { getAssignment, listOpenAssignments } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
-
-// EditorHeader has its own tests; swap it for a simple stand-in so these tests only check the dashboard
-jest.mock('../components/header/EditorHeader', () => ({
-  EditorHeader: () => <header>Header</header>,
-}));
 
 // No real browser URL in tests; pretend there's no "?new=assignment"
 jest.mock('next/navigation', () => ({
@@ -18,8 +13,11 @@ jest.mock('next/navigation', () => ({
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
 jest.mock('../../lib/workspace', () => ({ requireWorkspace: jest.fn() }));
+jest.mock('../../lib/db', () => ({ db: { query: jest.fn() } }));
 jest.mock('../../lib/assignments', () => ({
+  ...jest.requireActual('../../lib/assignments'),
   listOpenAssignments: jest.fn(),
+  getAssignment: jest.fn(async () => null),
   loadAssignmentViewer: jest.fn(async () => viewer),
 }));
 jest.mock('../../lib/roster', () => ({ loadEditorRoster: jest.fn() }));
@@ -29,7 +27,10 @@ const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
 const loadEditorRosterMock = loadEditorRoster as jest.Mock;
 
-const renderDashboard = async () => render(await Dashboard());
+const getAssignmentMock = getAssignment as jest.Mock;
+
+const renderDashboard = async (params: Record<string, string> = {}) =>
+  render(await Dashboard({ searchParams: Promise.resolve(params) }));
 
 const postedAssignment: Assignment = {
   id: 'posted-1',
@@ -49,10 +50,19 @@ const postedAssignment: Assignment = {
   updatedAt: new Date(2030, 0, 1),
 };
 
+/** The same posted assignment with another status, for the count tests */
+const post = (overrides: Partial<Assignment>): Assignment => ({
+  ...postedAssignment,
+  id: 'posted-2',
+  slug: 'posted-2',
+  ...overrides,
+});
+
 describe('Dashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     listOpenAssignmentsMock.mockResolvedValue([]);
+    getAssignmentMock.mockResolvedValue(null);
     loadEditorRosterMock.mockResolvedValue({
       members: ROSTER.slice(0, 2),
       pending: [ROSTER[2]],
@@ -60,13 +70,27 @@ describe('Dashboard', () => {
     });
   });
 
-  it('renders the shared header and the status bar with real numbers', async () => {
+  it('counts what the database returned', async () => {
+    listOpenAssignmentsMock.mockResolvedValue([
+      postedAssignment,
+      post({ id: 'posted-2', status: 'invited', title: 'Waiting on someone' }),
+      post({ id: 'posted-3', status: 'assigned', title: 'Already taken' }),
+    ]);
+
     await renderDashboard();
-    expect(screen.getByRole('banner')).toBeInTheDocument();
+
     const counts = screen.getByRole('list', { name: /assignment counts/i });
-    expect(within(counts).getByText('2 open')).toBeInTheDocument();
+    expect(within(counts).getByText('1 open')).toBeInTheDocument();
     expect(within(counts).getByText('1 pending')).toBeInTheDocument();
     expect(within(counts).getByText('1 assigned')).toBeInTheDocument();
+  });
+
+  it('says nothing is open rather than showing sample work nobody posted', async () => {
+    await renderDashboard();
+    const column = screen.getByRole('region', { name: /assignments/i });
+
+    expect(within(column).queryAllByRole('article')).toHaveLength(0);
+    expect(screen.queryByText(/election night/i)).not.toBeInTheDocument();
   });
 
   it('shows only the freelancers who accepted a place on the editor roster', async () => {
@@ -120,43 +144,47 @@ describe('Dashboard', () => {
     expect(within(filters).getByRole('button', { name: 'Open' })).toHaveAttribute('aria-pressed', 'false');
   });
 
-  it('lists every assignment with its details', async () => {
+  it('has no assignment drawer open by default', async () => {
     await renderDashboard();
-    const column = screen.getByRole('region', { name: /assignments/i });
-    expect(within(column).getAllByRole('article')).toHaveLength(ASSIGNMENTS.length);
-
-    const card = within(column)
-      .getByRole('heading', { name: /election night/i })
-      .closest('article')!;
-    expect(within(card).getByText(/sarah jenkins, news desk/i)).toBeInTheDocument();
-    expect(within(card).getByText(/\$1\.10 \/ word \(≈ \$1,100 est\.\)/)).toBeInTheDocument();
-    expect(within(card).getByText('3 interested')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('links the sample cards to their expanded view too', async () => {
-    listOpenAssignmentsMock.mockResolvedValue([]);
-    await renderDashboard();
+  it('opens a posted assignment in a drawer that closes back to the desk', async () => {
+    getAssignmentMock.mockResolvedValue(postedAssignment);
+    await renderDashboard({ assignment: postedAssignment.id });
 
-    expect(screen.getByRole('link', { name: ASSIGNMENTS[0].title })).toHaveAttribute(
-      'href',
-      `/dashboard/assignments/${ASSIGNMENTS[0].id}`
-    );
+    const drawer = screen.getByRole('dialog', { name: postedAssignment.title });
+    expect(within(drawer).getByRole('heading', { level: 1, name: postedAssignment.title })).toBeInTheDocument();
+    // the editor's own organization posted it, so it can be edited from the drawer
+    expect(within(drawer).getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('link', { name: 'Close' })).toHaveAttribute('href', '/dashboard');
   });
 
-  it('shows assignments posted to the database above the sample data', async () => {
-    listOpenAssignmentsMock.mockResolvedValue([postedAssignment]);
+  it('does not open a drawer for an assignment the editor cannot see', async () => {
+    getAssignmentMock.mockResolvedValue({ ...postedAssignment, organizationId: 'org-2', createdByUserId: 'user-9' });
+    await renderDashboard({ assignment: postedAssignment.id });
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('lists the posted assignments with their details and a link that opens each one in the drawer', async () => {
+    listOpenAssignmentsMock.mockResolvedValue([postedAssignment, post({ id: 'posted-9', title: 'Second post' })]);
 
     await renderDashboard();
 
     const column = screen.getByRole('region', { name: /assignments/i });
     const cards = within(column).getAllByRole('article');
-    expect(cards).toHaveLength(ASSIGNMENTS.length + 1);
-    expect(within(cards[0]).getByRole('heading', { name: /posted to the database/i })).toBeInTheDocument();
-    expect(within(cards[1]).getByRole('heading', { name: ASSIGNMENTS[0].title })).toBeInTheDocument();
-    expect(within(cards[0]).getByText('$800')).toBeInTheDocument();
+    expect(cards).toHaveLength(2);
 
-    const counts = screen.getByRole('list', { name: /assignment counts/i });
-    expect(within(counts).getByText('3 open')).toBeInTheDocument();
+    expect(within(cards[0]).getByRole('heading', { name: /posted to the database/i })).toBeInTheDocument();
+    expect(within(cards[0]).getByText(/sam desk/i)).toBeInTheDocument();
+    expect(within(cards[0]).getByText('$800')).toBeInTheDocument();
+    expect(within(cards[1]).getByRole('heading', { name: 'Second post' })).toBeInTheDocument();
+
+    expect(screen.getByRole('link', { name: /posted to the database/i })).toHaveAttribute(
+      'href',
+      '/dashboard?assignment=posted-1'
+    );
   });
 
   it('keeps the New Assignment drawer closed without ?new=assignment', async () => {

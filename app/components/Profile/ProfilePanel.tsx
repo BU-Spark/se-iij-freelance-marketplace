@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import { useClerk } from '@clerk/nextjs';
 import SidePanel from '../SidePanel/SidePanel';
-import BasicInfoCard from './cards/BasicInfoCard';
-import BasicInfoForm from './forms/BasicInfoForm';
-import RoleCard from './cards/RoleCard';
-import RoleForm from './forms/RoleForm';
-import AddRoleButton from './cards/AddRoleButton';
-import { ALL_ROLES, ROLE_CONFIG, isFilled, profileCompletion, requiredFieldsFor } from './config/roleConfig';
-import { missingRoles } from '../../utils/profile.utils';
+import ProfileContent from './ProfileContent';
+import ProfileHero from './cards/ProfileHero';
+import BasicInfoDrawer from './BasicInfoDrawer';
+import RoleDrawer from './RoleDrawer';
 import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
 import styles from './Profile.module.css';
 
@@ -18,14 +16,15 @@ type SaveResult = Promise<boolean> | boolean;
 type ProfilePanelProps = {
   profile: AccountProfile;
   onClose: () => void;
-  /** if given, basic info gets an Edit button */
+  /** if given, the Basic info drawer gets an Edit button */
   onSaveBasic?: (basic: BasicInfo) => SaveResult;
-  /** if given, each role card gets an Edit button */
+  /** if given, each role's drawer gets an Edit button */
   onSaveRole?: (details: RoleDetails) => SaveResult;
-  /** if given, basic info gets the "free right now" switch */
+  /** if given, My profile shows the "free right now" switch */
   onSaveAvailable?: (availableNow: boolean) => SaveResult;
 };
 
+/** The quick view from the header avatar; the settings page shows the same cards expanded */
 export default function ProfilePanel({
   profile,
   onClose,
@@ -33,87 +32,41 @@ export default function ProfilePanel({
   onSaveRole,
   onSaveAvailable,
 }: ProfilePanelProps) {
-  // which card is open as a form: 'basic', a role, or nothing
-  const [editing, setEditing] = useState<'basic' | ProfileRole | null>(null);
-  const stopEditing = () => setEditing(null);
-
-  const unfinished = profile.roles
-    .map((details) => ({
-      role: details.role,
-      missing: requiredFieldsFor(details.role).filter((field) => !isFilled(details.facts[field.key])),
-    }))
-    .filter((entry) => entry.missing.length > 0);
-
-  // hidden once there is nothing left to fill in
-  const completion = profileCompletion(profile);
-
-  const saveBasic = async (basic: BasicInfo) => {
-    if ((await onSaveBasic?.(basic)) === true) stopEditing();
-  };
-
-  const saveRole = async (details: RoleDetails) => {
-    if ((await onSaveRole?.(details)) === true) stopEditing();
-  };
+  const { signOut } = useClerk();
+  const [open, setOpen] = useState<'basic' | ProfileRole | null>(null);
+  const close = () => setOpen(null);
+  // read from the profile each render, so a save shows up in the open drawer straight away
+  const openDetails = profile.roles.find((r) => r.role === open);
 
   return (
-    <SidePanel title="My profile" side="right" onClose={onClose}>
-      <div className={styles.stack}>
-        {completion < 100 && (
-          <section className={styles.completion} aria-label="Profile completion">
-            <p className={styles.completionHead}>
-              <span>Profile completion</span>
-              <strong>{completion}%</strong>
-            </p>
-            <div
-              className={styles.completionTrack}
-              role="progressbar"
-              aria-label="Profile completion"
-              aria-valuenow={completion}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div className={styles.completionFill} style={{ width: `${completion}%` }} />
-            </div>
-            <p className={styles.completionHint}>Fill in the rest so editors and freelancers can find you.</p>
-          </section>
-        )}
+    <>
+      <SidePanel
+        title="My profile"
+        side="right"
+        tone="navy"
+        header={<ProfileHero basic={profile.basic} />}
+        onClose={onClose}
+        // the little expand button opens the same cards on the settings page
+        expandHref="/dashboard/settings"
+        expandLabel="Open settings"
+        footer={
+          <button type="button" className={styles.signOut} onClick={() => signOut({ redirectUrl: '/' })}>
+            <span aria-hidden="true">⇤</span>
+            Sign out
+          </button>
+        }
+      >
+        <ProfileContent
+          profile={profile}
+          onSaveAvailable={onSaveAvailable}
+          onOpenBasic={() => setOpen('basic')}
+          onOpenRole={setOpen}
+        />
+      </SidePanel>
 
-        {editing === 'basic' && onSaveBasic ? (
-          <BasicInfoForm basic={profile.basic} onSave={saveBasic} onCancel={stopEditing} />
-        ) : (
-          <BasicInfoCard
-            basic={profile.basic}
-            onEdit={onSaveBasic && (() => setEditing('basic'))}
-            onToggleAvailable={onSaveAvailable && ((next) => void onSaveAvailable(next))}
-          />
-        )}
-
-        <h3 className={styles.label}>My roles</h3>
-
-        {profile.roles.length === 0 && (
-          <p className={styles.notice}>
-            Your profile isn&apos;t finished yet. Add the role you work as below and you&apos;re done.
-          </p>
-        )}
-        {unfinished.map(({ role, missing }) => (
-          <p key={role} className={styles.notice}>
-            Finish your {ROLE_CONFIG[role].label.toLowerCase()} profile: add{' '}
-            {missing.map((field) => `a ${field.label.toLowerCase()}`).join(' and ')}.
-          </p>
-        ))}
-        {profile.roles.map((r) =>
-          editing === r.role && onSaveRole ? (
-            <RoleForm key={r.role} details={r} onSave={saveRole} onCancel={stopEditing} />
-          ) : (
-            <RoleCard key={r.role} details={r} onEdit={onSaveRole && (() => setEditing(r.role))} />
-          )
-        )}
-
-        {/* adding a role needs its own onboarding steps, so these link there */}
-        {missingRoles(profile, ALL_ROLES).map((role) => (
-          <AddRoleButton key={role} role={role} />
-        ))}
-      </div>
-    </SidePanel>
+      {/* siblings, not children, so they are never clipped or moved by this panel's slide-in */}
+      {open === 'basic' && <BasicInfoDrawer basic={profile.basic} onClose={close} onSave={onSaveBasic} />}
+      {openDetails && <RoleDrawer key={openDetails.role} details={openDetails} onClose={close} onSave={onSaveRole} />}
+    </>
   );
 }

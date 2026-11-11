@@ -48,6 +48,8 @@ export type RosterMember = {
   note: string;
   weekDays: boolean[];
   monthDays: boolean[];
+  /** the dates behind `monthDays`, today first; absent on hand-built samples */
+  monthDayDates?: string[];
 };
 
 export type Rate = {
@@ -73,6 +75,8 @@ export type DeskAssignment = {
   rate?: Rate;
   /** raw pay text from the database, shown when there is no structured rate */
   compensation?: string;
+  /** the organization that posted it; absent on the sample desk data */
+  organizationId?: string | null;
   interestedIds: string[];
   invitedIds?: string[];
   /** expanded view of the assignment; only assignments saved in the database have one */
@@ -98,9 +102,6 @@ export type Pitch = {
   length: string;
   deadline: string;
   rate: string;
-  sources: string;
-  audience: string;
-  assets: string;
-  whyFit: string;
-  whyMe: string;
+  /** the full pitch: angle, reporting plan and sources */
+  description: string;
 };

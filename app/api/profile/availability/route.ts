@@ -1,6 +1,8 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
+import { dateKeyIn, isDateKey, sanitizeExceptions } from '../../../utils/availability.utils';
+import type { AvailabilityException } from '../../../types/availability.types';
 import type { ProfileRole, StoredAvailability } from '../../../types/profile.types';
 
 export const runtime = 'nodejs';
@@ -38,6 +40,8 @@ type AvailabilityPayload = {
   days: string[];
   startsAt: string | null;
   endsAt: string | null;
+  /** dates that do not follow the weekly pattern */
+  exceptions: AvailabilityException[];
 };
 
 /**
@@ -65,6 +69,7 @@ const toPayload = (
   days: stored?.days ?? [],
   startsAt: stored?.typicalWorkingWindow?.startsAt ?? null,
   endsAt: stored?.typicalWorkingWindow?.endsAt ?? null,
+  exceptions: sanitizeExceptions(stored?.exceptions),
 });
 
 const SELECT_AVAILABILITY = `
@@ -81,27 +86,54 @@ const SELECT_AVAILABILITY = `
   WHERE u.clerk_id = $1
 `;
 
-/** The availability card, as the signed-in freelancer or editor last saved it */
-export async function GET() {
+const isRole = (value: unknown): value is ProfileRole => value === 'freelancer' || value === 'editor';
+
+const holdsRole = (row: AvailabilityRow, role: ProfileRole): boolean =>
+  role === 'freelancer' ? Boolean(row.freelancer_id) : Boolean(row.editor_id);
+
+/** Null here means "never saved", not "no such role", which `holdsRole` answers */
+const storedForRole = (row: AvailabilityRow, role: ProfileRole): StoredAvailability | null =>
+  role === 'freelancer' ? row.freelancer_availability : row.editor_availability;
+
+/**
+ * The availability card, as it was last saved. `?role=` asks for one role's pattern, which is what
+ * the role card does; without it, the role this person works as decides.
+ */
+export async function GET(request: Request) {
   const { userId } = await auth();
 
   if (!userId) {
     return NextResponse.json({ error: 'You must be signed in to see your availability.' }, { status: 401 });
   }
 
+  const requested = new URL(request.url).searchParams.get('role');
+
+  if (requested !== null && !isRole(requested)) {
+    return NextResponse.json({ error: 'Ask for the freelancer or editor availability.' }, { status: 400 });
+  }
+
   try {
     const { rows } = await db.query<AvailabilityRow>(SELECT_AVAILABILITY, [userId]);
     const row = rows[0];
-    const held = row ? storedFor(row) : null;
+    const fallback = row ? storedFor(row) : null;
+    const role = requested ?? fallback?.role ?? null;
 
-    if (!row || !held) {
+    if (!row || !role) {
       return NextResponse.json(
         { error: 'Finish onboarding before setting availability.', code: 'onboarding_required' },
         { status: 404 }
       );
     }
 
-    return NextResponse.json(toPayload(row.available_now === true, held.role, held.stored));
+    // asking for a role they do not have is a client mistake, not a missing profile
+    if (!holdsRole(row, role)) {
+      return NextResponse.json(
+        { error: 'Finish onboarding for that role before setting its availability.', code: 'role_required' },
+        { status: 400 }
+      );
+    }
+
+    return NextResponse.json(toPayload(row.available_now === true, role, storedForRole(row, role)));
   } catch (error) {
     console.error('Failed to load availability.', error);
     return NextResponse.json({ error: 'Unable to load your availability right now.' }, { status: 500 });
@@ -109,8 +141,9 @@ export async function GET() {
 }
 
 /**
- * Saves the weekly pattern and the "free right now" switch together. A person who holds both roles
- * gets both rows written, so neither card shows hours they did not set.
+ * Saves the weekly pattern and the "free right now" switch together. With a `role` only that
+ * role's pattern is written, so editing the freelancer hours leaves the desk hours alone; without
+ * one, both rows get the same hours.
  */
 export async function PATCH(request: Request) {
   const { userId } = await auth();
@@ -155,10 +188,36 @@ export async function PATCH(request: Request) {
     );
   }
 
+  const requestedRole = body.role;
+
+  if (requestedRole !== undefined && !isRole(requestedRole)) {
+    return NextResponse.json({ error: 'Save the freelancer or editor availability.' }, { status: 400 });
+  }
+
+  if (body.exceptions !== undefined) {
+    const entries = body.exceptions;
+    const valid =
+      Array.isArray(entries) &&
+      entries.every((entry) => isRecord(entry) && isDateKey(entry.date) && typeof entry.available === 'boolean');
+
+    if (!valid) {
+      return NextResponse.json(
+        { error: 'Each date you mark needs a real date (YYYY-MM-DD) and whether you are free.' },
+        { status: 400 }
+      );
+    }
+  }
+
+  // past dates are dropped so an old booking does not sit in the blob forever
+  const today = dateKeyIn(new Date(), timezone.trim());
+  const exceptions = sanitizeExceptions(body.exceptions).filter((entry) => entry.date >= today);
+
   const availability: StoredAvailability = {
     timezone: timezone.trim(),
     days: [...new Set(days as string[])],
     typicalWorkingWindow: { startsAt, endsAt },
+    // an empty list is left out so the blob keeps its old shape for people who never mark a date
+    ...(exceptions.length ? { exceptions } : {}),
   };
 
   let client;
@@ -184,28 +243,38 @@ export async function PATCH(request: Request) {
       );
     }
 
-    // whichever role rows exist get the same hours; a role they do not hold simply updates nothing
-    const freelancer = await client.query(
-      `UPDATE freelancers f
-          SET availability = $2::jsonb,
-              updated_at = NOW()
-         FROM users u
-        WHERE u.clerk_id = $1
-          AND f.user_id = u.id`,
-      [userId, JSON.stringify(availability)]
-    );
+    // a named role writes only that pattern; without one, every role row gets the same hours
+    let saved = 0;
 
-    const editor = await client.query(
-      `UPDATE editors e
-          SET availability = $2::jsonb,
-              updated_at = NOW()
-         FROM users u
-        WHERE u.clerk_id = $1
-          AND e.user_id = u.id`,
-      [userId, JSON.stringify(availability)]
-    );
+    if (requestedRole === undefined || requestedRole === 'freelancer') {
+      const freelancer = await client.query(
+        `UPDATE freelancers f
+            SET availability = $2::jsonb,
+                updated_at = NOW()
+           FROM users u
+          WHERE u.clerk_id = $1
+            AND f.user_id = u.id`,
+        [userId, JSON.stringify(availability)]
+      );
 
-    if (!freelancer.rowCount && !editor.rowCount) {
+      saved += freelancer.rowCount ?? 0;
+    }
+
+    if (requestedRole === undefined || requestedRole === 'editor') {
+      const editor = await client.query(
+        `UPDATE editors e
+            SET availability = $2::jsonb,
+                updated_at = NOW()
+           FROM users u
+          WHERE u.clerk_id = $1
+            AND e.user_id = u.id`,
+        [userId, JSON.stringify(availability)]
+      );
+
+      saved += editor.rowCount ?? 0;
+    }
+
+    if (!saved) {
       await client.query('ROLLBACK');
       return NextResponse.json(
         { error: 'Finish onboarding for a role before setting availability.', code: 'role_required' },
