@@ -90,7 +90,7 @@ export function toDeskAssignment(a: Assignment): DeskAssignment {
     length: a.length,
     compensation: a.compensation,
     interestedIds: [],
-    href: `/dashboard/assignments/${a.id}`,
+    href: assignmentDrawerHref('/dashboard', a.id),
   };
 }
 
@@ -134,4 +134,9 @@ export function timeAgo(date: Date, now: Date = new Date()): string {
   const days = Math.floor(hours / 24);
   if (days < 7) return `${days}d ago`;
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+/** Opens the assignment drawer on a page, e.g. /dashboard?assignment=<id> */
+export function assignmentDrawerHref(basePath: string, id: string): string {
+  return `${basePath}?assignment=${encodeURIComponent(id)}`;
 }
