@@ -1,0 +1,46 @@
+.toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--control-height, 40px);
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--muted);
+  font: inherit;
+  font-size: var(--action-font-size, 14px);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.toggle:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa3b2;
+}
+
+.on {
+  border-color: var(--c-green-d);
+  color: var(--c-green-d);
+}
+
+.on .dot {
+  background: var(--c-green);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

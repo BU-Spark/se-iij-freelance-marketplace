@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
 import ProfileButton from '../Profile/ProfileButton';
+import AvailableNowToggle from './AvailableNowToggle';
 import { useProfile } from '../../hooks/useProfile';
 import { fullName } from '../../utils/profile.utils';
 import { workspaceForPath, workspaceHome } from '../../utils/workspace.utils';
@@ -64,9 +65,12 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
             New Assignment
           </Link>
         ) : (
-          <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
-            Make a Pitch
-          </Link>
+          <>
+            <AvailableNowToggle />
+            <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
+              Make a Pitch
+            </Link>
+          </>
         )}
 
         {/* avatar that opens My profile (?panel=profile) */}
