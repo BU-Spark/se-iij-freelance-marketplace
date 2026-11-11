@@ -25,6 +25,20 @@ describe('SidePanel', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(onClose).toHaveBeenCalledTimes(3);
   });
+
+  it('has no expand link when there is no full page to open', () => {
+    expect(screen.queryByRole('link', { name: /expand/i })).not.toBeInTheDocument();
+  });
+
+  it('offers the full page as a little expand link', () => {
+    render(
+      <SidePanel title="My profile" onClose={jest.fn()} expandHref="/dashboard/settings" expandLabel="Open settings">
+        <p>Not the panel under test</p>
+      </SidePanel>
+    );
+
+    expect(screen.getByRole('link', { name: 'Open settings' })).toHaveAttribute('href', '/dashboard/settings');
+  });
 });
 
 describe('stacked SidePanels', () => {
