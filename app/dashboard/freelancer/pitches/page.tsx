@@ -1,19 +1,10 @@
 import Link from 'next/link';
 import { FreelancerWorkspace } from '../../../components/FreelancerWorkspace';
-import { PITCHES } from '../../pitches/constants';
-import type { PitchStatus } from '../../../types/dashboard.types';
+import { PITCHES, PITCH_STATUS_LABEL } from '../../pitches/constants';
 import styles from '../freelancer.module.css';
 
 // Demo ownership stays explicit until pitch submissions are backed by the signed-in user's API data.
 const DEMO_FREELANCER_ID = 'priya';
-
-const STATUS_LABEL: Record<PitchStatus, string> = {
-  new: 'Submitted',
-  reviewed: 'Under review',
-  negotiating: 'Revision requested',
-  accepted: 'Accepted',
-  declined: 'Declined',
-};
 
 export default function MyPitchesPage() {
   const pitches = PITCHES.filter((pitch) => pitch.freelancer.id === DEMO_FREELANCER_ID);
@@ -34,7 +25,7 @@ export default function MyPitchesPage() {
                   <h2>{pitch.slug}</h2>
                   <p>{pitch.summary}</p>
                 </div>
-                <span className={styles.pitchStatus}>{STATUS_LABEL[pitch.status]}</span>
+                <span className={styles.pitchStatus}>{PITCH_STATUS_LABEL[pitch.status]}</span>
                 <Link href={`/dashboard/freelancer/pitches/${pitch.id}`}>View pitch and feedback</Link>
               </li>
             ))}
