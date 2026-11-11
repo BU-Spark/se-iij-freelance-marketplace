@@ -42,7 +42,7 @@ const row: ProfileRow = {
   freelancer_location: null,
   rate: null,
   community_covered: null,
-  reporting_beats: null,
+  beats: null,
   beat_other: null,
   skills: null,
   beat_tags: null,

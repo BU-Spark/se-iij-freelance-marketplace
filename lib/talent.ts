@@ -79,13 +79,13 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
       OR f.location ILIKE ${p}
       OR f.community_covered ILIKE ${p}
       OR u.short_bio ILIKE ${p}
-      OR array_to_string(f.reporting_beats || f.beat_tags || f.work_mediums, ' ') ILIKE ${p}
+      OR array_to_string(f.beats || f.beat_tags || f.work_mediums, ' ') ILIKE ${p}
     )`);
   }
 
   if (filters.beat) {
     const p = param(filters.beat);
-    where.push(`(${p} = ANY(f.reporting_beats) OR ${p} = ANY(f.beat_tags))`);
+    where.push(`(${p} = ANY(f.beats) OR ${p} = ANY(f.beat_tags))`);
   }
 
   if (filters.medium) where.push(`${param(filters.medium)} = ANY(f.work_mediums)`);
@@ -103,7 +103,7 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
       f.location,
       f.community_covered,
       f.rate,
-      f.reporting_beats,
+      f.beats,
       f.beat_tags,
       f.work_mediums,
       f.tools,
@@ -131,7 +131,7 @@ const SELECT_OPTIONS = `
     ARRAY(
       SELECT DISTINCT b FROM freelancers f2
       JOIN users u2 ON u2.id = f2.user_id AND 'freelancer' = ANY(u2.roles)
-      CROSS JOIN LATERAL unnest(f2.reporting_beats || f2.beat_tags) AS b
+      CROSS JOIN LATERAL unnest(f2.beats || f2.beat_tags) AS b
       WHERE b <> '' ORDER BY b
     ) AS beats,
     ARRAY(

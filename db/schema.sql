@@ -42,8 +42,8 @@ CREATE TABLE IF NOT EXISTS freelancers (
   location TEXT,
   rate TEXT,
   community_covered TEXT,
-  reporting_beats TEXT[] NOT NULL DEFAULT '{}',
-  -- The free-text answer when reporting_beats contains "Other/Not listed here"
+  beats TEXT[] NOT NULL DEFAULT '{}',
+  -- The free-text answer when beats contains "Other/Not listed here"
   beat_other TEXT,
   -- Craft, e.g. "Investigative Journalism" or "Data Visualization"
   skills TEXT[] NOT NULL DEFAULT '{}',
@@ -91,6 +91,26 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS suspension_reason TEXT;
 ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;
 ALTER TABLE freelancers ADD COLUMN IF NOT EXISTS beat_other TEXT;
 ALTER TABLE freelancers ADD COLUMN IF NOT EXISTS skills TEXT[] NOT NULL DEFAULT '{}';
+
+-- freelancers.reporting_beats became beats, so the column reads like the BEATS list the app collects
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1
+      FROM information_schema.columns
+     WHERE table_schema = current_schema()
+       AND table_name = 'freelancers'
+       AND column_name = 'reporting_beats'
+  ) AND NOT EXISTS (
+    SELECT 1
+      FROM information_schema.columns
+     WHERE table_schema = current_schema()
+       AND table_name = 'freelancers'
+       AND column_name = 'beats'
+  ) THEN
+    ALTER TABLE freelancers RENAME COLUMN reporting_beats TO beats;
+  END IF;
+END $$;
 
 -- users.role (single value) became users.roles (array) so one person can be both
 ALTER TABLE users ADD COLUMN IF NOT EXISTS roles TEXT[] NOT NULL DEFAULT '{}';

@@ -30,7 +30,7 @@ const PROFILE_SQL = `
     f.location AS freelancer_location,
     f.rate,
     f.community_covered,
-    f.reporting_beats,
+    f.beats,
     f.beat_other,
     f.skills,
     f.beat_tags,
