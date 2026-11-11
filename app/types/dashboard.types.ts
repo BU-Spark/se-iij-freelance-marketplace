@@ -2,6 +2,9 @@
 
 export type AvailabilityStatus = 'available' | 'busy' | 'off';
 
+/** An invitation waits for the freelancer; only an accepted one puts them on the roster */
+export type RosterInviteStatus = 'pending' | 'accepted' | 'declined';
+
 /** open = posted, invited = waiting on a freelancer (shown as "pending"), assigned = taken */
 export type AssignmentStatus = 'open' | 'invited' | 'assigned';
 
@@ -31,6 +34,8 @@ export type RosterMember = {
   city: string;
   /** ISO timestamp of when the editor added them; only set on an editor's own roster */
   invitedAt?: string;
+  /** where the invite stands; only set when this member has an invite row */
+  inviteStatus?: RosterInviteStatus;
   status: AvailabilityStatus;
   openHours: HourWindow[];
   note: string;
