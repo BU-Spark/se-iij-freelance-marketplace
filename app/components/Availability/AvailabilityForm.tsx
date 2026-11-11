@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import type { AvailabilityException, Weekday } from '../../types/availability.types';
+import type { ProfileRole } from '../../types/profile.types';
 import { WEEKDAYS, dateKeyIn, dayOfWeek, sanitizeExceptions } from '../../utils/availability.utils';
 import AvailabilityCalendar from './AvailabilityCalendar';
 import styles from './availability.module.css';
@@ -61,8 +62,15 @@ const toDraft = (body: Record<string, unknown>): Draft => {
   };
 };
 
+type AvailabilityFormProps = {
+  /** reloads when the signed-in account changes */
+  userId: string;
+  /** whose pattern this is; omitted means "whichever role the person works as" */
+  role?: ProfileRole;
+};
+
 /** Saves through the profile API, so editors and freelancers see the same hours the person set */
-export default function AvailabilityForm({ userId }: { userId: string }) {
+export default function AvailabilityForm({ userId, role }: AvailabilityFormProps) {
   const [draft, setDraft] = useState<Draft>(DEFAULT);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -77,7 +85,9 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
 
     (async () => {
       try {
-        const response = await fetch('/api/profile/availability', { cache: 'no-store' });
+        const response = await fetch(role ? `/api/profile/availability?role=${role}` : '/api/profile/availability', {
+          cache: 'no-store',
+        });
         if (cancelled) return;
 
         if (!response.ok) {
@@ -98,7 +108,7 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
     return () => {
       cancelled = true;
     };
-  }, [userId]);
+  }, [userId, role]);
 
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((previous) => ({ ...previous, [key]: value }));
@@ -155,6 +165,8 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // names the pattern being edited, so the other role's hours are left alone
+          ...(role ? { role } : {}),
           availableNow: draft.freeNow,
           timezone,
           days: draft.days,
@@ -230,7 +242,9 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
           <input type="time" required value={draft.endsAt} onChange={(event) => update('endsAt', event.target.value)} />
         </label>
       </div>
-      <p>Working times use your selected time zone. Choose a start and end within the same day.</p>
+      <p className={styles.hint}>
+        Working times use your selected time zone. Choose a start and end within the same day.
+      </p>
       <fieldset className={styles.dates}>
         <legend>Dates that differ</legend>
         <p className={styles.hint}>
@@ -249,8 +263,16 @@ export default function AvailabilityForm({ userId }: { userId: string }) {
             : 'Every date follows your usual week.'}
         </p>
       </fieldset>
-      {error && <p role="alert">{error}</p>}
-      {message && <p role="status">{message}</p>}
+      {error && (
+        <p className={styles.error} role="alert">
+          {error}
+        </p>
+      )}
+      {message && (
+        <p className={styles.note} role="status">
+          {message}
+        </p>
+      )}
       <button type="submit" className={styles.save} disabled={saving}>
         {saving ? 'Saving…' : 'Save availability'}
       </button>

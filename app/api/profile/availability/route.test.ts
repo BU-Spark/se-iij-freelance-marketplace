@@ -15,6 +15,9 @@ const consoleMock = jest.spyOn(console, 'error').mockImplementation(() => {});
 
 const client = { query: jest.fn(), release: jest.fn() };
 
+const get = (role?: string) =>
+  GET(new Request(`http://localhost/api/profile/availability${role ? `?role=${role}` : ''}`));
+
 const patch = (body: unknown) =>
   PATCH(
     new Request('http://localhost/api/profile/availability', {
@@ -60,13 +63,13 @@ describe('GET /api/profile/availability', () => {
   it('refuses anonymous callers', async () => {
     authMock.mockResolvedValue({ userId: null });
 
-    expect((await GET()).status).toBe(401);
+    expect((await get()).status).toBe(401);
   });
 
   it("returns the freelancer's saved hours", async () => {
     queryMock.mockResolvedValue({ rows: [row()] });
 
-    const response = await GET();
+    const response = await get();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
@@ -96,7 +99,7 @@ describe('GET /api/profile/availability', () => {
       ],
     });
 
-    expect(await (await GET()).json()).toMatchObject({
+    expect(await (await get()).json()).toMatchObject({
       exceptions: [
         { date: '2031-11-21', available: true },
         { date: '2031-12-25', available: false },
@@ -117,7 +120,7 @@ describe('GET /api/profile/availability', () => {
       ],
     });
 
-    expect(await (await GET()).json()).toMatchObject({ role: 'editor', timezone: 'America/New_York' });
+    expect(await (await get()).json()).toMatchObject({ role: 'editor', timezone: 'America/New_York' });
   });
 
   it('prefers the freelancer hours when the person holds both roles', async () => {
@@ -125,7 +128,7 @@ describe('GET /api/profile/availability', () => {
       rows: [row({ roles: ['editor', 'freelancer'], editor_id: 'editor-1', editor_availability: stored })],
     });
 
-    expect(await (await GET()).json()).toMatchObject({ role: 'freelancer' });
+    expect(await (await get()).json()).toMatchObject({ role: 'freelancer' });
   });
 
   it('gives nulls when nothing has been set yet', async () => {
@@ -133,7 +136,7 @@ describe('GET /api/profile/availability', () => {
       rows: [row({ available_now: null, freelancer_availability: null, roles: ['freelancer'] })],
     });
 
-    expect(await (await GET()).json()).toEqual({
+    expect(await (await get()).json()).toEqual({
       role: 'freelancer',
       availableNow: false,
       timezone: null,
@@ -144,10 +147,39 @@ describe('GET /api/profile/availability', () => {
     });
   });
 
+  it('returns the editor pattern when the role is asked for', async () => {
+    queryMock.mockResolvedValue({
+      rows: [row({ roles: ['editor', 'freelancer'], editor_id: 'editor-1', editor_availability: stored })],
+    });
+
+    expect(await (await get('editor')).json()).toMatchObject({ role: 'editor', timezone: 'Europe/London' });
+  });
+
+  it('returns the freelancer pattern when the role is asked for', async () => {
+    queryMock.mockResolvedValue({
+      rows: [row({ roles: ['freelancer'], editor_id: null, editor_availability: null })],
+    });
+
+    expect(await (await get('freelancer')).json()).toMatchObject({ role: 'freelancer', timezone: 'Europe/London' });
+  });
+
+  it('refuses a role this person does not hold', async () => {
+    queryMock.mockResolvedValue({ rows: [row({ roles: ['freelancer'], editor_id: null })] });
+
+    const response = await get('editor');
+
+    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ code: 'role_required' });
+  });
+
+  it('refuses a role that is not one of the two', async () => {
+    expect((await get('admin')).status).toBe(400);
+  });
+
   it('asks people to finish onboarding first', async () => {
     queryMock.mockResolvedValue({ rows: [] });
 
-    const response = await GET();
+    const response = await get();
 
     expect(response.status).toBe(404);
     expect(await response.json()).toMatchObject({ code: 'onboarding_required' });
@@ -156,7 +188,7 @@ describe('GET /api/profile/availability', () => {
   it('reports a failure instead of an empty card', async () => {
     queryMock.mockRejectedValue(new Error('db down'));
 
-    expect((await GET()).status).toBe(500);
+    expect((await get()).status).toBe(500);
   });
 });
 
@@ -244,6 +276,24 @@ describe('PATCH /api/profile/availability', () => {
 
     expect(client.query).toHaveBeenLastCalledWith('COMMIT');
     expect(client.release).toHaveBeenCalled();
+  });
+
+  it('writes only the pattern for the role being edited', async () => {
+    const response = await patch({ ...validBody, role: 'editor' });
+
+    expect(response.status).toBe(200);
+
+    const calls = client.query.mock.calls as [string][];
+    expect(calls[0][0]).toBe('BEGIN');
+    expect(calls[1][0]).toContain('SET available_now = $2');
+    expect(calls[2][0]).toContain('UPDATE editors');
+    expect(calls.some(([sql]) => sql.includes('UPDATE freelancers'))).toBe(false);
+    expect(client.query).toHaveBeenLastCalledWith('COMMIT');
+  });
+
+  it('rejects a role that is not one of the two', async () => {
+    expect((await patch({ ...validBody, role: 'admin' })).status).toBe(400);
+    expect(connectMock).not.toHaveBeenCalled();
   });
 
   it('rolls back when there is no user row yet', async () => {

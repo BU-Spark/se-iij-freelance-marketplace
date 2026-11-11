@@ -45,7 +45,7 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
       <div>
         <h3 className={styles.title}>
           {a.href ? (
-            <Link href={a.href} className={styles.cardLink}>
+            <Link href={a.href} className={styles.cardLink} scroll={false}>
               {a.title}
             </Link>
           ) : (
