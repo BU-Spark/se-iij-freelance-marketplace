@@ -43,6 +43,9 @@ export default function ProfilePanel({
         tone="navy"
         header={<ProfileHero basic={profile.basic} />}
         onClose={onClose}
+        // the little expand button opens the same cards on the settings page
+        expandHref="/dashboard/settings"
+        expandLabel="Open settings"
       >
         <ProfileContent
           profile={profile}

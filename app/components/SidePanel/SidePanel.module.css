@@ -64,6 +64,30 @@
   font-weight: 600;
   color: var(--navy-deep);
 }
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+/* small "open this panel as a page" button next to ✕ */
+.expand {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  color: var(--muted);
+  text-decoration: none;
+}
+.expand:hover {
+  background: #f0f2f5;
+  color: var(--ink);
+}
+.expand:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
 .close {
   display: inline-flex;
   align-items: center;
