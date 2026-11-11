@@ -75,6 +75,8 @@ export type DeskAssignment = {
   rate?: Rate;
   /** raw pay text from the database, shown when there is no structured rate */
   compensation?: string;
+  /** the organization that posted it; absent on the sample desk data */
+  organizationId?: string | null;
   interestedIds: string[];
   invitedIds?: string[];
   /** expanded view of the assignment; only assignments saved in the database have one */

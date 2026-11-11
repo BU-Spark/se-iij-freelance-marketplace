@@ -115,6 +115,7 @@ describe('dashboard utils', () => {
         location: 'Remote',
         length: '800 words',
         compensation: '750',
+        organizationId: 'org-1',
         interestedIds: [],
         href: '/dashboard?assignment=a1',
       });
