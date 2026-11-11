@@ -15,9 +15,20 @@ export type Assignment = {
   length: string;
   deadline: Date | null;
   compensation: string;
-  status: AssignmentStatus;
+  status: AssignmentStatus | 'completed';
   createdAt: Date;
   updatedAt: Date;
+};
+
+/** Structured feedback from the editor on a freelancer's completed assignment */
+export type AssignmentFeedback = {
+  id?: string;
+  submittedBy?: string;
+  submittedAt?: Date | string;
+  quality: 1 | 2 | 3 | 4 | 5;
+  communication: 1 | 2 | 3 | 4 | 5;
+  timeliness: 1 | 2 | 3 | 4 | 5;
+  comments: string;
 };
 
 /** What the New Assignment form submits and `POST /api/assignments` accepts */

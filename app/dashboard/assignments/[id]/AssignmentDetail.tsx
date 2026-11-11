@@ -2,13 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import type { Assignment } from '../../../types/assignments.types';
+import type { Assignment, AssignmentFeedback } from '../../../types/assignments.types';
 import { formatCompensation } from '../../../utils/assignment.utils';
 import { categoryColor } from '../../../utils/category.utils';
 import cardStyles from '../../../components/AssignmentCard/AssignmentCard.module.css';
 import listStyles from '../assignments.module.css';
 import styles from './assignmentDetail.module.css';
 import AssignmentEditForm from './AssignmentEditForm';
+import AssignmentFeedbackForm from './AssignmentFeedbackForm';
 
 type AssignmentDetailProps = {
   assignment: Assignment;
@@ -22,6 +23,7 @@ const STATUS_LABEL: Record<Assignment['status'], string> = {
   open: 'Open',
   invited: 'Invited',
   assigned: 'Assigned',
+  completed: 'Completed',
 };
 
 const formatDateTime = (date: Date | null) =>
@@ -42,6 +44,7 @@ const formatDate = (date: Date) =>
 /** The expanded view of one assignment: every field, including the description */
 export default function AssignmentDetail({ assignment: a, canEdit = false, isSample = false }: AssignmentDetailProps) {
   const [editing, setEditing] = useState(false);
+  const [feedbackHistory, setFeedbackHistory] = useState<AssignmentFeedback[]>([]);
 
   if (editing) {
     return (
@@ -63,7 +66,11 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
             <span className={cardStyles.dot} style={{ background: categoryColor(a.category) }} aria-hidden="true" />
             {a.category}
           </span>
-          <span className={`${cardStyles.pill} ${cardStyles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
+          <span
+            className={`${cardStyles.pill} ${a.status === 'completed' ? cardStyles.assigned : cardStyles[a.status]}`}
+          >
+            {STATUS_LABEL[a.status]}
+          </span>
           {canEdit && (
             <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
               Edit
@@ -116,6 +123,15 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
           </p>
         )}
       </article>
+      {!isSample && a.status === 'completed' && (canEdit || feedbackHistory.length > 0) && (
+        <AssignmentFeedbackForm
+          feedbackHistory={feedbackHistory}
+          canSubmit={canEdit}
+          onSubmit={(feedback) =>
+            setFeedbackHistory((history) => [{ ...feedback, submittedBy: 'You', submittedAt: new Date() }, ...history])
+          }
+        />
+      )}
     </main>
   );
 }

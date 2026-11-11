@@ -28,7 +28,7 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
   // our own copy of the pitches, so we can change their status on screen
   // TODO: save status changes to the backend once the API exists
   const [items, setItems] = useState(pitches);
-  const [feedbackByPitch, setFeedbackByPitch] = useState<Record<string, PitchFeedback>>({});
+  const [feedbackByPitch, setFeedbackByPitch] = useState<Record<string, PitchFeedback[]>>({});
   const [filter, setFilter] = useState<PitchFilter>('all');
   const [selectedId, setSelectedId] = useState<string | undefined>(pitches[0]?.id);
 
@@ -85,9 +85,17 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
                 key={selected.id}
                 status={selected.status}
                 freelancerName={selected.freelancer.name}
-                savedFeedback={feedbackByPitch[selected.id]}
+                feedbackHistory={feedbackByPitch[selected.id] ?? []}
                 onChange={(status) => setStatus(selected.id, status)}
-                onSubmitFeedback={(feedback) => setFeedbackByPitch((saved) => ({ ...saved, [selected.id]: feedback }))}
+                onSubmitFeedback={(feedback) =>
+                  setFeedbackByPitch((saved) => ({
+                    ...saved,
+                    [selected.id]: [
+                      { ...feedback, submittedBy: 'You', submittedAt: new Date() },
+                      ...(saved[selected.id] ?? []),
+                    ],
+                  }))
+                }
               />
             </>
           ) : (

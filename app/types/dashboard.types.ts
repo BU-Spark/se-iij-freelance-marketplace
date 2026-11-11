@@ -16,6 +16,9 @@ export type RateUnit = 'word' | 'hour' | 'flat';
 export type PitchStatus = 'new' | 'reviewed' | 'negotiating' | 'accepted' | 'declined';
 
 export type PitchFeedback = {
+  id?: string;
+  submittedBy?: string;
+  submittedAt?: Date | string;
   decision: 'accepted' | 'rejected' | 'revision_requested';
   comments: string;
   strengths: string;
