@@ -51,8 +51,8 @@ function compare(sort: SortKey) {
 }
 
 /*
- * Invites and removals only live in this component's state for now.
- * TODO: save them through the roster API once it exists.
+ * Invites and removals are saved through the roster API; the list only changes once the server confirms
+ * them, so a failed request shows an error instead of a roster that is not really there.
  */
 export default function RosterBrowser({ members, invitable, loadFailed = false }: RosterBrowserProps) {
   const { showToast } = useToast();
@@ -68,6 +68,8 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [roster, setRoster] = useState(members);
   const [others, setOthers] = useState(invitable);
+  /** true while an invite or a removal is in flight */
+  const [saving, setSaving] = useState(false);
 
   const beats = options(roster.flatMap(beatsOf));
   // places outside the US still get their own option, after the states
@@ -102,21 +104,69 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
   const togglePick = (id: string) =>
     setPicked((list) => (list.includes(id) ? list.filter((value) => value !== id) : [...list, id]));
 
-  const sendInvites = () => {
-    const invitedAt = new Date().toISOString();
-    const added = others.filter((member) => picked.includes(member.id)).map((member) => ({ ...member, invitedAt }));
-    setRoster((list) => [...list, ...added]);
-    setOthers((list) => list.filter((member) => !picked.includes(member.id)));
-    showToast(added.length === 1 ? `Added ${added[0].name} to your roster` : `Added ${added.length} freelancers`);
-    setInviting(false);
+  const sendInvites = async () => {
+    const chosen = others.filter((member) => picked.includes(member.id));
+    if (chosen.length === 0) return;
+
+    setSaving(true);
+    try {
+      const response = await fetch('/api/roster/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ freelancerIds: chosen.map((member) => member.id) }),
+      });
+
+      const body = (await response.json().catch(() => null)) as {
+        invited?: { freelancerId: string; invitedAt: string }[];
+        error?: string;
+      } | null;
+
+      if (!response.ok) {
+        showToast(body?.error ?? 'Could not add them to your roster right now.', 'error');
+        return;
+      }
+
+      const invitedAt = new Map((body?.invited ?? []).map((row) => [row.freelancerId, row.invitedAt]));
+      const added = chosen.map((member) => ({
+        ...member,
+        invitedAt: invitedAt.get(member.id) ?? new Date().toISOString(),
+      }));
+
+      setRoster((list) => [...list, ...added]);
+      setOthers((list) => list.filter((member) => !picked.includes(member.id)));
+      showToast(added.length === 1 ? `Added ${added[0].name} to your roster` : `Added ${added.length} freelancers`);
+      setInviting(false);
+    } catch (error) {
+      console.error('Could not add freelancers to the roster.', error);
+      showToast('Could not add them to your roster right now.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const remove = (member: RosterMember) => {
+  const remove = async (member: RosterMember) => {
     setConfirmingId(null);
-    setRoster((list) => list.filter((m) => m.id !== member.id));
-    // they go back to the invite list, so the editor can change their mind
-    setOthers((list) => [...list, { ...member, invitedAt: undefined }].sort((a, b) => a.name.localeCompare(b.name)));
-    showToast(`Removed ${member.name} from your roster`);
+    setSaving(true);
+
+    try {
+      const response = await fetch(`/api/roster/invites/${member.id}`, { method: 'DELETE' });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        showToast(body?.error ?? 'Could not remove them from your roster right now.', 'error');
+        return;
+      }
+
+      setRoster((list) => list.filter((m) => m.id !== member.id));
+      // they go back to the invite list, so the editor can change their mind
+      setOthers((list) => [...list, { ...member, invitedAt: undefined }].sort((a, b) => a.name.localeCompare(b.name)));
+      showToast(`Removed ${member.name} from your roster`);
+    } catch (error) {
+      console.error('Could not remove the freelancer from the roster.', error);
+      showToast('Could not remove them from your roster right now.', 'error');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loadFailed) {
@@ -267,7 +317,12 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
                       {confirmingId === member.id ? (
                         <span className={styles.confirm}>
                           Remove?
-                          <button type="button" className={styles.dangerLink} onClick={() => remove(member)}>
+                          <button
+                            type="button"
+                            className={styles.dangerLink}
+                            disabled={saving}
+                            onClick={() => void remove(member)}
+                          >
                             Yes, remove
                           </button>
                           <button type="button" className={styles.textButton} onClick={() => setConfirmingId(null)}>
@@ -310,10 +365,10 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
                 <button
                   type="button"
                   className={styles.inviteButton}
-                  onClick={sendInvites}
-                  disabled={picked.length === 0}
+                  onClick={() => void sendInvites()}
+                  disabled={picked.length === 0 || saving}
                 >
-                  {picked.length > 0 ? `Add ${picked.length} to roster` : 'Add to roster'}
+                  {saving ? 'Adding…' : picked.length > 0 ? `Add ${picked.length} to roster` : 'Add to roster'}
                 </button>
               </div>
             </>
