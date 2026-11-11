@@ -14,11 +14,12 @@ export const NAV_ITEMS: Record<ProfileRole, NavItem[]> = {
     { key: 'roster', label: 'Roster', href: '/dashboard/roster' },
     { key: 'talent', label: 'Find talent', href: '/dashboard/talent' },
     { key: 'pitches', label: 'Pitches', href: '/dashboard/pitches' },
-    { key: 'availability', label: 'My availability', href: '/dashboard/desk-availability' },
+    { key: 'settings', label: 'Settings', href: '/dashboard/settings' },
   ],
   freelancer: [
     { key: 'assignments', label: 'Available assignments', href: '/dashboard/freelancer', exact: true },
     { key: 'my-assignments', label: 'My assignments', href: '/dashboard/freelancer#active-assignments' },
-    { key: 'availability', label: 'My availability', href: '/dashboard/availability' },
+    // the profile and availability live together on the settings page
+    { key: 'settings', label: 'Settings', href: '/dashboard/settings' },
   ],
 };
