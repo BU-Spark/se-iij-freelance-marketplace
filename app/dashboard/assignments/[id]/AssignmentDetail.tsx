@@ -14,8 +14,6 @@ type AssignmentDetailProps = {
   assignment: Assignment;
   /** true for editors from the organization that posted it */
   canEdit?: boolean;
-  /** true for the sample desk data, which is not saved anywhere */
-  isSample?: boolean;
 };
 
 const STATUS_LABEL: Record<Assignment['status'], string> = {
@@ -40,7 +38,7 @@ const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /** The expanded view of one assignment: every field, including the description */
-export default function AssignmentDetail({ assignment: a, canEdit = false, isSample = false }: AssignmentDetailProps) {
+export default function AssignmentDetail({ assignment: a, canEdit = false }: AssignmentDetailProps) {
   const [editing, setEditing] = useState(false);
 
   if (editing) {
@@ -53,8 +51,8 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
 
   return (
     <main className={styles.main}>
-      <Link href={isSample ? '/dashboard' : '/dashboard/assignments'} className={listStyles.backLink}>
-        {isSample ? '← Back to dashboard' : '← Back to assignments'}
+      <Link href="/dashboard/assignments" className={listStyles.backLink}>
+        ← Back to assignments
       </Link>
 
       <article className={styles.card}>
@@ -102,19 +100,13 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
           <p className={styles.description}>{a.description || 'No description yet.'}</p>
         </section>
 
-        {isSample ? (
-          <p className={styles.meta}>
-            Sample assignment for the demo desk. It isn&apos;t saved anywhere, so it can&apos;t be edited.
-          </p>
-        ) : (
-          <p className={styles.meta}>
-            Posted {formatDate(a.createdAt)}
-            {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
-              ` · Updated ${formatDate(a.updatedAt)}`}
-            {' · '}
-            <span className={styles.slug}>{a.slug}</span>
-          </p>
-        )}
+        <p className={styles.meta}>
+          Posted {formatDate(a.createdAt)}
+          {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
+            ` · Updated ${formatDate(a.updatedAt)}`}
+          {' · '}
+          <span className={styles.slug}>{a.slug}</span>
+        </p>
       </article>
     </main>
   );

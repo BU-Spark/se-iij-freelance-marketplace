@@ -2,8 +2,6 @@ import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
 import { Header } from '../../../components/header/Header';
 import { canEditAssignment, canViewAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
-import { ASSIGNMENTS } from '../../constants';
-import { sampleToAssignment } from '../../../utils/dashboard.utils';
 import AssignmentDetail from './AssignmentDetail';
 import styles from '../assignments.module.css';
 
@@ -18,17 +16,7 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
 
   const [viewer, assignment] = await Promise.all([userId ? loadAssignmentViewer(userId) : null, getAssignment(id)]);
 
-  // Sample desk cards are not in the database; show them read-only so they can be opened too
-  if (!assignment) {
-    const sample = ASSIGNMENTS.find((a) => a.id === id);
-    if (!sample) notFound();
-    return (
-      <div className={styles.shell}>
-        <Header />
-        <AssignmentDetail assignment={sampleToAssignment(sample)} canEdit={false} isSample />
-      </div>
-    );
-  }
+  if (!assignment) notFound();
 
   if (!canViewAssignment(viewer, assignment)) notFound();
 

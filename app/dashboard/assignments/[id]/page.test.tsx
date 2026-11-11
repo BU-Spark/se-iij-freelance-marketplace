@@ -73,19 +73,6 @@ describe('Assignment detail page', () => {
     expect(notFound).toHaveBeenCalled();
   });
 
-  it('opens sample desk cards read-only', async () => {
-    getAssignmentMock.mockResolvedValue(null);
-    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
-
-    render(await AssignmentPage({ params: Promise.resolve({ id: 'port-oped' }) }));
-
-    expect(screen.getByRole('heading', { level: 1, name: /port authority/i })).toBeInTheDocument();
-    expect(screen.getByText('Point of contact: David Park, Opinion')).toBeInTheDocument();
-    expect(screen.getByText(/\$85 \/ hr/)).toBeInTheDocument();
-    expect(screen.getByText(/sample assignment/i)).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-  });
-
   it('is a 404 when the assignment does not exist', async () => {
     getAssignmentMock.mockResolvedValue(null);
     loadViewerMock.mockResolvedValue(null);
