@@ -248,18 +248,19 @@ describe('ProfilePanel', () => {
     expect(onSaveBasic).not.toHaveBeenCalled();
   });
 
-  it("shows a role's availability only while that role is being edited", () => {
+  it('points availability at the settings page instead of editing it here', () => {
     render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={jest.fn()} />);
 
-    expect(screen.queryByText('Editor availability')).not.toBeInTheDocument();
-    expect(screen.queryByText('Freelancer availability')).not.toBeInTheDocument();
-
     fireEvent.click(screen.getByRole('button', { name: 'Open Editor details' }));
-    expect(screen.queryByText('Editor availability')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
 
-    expect(screen.getByText('Editor availability')).toBeInTheDocument();
-    expect(screen.queryByText('Freelancer availability')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /edit availability in settings/i })).toHaveAttribute(
+      'href',
+      '/dashboard/settings'
+    );
+    // the hours themselves are only editable on the settings page
+    expect(screen.queryByText('Editor availability')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Time zone')).not.toBeInTheDocument();
   });
 
   it('cancelling a role edit changes nothing', () => {

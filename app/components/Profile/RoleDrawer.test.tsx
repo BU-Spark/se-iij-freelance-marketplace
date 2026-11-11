@@ -1,34 +1,9 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { useAuth } from '@clerk/nextjs';
 import RoleDrawer from './RoleDrawer';
 import RoleRow from './cards/RoleRow';
 import { MOCK_PROFILE } from './config/constants';
 
-jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
-
 const editor = MOCK_PROFILE.roles[1];
-const originalFetch = global.fetch;
-
-beforeEach(() => {
-  // editing a role mounts its availability card, which asks for that role's saved pattern
-  jest.mocked(useAuth).mockReturnValue({ userId: 'user-a', isLoaded: true } as ReturnType<typeof useAuth>);
-  global.fetch = jest.fn().mockResolvedValue({
-    ok: true,
-    status: 200,
-    json: async () => ({
-      role: 'editor',
-      availableNow: false,
-      timezone: 'UTC',
-      days: [],
-      startsAt: null,
-      endsAt: null,
-    }),
-  }) as unknown as typeof fetch;
-});
-
-afterAll(() => {
-  global.fetch = originalFetch;
-});
 
 describe('RoleRow', () => {
   it('shows just the role name and opens on click', () => {
@@ -66,6 +41,18 @@ describe('RoleDrawer', () => {
       )
     );
     expect(await screen.findByRole('button', { name: 'Edit Editor details' })).toBeInTheDocument();
+  });
+
+  it('sends availability edits to the settings page', () => {
+    render(<RoleDrawer details={editor} onClose={jest.fn()} onSave={jest.fn()} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
+
+    expect(screen.getByRole('link', { name: /edit availability in settings/i })).toHaveAttribute(
+      'href',
+      '/dashboard/settings'
+    );
+    expect(screen.queryByLabelText('Time zone')).not.toBeInTheDocument();
   });
 
   it('keeps the form open when the save fails', async () => {

@@ -80,6 +80,17 @@ describe('Settings page', () => {
     expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/profile/availability'), expect.anything());
   });
 
+  it('edits availability from the role being edited', async () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
+
+    expect(screen.getByText('Editor availability')).toBeInTheDocument();
+    expect(screen.queryByText('Freelancer availability')).not.toBeInTheDocument();
+    expect(await screen.findByLabelText('Time zone')).toHaveValue('UTC');
+    expect(fetchMock).toHaveBeenCalledWith('/api/profile/availability?role=editor', { cache: 'no-store' });
+  });
+
   it('waits for the profile before drawing the cards', () => {
     mockStore.mockReturnValue(store({ profile: null }));
 

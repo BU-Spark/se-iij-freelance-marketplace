@@ -26,7 +26,13 @@ export default function RoleDrawer({ details, onClose, onSave }: RoleDrawerProps
   return (
     <SidePanel title={`${config.label} details`} side="right" tone="navy" onClose={onClose}>
       {editing && onSave ? (
-        <RoleForm details={details} onSave={save} onCancel={() => setEditing(false)} />
+        <RoleForm
+          details={details}
+          onSave={save}
+          onCancel={() => setEditing(false)}
+          // the hours are edited on the settings page, not in this drawer
+          editAvailability={false}
+        />
       ) : (
         <RoleCard details={details} onEdit={onSave && (() => setEditing(true))} />
       )}

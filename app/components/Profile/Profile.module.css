@@ -364,3 +364,45 @@ textarea.input {
   color: var(--row-accent);
   transform: translateX(2px);
 }
+
+/* availability as a pointer to settings, shown in the quick panel while a role is edited */
+.availability {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #f7f8fa;
+}
+.availabilityText {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.availabilityLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.availabilityValue {
+  margin: 0;
+  font-size: 14px;
+  color: var(--ink);
+}
+.availabilityAction {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-blue);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.availabilityAction:hover {
+  text-decoration: underline;
+}
+
