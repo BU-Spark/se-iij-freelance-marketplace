@@ -46,17 +46,26 @@ export function WeekStrip({ member }: StripProps) {
   );
 }
 
-/** a small box per day of the month, 10 per row */
+/** a small box per day, 10 per row; the real date is read out for screen readers */
 export function MonthGrid({ member }: StripProps) {
   return (
     <ul className={styles.month} aria-label="Free days this month">
-      {member.monthDays.map((free, i) => (
-        <li key={i} className={free ? styles.free : styles.taken}>
-          <span className={styles.srOnly}>
-            Day {i + 1} {free ? 'free' : 'busy'}
-          </span>
-        </li>
-      ))}
+      {member.monthDays.map((free, i) => {
+        const date = member.monthDayDates?.[i];
+        const day = date ? `Day ${date.slice(8)}` : `Day ${i + 1}`;
+
+        return (
+          <li
+            key={i}
+            className={free ? styles.free : styles.taken}
+            title={date ? `${date}: ${free ? 'free' : 'busy'}` : undefined}
+          >
+            <span className={styles.srOnly}>
+              {day} {free ? 'free' : 'busy'}
+            </span>
+          </li>
+        );
+      })}
     </ul>
   );
 }

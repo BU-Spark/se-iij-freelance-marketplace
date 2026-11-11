@@ -72,6 +72,119 @@
   gap: 16px;
 }
 
+/* the month of dated exceptions */
+.dates {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.calendar {
+  display: grid;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.calendarHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.monthNav {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.monthNav:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.calendarWeek,
+.calendarGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.calendarWeek li {
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.calendarGrid li {
+  min-width: 0;
+}
+
+.calendarGrid button {
+  width: 100%;
+  min-height: 36px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.calendarGrid button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* free days look like the roster's free boxes, so the two views agree */
+.freeDay {
+  background: #dce6fd;
+  color: #1e3a9e;
+}
+
+.busyDay {
+  background: #f1f2f5;
+  color: #5f6673;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+}
+
+.swatch + .swatch {
+  margin-left: 8px;
+}
+
 .save {
   justify-self: start;
   min-height: 44px;
@@ -85,6 +198,8 @@
 
 .form input:focus-visible,
 .form select:focus-visible,
+.calendarGrid button:focus-visible,
+.monthNav:focus-visible,
 .save:focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;

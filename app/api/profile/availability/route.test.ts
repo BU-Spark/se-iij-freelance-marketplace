@@ -76,6 +76,31 @@ describe('GET /api/profile/availability', () => {
       days: ['monday', 'tuesday'],
       startsAt: '09:00',
       endsAt: '17:00',
+      exceptions: [],
+    });
+  });
+
+  it('returns the dates that do not follow the weekly pattern', async () => {
+    queryMock.mockResolvedValue({
+      rows: [
+        row({
+          freelancer_availability: {
+            ...stored,
+            exceptions: [
+              { date: '2031-12-25', available: false },
+              { date: '2031-11-21', available: true },
+              { date: '2031-02-31', available: false },
+            ],
+          },
+        }),
+      ],
+    });
+
+    expect(await (await GET()).json()).toMatchObject({
+      exceptions: [
+        { date: '2031-11-21', available: true },
+        { date: '2031-12-25', available: false },
+      ],
     });
   });
 
@@ -115,6 +140,7 @@ describe('GET /api/profile/availability', () => {
       days: [],
       startsAt: null,
       endsAt: null,
+      exceptions: [],
     });
   });
 
@@ -149,8 +175,51 @@ describe('PATCH /api/profile/availability', () => {
     expect((await patch({ ...validBody, days: ['someday'] })).status).toBe(400);
     expect((await patch({ ...validBody, startsAt: '9am' })).status).toBe(400);
     expect((await patch({ ...validBody, startsAt: '18:00', endsAt: '09:00' })).status).toBe(400);
+    expect((await patch({ ...validBody, exceptions: 'none' })).status).toBe(400);
+    expect((await patch({ ...validBody, exceptions: [{ date: '25/12/2026', available: false }] })).status).toBe(400);
+    expect((await patch({ ...validBody, exceptions: [{ date: '2031-02-31', available: false }] })).status).toBe(400);
+    expect((await patch({ ...validBody, exceptions: [{ date: '2031-12-25', available: 'no' }] })).status).toBe(400);
 
     expect(connectMock).not.toHaveBeenCalled();
+  });
+
+  it('saves the dated overrides beside the weekly pattern', async () => {
+    const response = await patch({
+      ...validBody,
+      exceptions: [
+        { date: '2031-12-25', available: false },
+        { date: '2031-11-21', available: true },
+        { date: '2031-12-25', available: false },
+      ],
+    });
+
+    expect(response.status).toBe(200);
+
+    const [, freelancerParams] = client.query.mock.calls[2] as [string, unknown[]];
+    expect(JSON.parse(freelancerParams[1] as string)).toEqual({
+      ...stored,
+      exceptions: [
+        { date: '2031-11-21', available: true },
+        { date: '2031-12-25', available: false },
+      ],
+    });
+  });
+
+  it('drops dates that have already gone by', async () => {
+    expect(
+      (
+        await patch({
+          ...validBody,
+          exceptions: [
+            { date: '2020-01-01', available: false },
+            { date: '2031-12-25', available: false },
+          ],
+        })
+      ).status
+    ).toBe(200);
+
+    const [, freelancerParams] = client.query.mock.calls[2] as [string, unknown[]];
+    expect(JSON.parse(freelancerParams[1] as string).exceptions).toEqual([{ date: '2031-12-25', available: false }]);
   });
 
   it('writes the switch and the pattern for both role rows', async () => {

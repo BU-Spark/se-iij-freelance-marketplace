@@ -1,46 +1,35 @@
 import { auth } from '@clerk/nextjs/server';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster';
-import { ASSIGNMENTS } from '../constants';
+import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
+import { toDeskAssignment } from '../../utils/dashboard.utils';
 import FreelancerDashboard from './FreelancerDashboard';
 import RosterInvites from './RosterInvites';
 import styles from './freelancer.module.css';
-
-// Demo ownership is explicit until the API supplies assignments for the authenticated user.
-const DEMO_FREELANCER_ID = 'priya';
-const DEMO_DEADLINE = ASSIGNMENTS[1].deadline ?? new Date();
-const DEMO_ASSIGNMENTS: DeskAssignment[] = [
-  ...ASSIGNMENTS,
-  ...['Community health reporting', 'Climate data explainer', 'Local arts interview', 'Housing policy fact-check'].map(
-    (title, index) => ({
-      ...ASSIGNMENTS[1],
-      id: `demo-opportunity-${index}`,
-      title,
-      deadline: new Date(DEMO_DEADLINE.getTime() + (index + 1) * 86400000),
-      interestedIds: [],
-      invitedIds: [],
-    })
-  ),
-  {
-    ...ASSIGNMENTS[2],
-    id: 'demo-personal-invitation',
-    title: 'Invitation: City budget data analysis',
-    invitedIds: [DEMO_FREELANCER_ID],
-  },
-];
 
 // An invitation sent a moment ago has to show up on the next visit
 export const dynamic = 'force-dynamic';
 
 export default async function FreelancerPage() {
-  let invites: RosterInvite[] = [];
+  const { userId } = await auth();
 
+  let invites: RosterInvite[] = [];
   try {
-    const { userId } = await auth();
     if (userId) invites = await listInvitesForFreelancer(userId);
   } catch (error) {
     console.error('Failed to load roster invitations.', error);
+  }
+
+  // The feed is the open assignments editors have actually posted, not a demo list
+  let assignments: DeskAssignment[] = [];
+  let freelancerId = '';
+  try {
+    const viewer = userId ? await loadAssignmentViewer(userId) : null;
+    freelancerId = viewer?.userId ?? '';
+    assignments = (await listOpenAssignments(viewer)).map(toDeskAssignment);
+  } catch (error) {
+    console.error('Failed to load assignments for the freelancer.', error);
   }
 
   return (
@@ -51,7 +40,7 @@ export default async function FreelancerPage() {
         <p>Discover opportunities and keep your current work in view.</p>
         {/* declined invitations are left out: the editor sees the answer on their roster */}
         <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
-        <FreelancerDashboard assignments={DEMO_ASSIGNMENTS} freelancerId={DEMO_FREELANCER_ID} />
+        <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} />
       </main>
     </FreelancerWorkspace>
   );

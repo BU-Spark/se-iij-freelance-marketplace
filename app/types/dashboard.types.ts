@@ -48,6 +48,8 @@ export type RosterMember = {
   note: string;
   weekDays: boolean[];
   monthDays: boolean[];
+  /** the dates behind `monthDays`, today first; absent on hand-built samples */
+  monthDayDates?: string[];
 };
 
 export type Rate = {
