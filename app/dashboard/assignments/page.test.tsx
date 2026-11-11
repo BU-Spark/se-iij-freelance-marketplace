@@ -8,6 +8,7 @@ jest.mock('../../components/FreelancerWorkspace', () => ({
   FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
+jest.mock('../../../lib/workspace', () => ({ requireWorkspace: jest.fn() }));
 jest.mock('../../../lib/assignments', () => ({
   listOpenAssignments: jest.fn(),
   loadAssignmentViewer: jest.fn(async () => viewer),

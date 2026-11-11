@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import type { Assignment } from '../../types/assignments.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
+import { requireWorkspace } from '../../../lib/workspace';
 import AssignmentsBrowser from './AssignmentsBrowser';
 import styles from './assignments.module.css';
 
@@ -9,6 +10,9 @@ import styles from './assignments.module.css';
 export const dynamic = 'force-dynamic';
 
 export default async function AssignmentsPage() {
+  // Browsing open assignments is the freelancer side of the app
+  await requireWorkspace('freelancer');
+
   let assignments: Assignment[] = [];
   let loadFailed = false;
 

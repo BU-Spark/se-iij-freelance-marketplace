@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useClerk } from '@clerk/nextjs';
@@ -9,10 +9,8 @@ import HamburgerMenu from '../NavMenu/HamburgerMenu';
 import ProfileButton from '../Profile/ProfileButton';
 import { useProfile } from '../../hooks/useProfile';
 import { fullName } from '../../utils/profile.utils';
+import { workspaceHome } from '../../utils/workspace.utils';
 import styles from './editorHeader.module.css';
-
-// PR #141's shared header always offers both workspaces; profile roles are separate profile data.
-const WORKSPACE_ROLES: ProfileRole[] = ['freelancer', 'editor'];
 
 export function EditorHeader({ initialRole }: { initialRole?: ProfileRole } = {}) {
   const pathname = usePathname();
@@ -24,14 +22,31 @@ export function EditorHeader({ initialRole }: { initialRole?: ProfileRole } = {}
 
   // people can switch which side of the desk they are working as; editors land on the desk by default
   const [workingAs, setWorkingAs] = useState<ProfileRole | null>(null);
-  const role = workingAs ?? initialRole ?? 'editor';
+
+  /*
+   * The profile decides which workspaces this person has. Until it loads we only offer the one
+   * being viewed, so the switch never flashes a role they do not hold.
+   */
+  const viewingAs = initialRole ?? 'editor';
+  const heldRoles = profile?.roles.map((details) => details.role) ?? [];
+  const roles: ProfileRole[] = heldRoles.length > 0 ? heldRoles : [viewingAs];
+  const preferred = workingAs ?? viewingAs;
+  const role = roles.includes(preferred) ? preferred : roles[0];
+
+  // A deep link into a workspace they do not hold sends them home instead
+  useEffect(() => {
+    if (!profile) return;
+
+    const held = profile.roles.map((details) => details.role);
+    if (!held.includes(viewingAs)) router.replace(workspaceHome(held));
+  }, [profile, viewingAs, router]);
 
   return (
     <header className={styles.headerBox}>
       {/* ☰ opens the navigation menu on the left */}
       <HamburgerMenu
         name={myName}
-        roles={WORKSPACE_ROLES}
+        roles={roles}
         activeRole={role}
         onRoleChange={(nextRole) => {
           setWorkingAs(nextRole);
