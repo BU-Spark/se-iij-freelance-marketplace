@@ -17,6 +17,6 @@ export const NAV_ITEMS: Record<ProfileRole, NavItem[]> = {
   freelancer: [
     { key: 'assignments', label: 'Available assignments', href: '/dashboard/freelancer', exact: true },
     { key: 'my-assignments', label: 'My assignments', href: '/dashboard/freelancer#active-assignments' },
-    { key: 'make-a-pitch', label: 'Make a pitch', href: '/dashboard/freelancer/make-a-pitch' },
+    { key: 'availability', label: 'My availability', href: '/dashboard/availability' },
   ],
 };
