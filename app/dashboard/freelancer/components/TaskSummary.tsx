@@ -1,5 +1,5 @@
 import type { FeedFilter } from '../freelancer.utils';
-import styles from '../freelancer.module.css';
+import styles from '../../dashboard.module.css';
 export type TaskSummaryProps = {
   openCount: number;
   invitedCount: number;
@@ -8,20 +8,20 @@ export type TaskSummaryProps = {
 };
 export function TaskSummary({ openCount, invitedCount, activeCount, onSelect }: TaskSummaryProps) {
   return (
-    <ul className={styles.summary} aria-label="Task summary">
-      <li>
+    <ul className={styles.counts} aria-label="Task summary">
+      <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>
         <a href="#task-feed" onClick={() => onSelect('open')}>
-          <strong>{openCount}</strong> Open opportunities
+          {openCount} open opportunities
         </a>
       </li>
-      <li>
+      <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>
         <a href="#task-feed" onClick={() => onSelect('invited')}>
-          <strong>{invitedCount}</strong> Invitations
+          {invitedCount} invitations
         </a>
       </li>
-      <li>
+      <li style={{ ['--dot' as string]: 'var(--c-green)' }}>
         <a href="#task-feed" onClick={() => onSelect('in-progress')}>
-          <strong>{activeCount}</strong> In progress
+          {activeCount} in progress
         </a>
       </li>
     </ul>

@@ -1,16 +1,30 @@
 'use client';
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import { taskStatus, PAGE_SIZE, type FeedFilter } from './freelancer.utils';
 import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters, TaskPagination } from './components';
+import PageSearch from '../components/PageSearch';
+import { formatDeskDate } from '../../utils/dashboard.utils';
 import styles from './freelancer.module.css';
+import dashboardStyles from '../dashboard.module.css';
 
-export type FreelancerDashboardProps = { assignments: DeskAssignment[]; freelancerId: string };
+export type FreelancerDashboardProps = {
+  assignments: DeskAssignment[];
+  freelancerId: string;
+  dateLabel?: string;
+  children?: ReactNode;
+};
 
 const byDeadline = (a: DeskAssignment, b: DeskAssignment) =>
   (a.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER) - (b.deadline?.getTime() ?? Number.MAX_SAFE_INTEGER);
 
-export default function FreelancerDashboard({ assignments, freelancerId }: FreelancerDashboardProps) {
+export default function FreelancerDashboard({
+  assignments,
+  freelancerId,
+  dateLabel = formatDeskDate(new Date()),
+  children,
+}: FreelancerDashboardProps) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [page, setPage] = useState(1);
@@ -55,16 +69,28 @@ export default function FreelancerDashboard({ assignments, freelancerId }: Freel
 
   return (
     <>
-      <TaskSummary
-        openCount={relevant.filter((task) => taskStatus(task, freelancerId) === 'open').length}
-        invitedCount={relevant.filter((task) => taskStatus(task, freelancerId) === 'invited').length}
-        activeCount={active.length}
-        onSelect={showStatus}
-      />
+      <div className={styles.statusBar}>
+        <div className={dashboardStyles.statusLead}>
+          <p>
+            <strong>{dateLabel}</strong>
+          </p>
+          <PageSearch targetId="task-feed" />
+        </div>
+        <TaskSummary
+          openCount={relevant.filter((task) => taskStatus(task, freelancerId) === 'open').length}
+          invitedCount={relevant.filter((task) => taskStatus(task, freelancerId) === 'invited').length}
+          activeCount={active.length}
+          onSelect={showStatus}
+        />
+      </div>
+      {children}
       <ActiveAssignments active={active} freelancerId={freelancerId} />
-      <section id="task-feed" tabIndex={-1} aria-labelledby="feed-heading" className={styles.section}>
-        <h2 id="feed-heading">Task feed</h2>
-        <p>Open opportunities, your invitations, and your ongoing work. Soonest deadlines first.</p>
+      <section id="task-feed" tabIndex={-1} aria-label="Task feed" className={styles.section}>
+        <div className={styles.sectionHeading}>
+          <div>
+            <h2 id="feed-heading">Available assignments</h2>
+          </div>
+        </div>
         <TaskFilters
           query={query}
           filter={filter}
