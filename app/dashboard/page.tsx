@@ -8,7 +8,9 @@ import styles from './dashboard.module.css';
 import { ASSIGNMENTS, ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
+import type { RosterMember } from '../types/dashboard.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments';
+import { loadEditorRoster } from '../../lib/roster';
 import { requireWorkspace } from '../../lib/workspace';
 import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 
@@ -33,6 +35,20 @@ export default async function Dashboard() {
     posted = await listOpenAssignments(viewer);
   } catch (error) {
     console.error('Failed to load assignments.', error);
+  }
+
+  // The availability column is this editor's own roster, not the whole directory
+  let roster: RosterMember[] = [];
+  let rosterFailed = false;
+  try {
+    const { userId } = await auth();
+    if (userId) {
+      const { members } = await loadEditorRoster(userId);
+      roster = members;
+    }
+  } catch (error) {
+    console.error('Failed to load the roster for the desk.', error);
+    rosterFailed = true;
   }
 
   // Assignments posted to the database sit above the sample desk data
@@ -62,7 +78,7 @@ export default async function Dashboard() {
 
       <main id="dashboard-columns" className={styles.columns}>
         {/* ---- Left column: who is available ---- */}
-        <AvailabilityColumn roster={ROSTER} />
+        <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
 
         {/* ---- Right column: assignments ---- */}
         <AssignmentsColumn assignments={assignments} roster={ROSTER} />

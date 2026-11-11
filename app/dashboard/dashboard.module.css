@@ -172,6 +172,34 @@
   list-style: none;
 }
 
+/* the availability column before anyone has joined the roster */
+.emptyRoster {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.emptyRoster strong {
+  color: var(--navy-deep);
+  font-size: 15px;
+}
+
+.emptyRoster a {
+  color: var(--navy);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--c-yellow);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
 
 
 /* ---- Phones and small tablets: stack the columns ---- */
