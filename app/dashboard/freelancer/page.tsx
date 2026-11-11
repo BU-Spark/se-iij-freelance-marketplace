@@ -1,5 +1,4 @@
 import { auth } from '@clerk/nextjs/server';
-import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
@@ -33,15 +32,13 @@ export default async function FreelancerPage() {
   }
 
   return (
-    <FreelancerWorkspace>
-      <main className={styles.main}>
-        <p className={styles.eyebrow}>Freelancer workspace</p>
-        <h1>Your assignment desk</h1>
-        <p>Discover opportunities and keep your current work in view.</p>
-        {/* declined invitations are left out: the editor sees the answer on their roster */}
-        <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
-        <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} />
-      </main>
-    </FreelancerWorkspace>
+    <main className={styles.main}>
+      <p className={styles.eyebrow}>Freelancer workspace</p>
+      <h1>Your assignment desk</h1>
+      <p>Discover opportunities and keep your current work in view.</p>
+      {/* declined invitations are left out: the editor sees the answer on their roster */}
+      <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
+      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} />
+    </main>
   );
 }

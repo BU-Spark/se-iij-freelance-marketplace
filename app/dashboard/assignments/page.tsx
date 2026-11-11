@@ -1,5 +1,4 @@
 import { auth } from '@clerk/nextjs/server';
-import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import type { Assignment } from '../../types/assignments.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import { requireWorkspace } from '../../../lib/workspace';
@@ -40,13 +39,13 @@ export default async function AssignmentsPage({ searchParams }: AssignmentsPageP
   }
 
   return (
-    <FreelancerWorkspace>
+    <>
       <div className={styles.shell}>
         <AssignmentsBrowser assignments={assignments} loadFailed={loadFailed} />
       </div>
       {opened && (
         <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard/assignments" />
       )}
-    </FreelancerWorkspace>
+    </>
   );
 }

@@ -1,5 +1,4 @@
 import { auth } from '@clerk/nextjs/server';
-import { EditorHeader } from '../../components/header/EditorHeader';
 import { loadEditorRoster } from '../../../lib/roster';
 import { requireWorkspace } from '../../../lib/workspace';
 import type { RosterMember } from '../../types/dashboard.types';
@@ -28,7 +27,6 @@ export default async function RosterPage() {
 
   return (
     <div className={styles.shell}>
-      <EditorHeader />
       <RosterBrowser members={members} pending={pending} invitable={invitable} loadFailed={loadFailed} />
     </div>
   );

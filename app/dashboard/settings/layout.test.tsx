@@ -1,13 +1,9 @@
-import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import SettingsLayout from './layout';
 
 let mockPath = '/dashboard/settings';
 
 jest.mock('next/navigation', () => ({ usePathname: () => mockPath }));
-jest.mock('../../components/FreelancerWorkspace', () => ({
-  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
 
 const renderLayout = () =>
   render(
