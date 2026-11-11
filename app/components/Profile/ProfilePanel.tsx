@@ -2,6 +2,7 @@
 
 import SidePanel from '../SidePanel/SidePanel';
 import ProfileContent from './ProfileContent';
+import ProfileHero from './cards/ProfileHero';
 import type { AccountProfile, BasicInfo, RoleDetails } from '../../types/profile.types';
 
 /** Saves resolve true once the server has the change, so a failed save leaves the form open */
@@ -27,7 +28,13 @@ export default function ProfilePanel({
   onSaveAvailable,
 }: ProfilePanelProps) {
   return (
-    <SidePanel title="My profile" side="right" onClose={onClose}>
+    <SidePanel
+      title="My profile"
+      side="right"
+      tone="navy"
+      header={<ProfileHero basic={profile.basic} />}
+      onClose={onClose}
+    >
       <ProfileContent
         profile={profile}
         onSaveBasic={onSaveBasic}
