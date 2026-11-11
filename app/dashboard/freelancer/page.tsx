@@ -38,14 +38,12 @@ export default async function FreelancerPage() {
       <main className={styles.main}>
         {/* declined invitations are left out: the editor sees the answer on their roster */}
         <FreelancerDashboard
-          assignments={DEMO_ASSIGNMENTS}
-          freelancerId={DEMO_FREELANCER_ID}
+          assignments={assignments}
+          freelancerId={freelancerId}
           dateLabel={formatDeskDate(new Date())}
         >
           <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
         </FreelancerDashboard>
-        <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
-        <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} />
       </main>
     </FreelancerWorkspace>
   );
