@@ -10,7 +10,7 @@ export default function DeskAvailabilityPage() {
   const { userId, isLoaded } = useAuth();
 
   return (
-    <FreelancerWorkspace role="editor">
+    <FreelancerWorkspace>
       <main className={styles.main}>
         <h1>My availability</h1>
         <p>Set whether you are free right now and your usual hours at the desk.</p>

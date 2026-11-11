@@ -15,8 +15,6 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
   const { userId } = await auth();
 
   const [viewer, assignment] = await Promise.all([userId ? loadAssignmentViewer(userId) : null, getAssignment(id)]);
-  const role =
-    viewer && !viewer.roles.includes('editor') && viewer.roles.includes('freelancer') ? 'freelancer' : 'editor';
 
   if (!assignment) notFound();
 
@@ -24,7 +22,7 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
 
   return (
     <div className={styles.shell}>
-      <EditorHeader initialRole={role} />
+      <EditorHeader />
       <AssignmentDetail assignment={assignment} canEdit={canEditAssignment(viewer, assignment)} />
     </div>
   );

@@ -42,16 +42,14 @@ describe('EditorHeader', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('switches the action button when working as freelancer', async () => {
+  it('goes to the freelancer workspace when switching sides', async () => {
     render(<EditorHeader />);
     expect(screen.getByRole('link', { name: /new assignment/i })).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
     await userEvent.click(await screen.findByRole('radio', { name: /freelancer/i }));
 
-    const pitchLinks = screen.getAllByRole('link', { name: /make a pitch/i });
-    expect(pitchLinks).toHaveLength(1); // The header action remains; the sidebar item was removed.
-    expect(pitchLinks[0]).toHaveAttribute('href', '/dashboard/freelancer/make-a-pitch');
+    // the side follows the URL, so the freelancer header appears once that page opens
     expect(mockPush).toHaveBeenCalledWith('/dashboard/freelancer');
   });
 
