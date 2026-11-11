@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import ProfileContent from '../../components/Profile/ProfileContent';
-import AvailabilitySection from '../../components/Availability/AvailabilitySection';
 import { useToast } from '../../components/Toast/ToastProvider';
 import { useProfile } from '../../hooks/useProfile';
 import type { BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
@@ -13,8 +12,8 @@ import styles from './settings.module.css';
 const SAVE_FAILED = 'Could not save your profile. Please try again.';
 
 /**
- * Settings is the profile page: the same cards the profile panel shows, on a page and with
- * availability underneath instead of a separate page of its own.
+ * Settings is the profile page: the same cards the profile panel shows, on a page. Availability is
+ * not a section of its own — it opens with the role it belongs to.
  */
 export default function SettingsPage() {
   const { isLoaded } = useAuth();
@@ -63,9 +62,7 @@ export default function SettingsPage() {
             </Link>
           </>
         ) : profile ? (
-          <ProfileContent profile={profile} onSaveBasic={handleSaveBasic} onSaveRole={handleSaveRole}>
-            <AvailabilitySection />
-          </ProfileContent>
+          <ProfileContent profile={profile} onSaveBasic={handleSaveBasic} onSaveRole={handleSaveRole} />
         ) : (
           <p className={styles.status} role="status">
             {error ?? 'Your profile is unavailable right now.'}

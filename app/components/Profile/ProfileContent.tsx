@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useState } from 'react';
 import BasicInfoCard from './cards/BasicInfoCard';
 import BasicInfoForm from './forms/BasicInfoForm';
 import RoleCard from './cards/RoleCard';
@@ -22,21 +22,13 @@ type ProfileContentProps = {
   onSaveRole?: (details: RoleDetails) => SaveResult;
   /** if given, basic info gets the "free right now" switch */
   onSaveAvailable?: (availableNow: boolean) => SaveResult;
-  /** further settings sections shown under the profile, e.g. availability */
-  children?: ReactNode;
 };
 
 /**
  * The profile's cards and forms. The side panel and the settings page show the same thing, so
  * the panel is this in a drawer and the settings page is this on a page.
  */
-export default function ProfileContent({
-  profile,
-  onSaveBasic,
-  onSaveRole,
-  onSaveAvailable,
-  children,
-}: ProfileContentProps) {
+export default function ProfileContent({ profile, onSaveBasic, onSaveRole, onSaveAvailable }: ProfileContentProps) {
   // which card is open as a form: 'basic', a role, or nothing
   const [editing, setEditing] = useState<'basic' | ProfileRole | null>(null);
   const stopEditing = () => setEditing(null);
@@ -116,8 +108,6 @@ export default function ProfileContent({
       {missingRoles(profile, ALL_ROLES).map((role) => (
         <AddRoleButton key={role} role={role} />
       ))}
-
-      {children}
     </div>
   );
 }

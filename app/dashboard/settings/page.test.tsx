@@ -62,14 +62,22 @@ afterAll(() => {
 });
 
 describe('Settings page', () => {
-  it('shows the profile cards and the availability form together', async () => {
+  it('shows the profile cards', () => {
     renderPage();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
     expect(screen.getByText('Basic info')).toBeInTheDocument();
     expect(screen.getByText('My roles')).toBeInTheDocument();
-    expect(screen.getByText('My availability')).toBeInTheDocument();
-    expect(await screen.findByLabelText('Time zone')).toHaveValue('UTC');
+  });
+
+  it('leaves the availability editor to the role it belongs to', () => {
+    renderPage();
+
+    // the role cards keep their one-line summary, but nothing here opens the hours editor
+    expect(screen.queryByText('Freelancer availability')).not.toBeInTheDocument();
+    expect(screen.queryByText('Editor availability')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Time zone')).not.toBeInTheDocument();
+    expect(fetchMock).not.toHaveBeenCalledWith(expect.stringContaining('/api/profile/availability'), expect.anything());
   });
 
   it('waits for the profile before drawing the cards', () => {

@@ -1,8 +1,33 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useAuth } from '@clerk/nextjs';
 import ProfilePanel from './ProfilePanel';
 import { MOCK_PROFILE } from './config/constants';
 
+jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
+
 const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
+const originalFetch = global.fetch;
+
+beforeEach(() => {
+  // editing a role mounts its availability card, which asks for that role's saved pattern
+  jest.mocked(useAuth).mockReturnValue({ userId: 'user-a', isLoaded: true } as ReturnType<typeof useAuth>);
+  global.fetch = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({
+      role: 'editor',
+      availableNow: false,
+      timezone: 'UTC',
+      days: [],
+      startsAt: null,
+      endsAt: null,
+    }),
+  }) as unknown as typeof fetch;
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
 
 describe('ProfilePanel completion bar', () => {
   const blankBios = { ...MOCK_PROFILE, basic: { ...MOCK_PROFILE.basic, shortBio: '', longBio: '' } };
@@ -46,6 +71,11 @@ describe('ProfilePanel', () => {
     expect(screen.getByText('Marcus Thorne')).toBeInTheDocument();
     expect(screen.getByText(MOCK_PROFILE.basic.email)).toBeInTheDocument();
     expect(screen.getByText(MOCK_PROFILE.basic.shortBio)).toBeInTheDocument();
+  });
+
+  it('expands to the settings page', () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+    expect(screen.getByRole('link', { name: /open settings/i })).toHaveAttribute('href', '/dashboard/settings');
   });
 
   it('shows one card per role with its own fields', () => {
@@ -177,6 +207,18 @@ describe('ProfilePanel', () => {
 
     expect(await screen.findByText('Add your first name.')).toBeInTheDocument();
     expect(onSaveBasic).not.toHaveBeenCalled();
+  });
+
+  it("shows a role's availability only while that role is being edited", () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} onSaveRole={jest.fn()} />);
+
+    expect(screen.queryByText('Editor availability')).not.toBeInTheDocument();
+    expect(screen.queryByText('Freelancer availability')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Editor details' }));
+
+    expect(screen.getByText('Editor availability')).toBeInTheDocument();
+    expect(screen.queryByText('Freelancer availability')).not.toBeInTheDocument();
   });
 
   it('cancelling a role edit changes nothing', () => {
