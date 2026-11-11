@@ -1,12 +1,17 @@
 import type { AccountProfile, ProfileRole, RoleValue } from '../../../types/profile.types';
 import { PROFILE_ROLE_ORDER } from '../../../types/profile.types';
+import { BEATS, DEFAULT_ORGS, MEDIUMS, SKILLS } from '../../../onboarding/constants';
 
-export type RoleFieldType = 'text' | 'number' | 'chips' | 'org' | 'readonly';
+export type RoleFieldType = 'text' | 'number' | 'chips' | 'org' | 'readonly' | 'availability';
 
 export type RoleField = {
   key: string;
   label: string;
   type: RoleFieldType;
+  /** the shared list a `chips` field suggests from; without it the field is free text only */
+  options?: string[];
+  /** shown and edited, but left out of the completion maths (e.g. only applies to some answers) */
+  optional?: boolean;
 };
 
 type RoleConfig = {
@@ -15,7 +20,10 @@ type RoleConfig = {
   accent: string;
   tint: string;
   ink: string;
-  /** which fields this role has, in order; `readonly` ones are shown but not edited */
+  /**
+   * which fields this role has, in order; `readonly` ones are shown but not edited, and
+   * `availability` is edited by its own controls rather than as a text box
+   */
   fields: RoleField[];
   /** fields that must be filled in before the role counts as finished */
   requiredFields: string[];
@@ -32,11 +40,13 @@ export const ROLE_CONFIG: Record<ProfileRole, RoleConfig> = {
       { key: 'location', label: 'Location', type: 'text' },
       { key: 'rate', label: 'Usual rate', type: 'text' },
       { key: 'communityCovered', label: 'Community covered', type: 'text' },
-      { key: 'reportingBeats', label: 'Reporting beats', type: 'chips' },
+      { key: 'reportingBeats', label: 'Reporting beats', type: 'chips', options: BEATS },
+      { key: 'beatOther', label: 'Other beat', type: 'text', optional: true },
+      { key: 'skills', label: 'Skills', type: 'chips', options: SKILLS },
       { key: 'beatTags', label: 'Beat tags', type: 'chips' },
-      { key: 'workMediums', label: 'Work mediums', type: 'chips' },
+      { key: 'workMediums', label: 'Work mediums', type: 'chips', options: MEDIUMS },
       { key: 'tools', label: 'Tools', type: 'chips' },
-      { key: 'availability', label: 'Availability', type: 'readonly' },
+      { key: 'availability', label: 'Availability', type: 'availability' },
     ],
     // nothing here is mandatory: a freelancer can fill the rest in whenever
     requiredFields: [],
@@ -57,12 +67,15 @@ export const ROLE_CONFIG: Record<ProfileRole, RoleConfig> = {
       { key: 'interestedTopics', label: 'Interested topics', type: 'chips' },
       { key: 'editorialPreferences', label: 'Editorial preferences', type: 'chips' },
       { key: 'lookingFor', label: 'Looking for', type: 'chips' },
-      { key: 'availability', label: 'Availability', type: 'readonly' },
+      { key: 'availability', label: 'Availability', type: 'availability' },
     ],
     // editors.job_title is NOT NULL, so a card without one cannot be saved
     requiredFields: ['jobTitle'],
   },
 };
+
+/** The row stores the organisation id; people recognise the name */
+export const organizationName = (id: string) => DEFAULT_ORGS.find((org) => org.id === id)?.name ?? id;
 
 /** The roles in the order we show them */
 export const ALL_ROLES: ProfileRole[] = PROFILE_ROLE_ORDER;
@@ -77,8 +90,9 @@ export const isFilled = (value: RoleValue | undefined) =>
 
 /**
  * How much of the profile has been filled in, as a whole percentage, so the panel can nudge the
- * rest. Counts the shared bios plus every field a role card lets you edit; `readonly` fields are
- * left out because the panel cannot change them, which keeps 100% reachable.
+ * rest. Counts the shared bios plus every plain field a role card lets you type into; `readonly`
+ * and `availability` fields are left out because they are not free text, which keeps 100%
+ * reachable.
  */
 export function profileCompletion(profile: AccountProfile): number {
   const checks = [
@@ -87,7 +101,7 @@ export function profileCompletion(profile: AccountProfile): number {
     profile.roles.length > 0,
     ...profile.roles.flatMap((details) =>
       ROLE_CONFIG[details.role].fields
-        .filter((field) => field.type !== 'readonly')
+        .filter((field) => field.type !== 'readonly' && field.type !== 'availability' && !field.optional)
         .map((field) => isFilled(details.facts[field.key]))
     ),
   ];

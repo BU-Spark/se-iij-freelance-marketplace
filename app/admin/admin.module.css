@@ -17,11 +17,6 @@
   background: var(--white);
 }
 
-.sidebar .backLink {
-  margin-top: auto;
-  padding: 0 14px;
-}
-
 /* phones: hide the sidebar and show the ☰ top bar instead */
 @media (max-width: 860px) {
   .shell {
@@ -98,17 +93,6 @@
   font-size: 12px;
 }
 
-.backLink {
-  color: var(--c-blue);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.backLink:hover {
-  text-decoration: underline;
-}
-
 .main {
   max-width: 1280px;
   margin: 0 auto;
@@ -118,7 +102,6 @@
 .empty {
   color: var(--muted);
 }
-
 
 .toolbar {
   display: flex;
@@ -370,4 +353,29 @@
 .dangerAction:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* the appeals queue sits above the flags inbox */
+.appealsSection {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 28px clamp(16px, 4vw, 64px) 0;
+}
+
+.appealsHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.appealsTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: var(--font-serif);
+  font-size: 26px;
+  font-weight: 400;
 }

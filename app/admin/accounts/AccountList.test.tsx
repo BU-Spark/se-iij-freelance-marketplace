@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ToastProvider } from '../../components/Toast/ToastProvider';
-import type { AdminAccount } from '../../types/admin.types';
+import type { AccountStatus, AdminAccount } from '../../types/admin.types';
 import AccountList from './AccountList';
 
 const account: AdminAccount = {
@@ -28,6 +28,32 @@ const renderList = () =>
     </ToastProvider>
   );
 
+const originalFetch = global.fetch;
+const fetchMock = jest.fn();
+
+/** Answer the admin API the way the real route does, echoing the requested status back */
+const answerWithStatus = () =>
+  fetchMock.mockImplementation(async (url: string, init?: RequestInit) => {
+    const account = accounts.find((a) => url === `/api/admin/accounts/${a.id}`)!;
+    const { status, reason } = JSON.parse(String(init?.body)) as { status: AccountStatus; reason?: string };
+
+    return {
+      ok: true,
+      json: async () => ({
+        account: { ...account, status, suspensionReason: status === 'suspended' ? reason : undefined },
+      }),
+    } as unknown as Response;
+  });
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  global.fetch = fetchMock as unknown as typeof fetch;
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
+
 describe('AccountList', () => {
   it('opens on active accounts with a count per status', () => {
     renderList();
@@ -50,6 +76,7 @@ describe('AccountList', () => {
   });
 
   it('needs a reason to suspend, then can reactivate', async () => {
+    answerWithStatus();
     renderList();
     const actions = screen.getByRole('group', { name: 'Actions for Amara Okafor' });
 
@@ -58,8 +85,13 @@ describe('AccountList', () => {
     await userEvent.type(screen.getByLabelText('Why are you suspending Amara Okafor?'), 'Spam pitches');
     await userEvent.click(screen.getByRole('button', { name: 'Suspend account' }));
 
-    expect(screen.getByText(/Amara Okafor is suspended/)).toBeInTheDocument();
+    expect(await screen.findByText(/Amara Okafor is suspended/)).toBeInTheDocument();
     expect(within(filter('Suspended')).getByText('2')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/accounts/a1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'suspended', reason: 'Spam pitches' }),
+    });
 
     await userEvent.click(filter('Suspended'));
     expect(screen.getByText('Spam pitches')).toBeInTheDocument();
@@ -69,7 +101,24 @@ describe('AccountList', () => {
         name: 'Reactivate',
       })
     );
-    expect(screen.getByText('Amara Okafor is active again.')).toBeInTheDocument();
+    expect(await screen.findByText('Amara Okafor is active again.')).toBeInTheDocument();
     expect(within(filter('Active')).getByText('2')).toBeInTheDocument();
+  });
+
+  it('keeps the account active and shows why when the server refuses', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'You cannot suspend your own account.' }),
+    } as unknown as Response);
+    renderList();
+
+    const actions = screen.getByRole('group', { name: 'Actions for Amara Okafor' });
+    await userEvent.click(within(actions).getByRole('button', { name: 'Suspend' }));
+    await userEvent.type(screen.getByLabelText('Why are you suspending Amara Okafor?'), 'Testing');
+    await userEvent.click(screen.getByRole('button', { name: 'Suspend account' }));
+
+    expect(await screen.findByText('You cannot suspend your own account.')).toBeInTheDocument();
+    expect(within(filter('Active')).getByText('2')).toBeInTheDocument();
+    expect(within(filter('Suspended')).getByText('1')).toBeInTheDocument();
   });
 });

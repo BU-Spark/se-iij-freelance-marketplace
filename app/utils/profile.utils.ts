@@ -89,7 +89,9 @@ const freelancerDetails = (row: ProfileRow): RoleDetails => ({
     location: str(row.freelancer_location),
     rate: str(row.rate),
     communityCovered: str(row.community_covered),
-    reportingBeats: list(row.reporting_beats),
+    reportingBeats: list(row.beats),
+    beatOther: str(row.beat_other),
+    skills: list(row.skills),
     beatTags: list(row.beat_tags),
     workMediums: list(row.work_mediums),
     tools: list(row.tools),
@@ -213,6 +215,8 @@ export type CleanFreelancer = {
   rate: string | null;
   communityCovered: string | null;
   reportingBeats: string[];
+  beatOther: string | null;
+  skills: string[];
   beatTags: string[];
   workMediums: string[];
   tools: string[];
@@ -309,7 +313,9 @@ export function toOnboardingData(row: ProfileRow): Partial<ProfileData> {
     rateAmount: rate.rateAmount,
     rateUnit: rate.rateUnit,
     communityCovered: str(row.community_covered),
-    reportingBeats: list(row.reporting_beats),
+    reportingBeats: list(row.beats),
+    beatOther: str(row.beat_other),
+    skills: list(row.skills),
     beatTags: list(row.beat_tags),
     workMediums: list(row.work_mediums),
     tools: list(row.tools),
@@ -343,6 +349,8 @@ export function cleanFreelancerFacts(facts: Record<string, unknown>): CleanRole 
       rate: optional(facts.rate),
       communityCovered: optional(facts.communityCovered),
       reportingBeats: chips(facts.reportingBeats),
+      beatOther: optional(facts.beatOther),
+      skills: chips(facts.skills),
       beatTags: chips(facts.beatTags),
       workMediums: chips(facts.workMediums),
       tools: chips(facts.tools),
@@ -398,6 +406,8 @@ export const toAvailability = (d: ProfileData): Availability | undefined => {
       startsAt: d.workdayStart || '09:00',
       endsAt: d.workdayEnd || '17:00',
     },
+    // onboarding only asks for the weekly pattern; dated exceptions are added later
+    exceptions: [],
     updatedAt: new Date(),
   };
 };
@@ -443,6 +453,8 @@ export const toFreelancer = (d: ProfileData): NewFreelancer => ({
   rate: formatRate(d.rateAmount, d.rateUnit),
   communityCovered: d.communityCovered.trim() || undefined,
   reportingBeats: d.reportingBeats,
+  beatOther: d.beatOther.trim() || undefined,
+  skills: d.skills,
   beatTags: d.beatTags,
   workMediums: d.workMediums,
   tools: d.tools,

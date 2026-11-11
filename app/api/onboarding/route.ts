@@ -152,13 +152,15 @@ export async function POST(request: Request) {
       const details = freelancer as NewFreelancer;
       await connection.query(
         `INSERT INTO freelancers
-           (user_id, location, rate, community_covered, reporting_beats, beat_tags, work_mediums, tools, portfolio, availability)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           (user_id, location, rate, community_covered, beats, beat_other, skills, beat_tags, work_mediums, tools, portfolio, availability)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
          ON CONFLICT (user_id) DO UPDATE SET
            location = EXCLUDED.location,
            rate = EXCLUDED.rate,
            community_covered = EXCLUDED.community_covered,
-           reporting_beats = EXCLUDED.reporting_beats,
+           beats = EXCLUDED.beats,
+           beat_other = EXCLUDED.beat_other,
+           skills = EXCLUDED.skills,
            beat_tags = EXCLUDED.beat_tags,
            work_mediums = EXCLUDED.work_mediums,
            tools = EXCLUDED.tools,
@@ -171,6 +173,8 @@ export async function POST(request: Request) {
           details.rate ?? null,
           details.communityCovered ?? null,
           details.reportingBeats ?? [],
+          details.beatOther ?? null,
+          details.skills ?? [],
           details.beatTags ?? [],
           details.workMediums ?? [],
           details.tools ?? [],

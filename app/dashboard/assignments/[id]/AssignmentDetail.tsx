@@ -1,12 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import type { Assignment, AssignmentFeedback } from '../../../types/assignments.types';
 import { formatCompensation } from '../../../utils/assignment.utils';
 import { categoryColor } from '../../../utils/category.utils';
+import { organizationName } from '../../../utils/organization.utils';
 import cardStyles from '../../../components/AssignmentCard/AssignmentCard.module.css';
-import listStyles from '../assignments.module.css';
 import styles from './assignmentDetail.module.css';
 import AssignmentEditForm from './AssignmentEditForm';
 import AssignmentFeedbackForm from './AssignmentFeedbackForm';
@@ -15,8 +14,8 @@ type AssignmentDetailProps = {
   assignment: Assignment;
   /** true for editors from the organization that posted it */
   canEdit?: boolean;
-  /** true for the sample desk data, which is not saved anywhere */
-  isSample?: boolean;
+  /** shows which organization posted it; the editor desk asks for it, the freelance browser does not yet */
+  showOrganization?: boolean;
 };
 
 const STATUS_LABEL: Record<Assignment['status'], string> = {
@@ -41,25 +40,22 @@ const formatDateTime = (date: Date | null) =>
 const formatDate = (date: Date) =>
   new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
-/** The expanded view of one assignment: every field, including the description */
-export default function AssignmentDetail({ assignment: a, canEdit = false, isSample = false }: AssignmentDetailProps) {
+/** The expanded view of one assignment, shown in the assignment drawer: every field, including the description */
+export default function AssignmentDetail({
+  assignment: a,
+  canEdit = false,
+  showOrganization = false,
+}: AssignmentDetailProps) {
   const [editing, setEditing] = useState(false);
   const [feedbackHistory, setFeedbackHistory] = useState<AssignmentFeedback[]>([]);
+  const organization = showOrganization ? organizationName(a.organizationId) : null;
 
   if (editing) {
-    return (
-      <main className={styles.main}>
-        <AssignmentEditForm assignment={a} onCancel={() => setEditing(false)} onSaved={() => setEditing(false)} />
-      </main>
-    );
+    return <AssignmentEditForm assignment={a} onCancel={() => setEditing(false)} onSaved={() => setEditing(false)} />;
   }
 
   return (
-    <main className={styles.main}>
-      <Link href={isSample ? '/dashboard' : '/dashboard/assignments'} className={listStyles.backLink}>
-        {isSample ? '← Back to dashboard' : '← Back to assignments'}
-      </Link>
-
+    <>
       <article className={styles.card}>
         <div className={cardStyles.top}>
           <span className={cardStyles.category}>
@@ -84,6 +80,12 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
         </div>
 
         <dl className={styles.details}>
+          {organization && (
+            <div>
+              <dt>Organization</dt>
+              <dd>{organization}</dd>
+            </div>
+          )}
           <div>
             <dt>Deadline</dt>
             <dd>{formatDateTime(a.deadline)}</dd>
@@ -109,21 +111,15 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
           <p className={styles.description}>{a.description || 'No description yet.'}</p>
         </section>
 
-        {isSample ? (
-          <p className={styles.meta}>
-            Sample assignment for the demo desk. It isn&apos;t saved anywhere, so it can&apos;t be edited.
-          </p>
-        ) : (
-          <p className={styles.meta}>
-            Posted {formatDate(a.createdAt)}
-            {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
-              ` · Updated ${formatDate(a.updatedAt)}`}
-            {' · '}
-            <span className={styles.slug}>{a.slug}</span>
-          </p>
-        )}
+        <p className={styles.meta}>
+          Posted {formatDate(a.createdAt)}
+          {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() &&
+            ` · Updated ${formatDate(a.updatedAt)}`}
+          {' · '}
+          <span className={styles.slug}>{a.slug}</span>
+        </p>
       </article>
-      {!isSample && a.status === 'completed' && (canEdit || feedbackHistory.length > 0) && (
+      {a.status === 'completed' && (canEdit || feedbackHistory.length > 0) && (
         <AssignmentFeedbackForm
           feedbackHistory={feedbackHistory}
           canSubmit={canEdit}
@@ -132,6 +128,6 @@ export default function AssignmentDetail({ assignment: a, canEdit = false, isSam
           }
         />
       )}
-    </main>
+    </>
   );
 }

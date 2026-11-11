@@ -6,6 +6,7 @@ const mockCreate = jest.fn();
 const mockPrepareFirstFactor = jest.fn();
 const mockAttemptFirstFactor = jest.fn();
 const mockSetActive = jest.fn();
+const mockFetch = jest.fn();
 const assign = jest.fn();
 
 jest.mock('@clerk/nextjs', () => ({
@@ -28,14 +29,18 @@ const originalLocation = window.location;
 
 beforeAll(() => {
   Object.defineProperty(window, 'location', { configurable: true, writable: true, value: { assign } });
+  global.fetch = mockFetch as unknown as typeof fetch;
 });
 
 afterAll(() => {
   Object.defineProperty(window, 'location', { configurable: true, writable: true, value: originalLocation });
 });
 
+const destinationResponse = (redirectTo: string) => ({ ok: true, json: async () => ({ redirectTo }) });
+
 beforeEach(() => {
   jest.clearAllMocks();
+  mockFetch.mockResolvedValue(destinationResponse('/dashboard'));
 });
 
 const fillCredentials = () => {
@@ -76,6 +81,39 @@ describe('Login page', () => {
 
     await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: 'sess_1' }));
     expect(assign).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('sends an admin to the admin dashboard', async () => {
+    mockCreate.mockResolvedValue({ status: 'complete', createdSessionId: 'sess_admin' });
+    mockFetch.mockResolvedValue(destinationResponse('/admin'));
+
+    fillCredentials();
+
+    await waitFor(() => expect(mockSetActive).toHaveBeenCalledWith({ session: 'sess_admin' }));
+    expect(mockFetch).toHaveBeenCalledWith('/api/auth/destination', { cache: 'no-store' });
+    expect(assign).toHaveBeenCalledWith('/admin');
+  });
+
+  it('falls back to the dashboard when the destination check fails', async () => {
+    mockCreate.mockResolvedValue({ status: 'complete', createdSessionId: 'sess_3' });
+    mockFetch.mockRejectedValue(new Error('offline'));
+    const consoleMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    fillCredentials();
+
+    await waitFor(() => expect(assign).toHaveBeenCalledWith('/dashboard'));
+    consoleMock.mockRestore();
+  });
+
+  it('offers the appeal form when Clerk says the account is banned', async () => {
+    mockCreate.mockRejectedValue({
+      errors: [{ code: 'user_banned', message: 'This user has been banned.' }],
+    });
+
+    fillCredentials();
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(/this account is suspended/i);
+    expect(screen.getByRole('link', { name: /appeal this decision/i })).toHaveAttribute('href', '/appeal');
   });
 
   it('asks for an emailed code when this device is not trusted yet', async () => {

@@ -1,45 +1,59 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useClerk } from '@clerk/nextjs';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
 import ProfileButton from '../Profile/ProfileButton';
 import { useProfile } from '../../hooks/useProfile';
 import { fullName } from '../../utils/profile.utils';
+import { workspaceForPath, workspaceHome } from '../../utils/workspace.utils';
 import styles from './editorHeader.module.css';
 
-// PR #141's shared header always offers both workspaces; profile roles are separate profile data.
-const WORKSPACE_ROLES: ProfileRole[] = ['freelancer', 'editor'];
+type EditorHeaderProps = {
+  /** The roles the server already read for this person, used until the profile loads */
+  initialRoles?: ProfileRole[];
+};
 
-export function EditorHeader({ initialRole }: { initialRole?: ProfileRole } = {}) {
+/** The one header for every dashboard page; the dashboard layout mounts it above each page */
+export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut } = useClerk();
   const { profile } = useProfile();
 
   const myName = profile ? fullName(profile) : '';
 
-  // people can switch which side of the desk they are working as; editors land on the desk by default
-  const [workingAs, setWorkingAs] = useState<ProfileRole | null>(null);
-  const role = workingAs ?? initialRole ?? 'editor';
+  /*
+   * The profile decides which workspaces this person has. Until it loads we lean on the roles the
+   * server read, and failing that only offer the one being viewed, so the switch never flashes a
+   * role they do not hold.
+   */
+  const loadedRoles = profile?.roles.map((details) => details.role) ?? [];
+  const heldRoles = loadedRoles.length > 0 ? loadedRoles : initialRoles;
+  const viewingAs = workspaceForPath(pathname, heldRoles);
+  const roles: ProfileRole[] = heldRoles.length > 0 ? heldRoles : [viewingAs];
+  // The header stays mounted across pages, so the side always follows the URL (back button included)
+  const role = roles.includes(viewingAs) ? viewingAs : roles[0];
+
+  // A deep link into a workspace they do not hold sends them home instead
+  useEffect(() => {
+    if (!profile) return;
+
+    const held = profile.roles.map((details) => details.role);
+    if (!held.includes(viewingAs)) router.replace(workspaceHome(held));
+  }, [profile, viewingAs, router]);
 
   return (
     <header className={styles.headerBox}>
       {/* ☰ opens the navigation menu on the left */}
       <HamburgerMenu
         name={myName}
-        roles={WORKSPACE_ROLES}
+        roles={roles}
         activeRole={role}
-        onRoleChange={(nextRole) => {
-          setWorkingAs(nextRole);
-          router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard');
-        }}
+        onRoleChange={(nextRole) => router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard')}
         currentPath={pathname}
-        profileHref={`${pathname}?panel=profile`}
-        onSignOut={() => signOut({ redirectUrl: '/' })}
+        settingsHref="/dashboard/settings"
       />
 
       <div className={styles.actions}>

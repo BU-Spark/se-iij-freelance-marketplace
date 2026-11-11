@@ -22,6 +22,22 @@ const messageFor = (status: string | null) =>
 
 type Errors = { email?: string; password?: string; code?: string; form?: string };
 
+/** Admins land in the admin area; everyone else in the app. Falls back to the app if the check fails. */
+const landingPath = async (): Promise<string> => {
+  try {
+    const response = await fetch('/api/auth/destination', { cache: 'no-store' });
+
+    if (response.ok) {
+      const body = (await response.json()) as { redirectTo?: unknown };
+      if (body.redirectTo === '/admin' || body.redirectTo === '/dashboard') return body.redirectTo;
+    }
+  } catch (error) {
+    console.error('Could not work out where to send you after logging in.', error);
+  }
+
+  return '/dashboard';
+};
+
 function LoginForm() {
   const { isLoaded, signIn, setActive } = useSignIn();
   const [email, setEmail] = useState('');
@@ -31,6 +47,8 @@ function LoginForm() {
   const [verifyingDevice, setVerifyingDevice] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+  /** Clerk bans a suspended account at sign-in; those people need the appeal form, not a password hint */
+  const [banned, setBanned] = useState(false);
 
   const firstClerkError = (error: unknown): { code?: string; longMessage?: string; message?: string } | undefined =>
     (error as { errors?: Array<{ code?: string; longMessage?: string; message?: string }> } | undefined)?.errors?.[0];
@@ -42,7 +60,7 @@ function LoginForm() {
     }
 
     await setActive({ session: sessionId });
-    window.location.assign('/dashboard');
+    window.location.assign(await landingPath());
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -66,6 +84,7 @@ function LoginForm() {
 
     setSubmitting(true);
     setErrors({});
+    setBanned(false);
     try {
       const result = await signIn.create({ identifier: email.trim(), password });
 
@@ -94,6 +113,13 @@ function LoginForm() {
       setErrors({ form: messageFor(result.status) });
     } catch (error) {
       const clerkError = firstClerkError(error);
+
+      // A ban is not a wrong password, so send them to the appeal form instead of saying "try again"
+      if (clerkError?.code === 'user_banned') {
+        setBanned(true);
+        return;
+      }
+
       setErrors({ form: clerkError?.longMessage ?? clerkError?.message ?? 'Unable to log in. Please try again.' });
     } finally {
       setSubmitting(false);
@@ -225,6 +251,17 @@ function LoginForm() {
                 )}
               </button>
             </form>
+
+            {banned && (
+              <div className={styles.appeal}>
+                <p role="alert" className={styles.appealNote}>
+                  This account is suspended. If you think that is a mistake, you can ask the team to look again.
+                </p>
+                <Link href="/appeal" className={styles.appealButton}>
+                  Appeal this decision
+                </Link>
+              </div>
+            )}
 
             <p className={styles.signupPrompt}>
               New to StoryMatch? <Link href="/signup">Create an account</Link>

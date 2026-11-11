@@ -1,10 +1,10 @@
-import { ChipGroup, Field, Section, TagInput } from '../../../components';
+import { Field, Section, TagInput } from '../../../components';
 import shared from '../../onboarding.module.css';
 import FormStep from '../FormStep';
 import PhotoField from '../../fields/PhotoField';
 import ShortBioField from '../../fields/ShortBioField';
-import { MEDIUMS, TOPICS } from '../../constants';
-import { fieldError, toggleValue } from '../../helpers';
+import { BEAT_OTHER, BEATS, MEDIUMS, SKILLS } from '../../constants';
+import { fieldError } from '../../helpers';
 import type {
   OrgOption,
   ProfileData,
@@ -77,25 +77,59 @@ export default function FreelancerProfileStep(p: FreelancerProfileStepProps) {
         </Section>
       )}
 
-      <Section title="Beats" hint="What do you cover?" color="var(--c-amber)" error={err('reportingBeats')}>
-        <ChipGroup
-          options={TOPICS}
-          selected={data.reportingBeats}
-          onToggle={(value) => {
-            update('reportingBeats', toggleValue(data.reportingBeats, value));
+      <Section
+        title="Beats"
+        hint="Search the beats you cover and add as many as apply."
+        color="var(--c-amber)"
+        error={err('reportingBeats')}
+      >
+        <TagInput
+          tags={data.reportingBeats}
+          onChange={(tags) => {
+            update('reportingBeats', tags);
             touch('reportingBeats');
           }}
+          suggestions={BEATS}
+          allowCustom={false}
+          ariaLabel="Search beats"
+          placeholder="Search beats…"
+        />
+        {data.reportingBeats.includes(BEAT_OTHER) && (
+          <div className={shared.spaced}>
+            <Field label="Your beat" error={err('beatOther')}>
+              <input
+                value={data.beatOther}
+                placeholder="Water rights in the Central Valley"
+                onChange={(e) => update('beatOther', e.target.value)}
+                onBlur={() => touch('beatOther')}
+              />
+            </Field>
+          </div>
+        )}
+      </Section>
+
+      <Section title="Skills" hint="Search how you do it and add as many as apply." color="var(--c-sky)">
+        <TagInput
+          tags={data.skills}
+          onChange={(tags) => update('skills', tags)}
+          suggestions={SKILLS}
+          allowCustom={false}
+          ariaLabel="Search skills"
+          placeholder="Search skills…"
         />
       </Section>
 
       <Section title="Mediums" hint="How do you tell stories?" color="var(--c-red)" error={err('workMediums')}>
-        <ChipGroup
-          options={MEDIUMS}
-          selected={data.workMediums}
-          onToggle={(value) => {
-            update('workMediums', toggleValue(data.workMediums, value));
+        <TagInput
+          tags={data.workMediums}
+          onChange={(tags) => {
+            update('workMediums', tags);
             touch('workMediums');
           }}
+          suggestions={MEDIUMS}
+          allowCustom={false}
+          ariaLabel="Search mediums"
+          placeholder="Search mediums…"
         />
       </Section>
 

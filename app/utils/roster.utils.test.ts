@@ -1,6 +1,7 @@
 import {
   availabilityStatus,
   beatsOf,
+  monthDayDates,
   monthDays,
   openHours,
   parseAvailability,
@@ -28,7 +29,7 @@ const row: RosterRow = {
   first_name: 'Sarah',
   last_name: 'Jenkins',
   location: 'Leeds, UK',
-  reporting_beats: ['Politics', 'Housing'],
+  beats: ['Politics', 'Housing'],
   beat_tags: ['Local'],
   work_mediums: ['Text'],
   availability: weekday,
@@ -41,6 +42,20 @@ describe('parseAvailability', () => {
     expect(parseAvailability({ ...weekday, typicalWorkingWindow: { startsAt: '17:00', endsAt: '09:00' } })).toBeNull();
     expect(parseAvailability({ ...weekday, days: [] })).toBeNull();
     expect(parseAvailability(null)).toBeNull();
+  });
+
+  it('keeps only the dated overrides that are real dates and a yes/no', () => {
+    const stored = {
+      ...weekday,
+      exceptions: [
+        { date: '2026-12-25', available: false },
+        { date: '25/12/2026', available: false },
+        { date: '2026-12-26' },
+        'nonsense',
+      ],
+    } as unknown as RosterAvailability;
+
+    expect(parseAvailability(stored)?.exceptions).toEqual([{ date: '2026-12-25', available: false }]);
   });
 });
 
@@ -64,6 +79,19 @@ describe('availabilityStatus', () => {
 
   it('falls back to the server clock when the time zone is unusable', () => {
     expect(availabilityStatus({ ...weekday, timezone: 'Mars/Olympus' }, LOCAL_WEDNESDAY_NOON)).toBe('available');
+  });
+
+  it('takes a dated override over the weekly pattern', () => {
+    const offToday = { ...weekday, exceptions: [{ date: '2026-11-04', available: false }] };
+    expect(availabilityStatus(offToday, WEDNESDAY_NOON)).toBe('off');
+
+    // Saturday, when the pattern has them off, but they said they are working
+    const extraDay = { ...weekday, exceptions: [{ date: '2026-11-07', available: true }] };
+    expect(availabilityStatus(extraDay, new Date('2026-11-07T12:00:00.000Z'))).toBe('available');
+
+    // an override for another date leaves today alone
+    const otherDay = { ...weekday, exceptions: [{ date: '2026-11-05', available: false }] };
+    expect(availabilityStatus(otherDay, WEDNESDAY_NOON)).toBe('available');
   });
 });
 
@@ -89,6 +117,27 @@ describe('strips', () => {
   it('has an empty month when there is no pattern', () => {
     expect(monthDays(null, WEDNESDAY_NOON).every((free) => free === false)).toBe(true);
   });
+
+  it('lets dated exceptions win over the projected pattern', () => {
+    const days = monthDays(
+      {
+        ...weekday,
+        exceptions: [
+          { date: '2026-11-05', available: false }, // a Thursday they took off
+          { date: '2026-11-07', available: true }, // a Saturday they are working
+        ],
+      },
+      WEDNESDAY_NOON
+    );
+
+    // Wed, Thu, Fri, Sat either side of the overrides
+    expect(days.slice(0, 4)).toEqual([true, false, true, true]);
+  });
+
+  it('carries the real dates behind the month boxes', () => {
+    expect(monthDayDates(weekday, WEDNESDAY_NOON).slice(0, 3)).toEqual(['2026-11-04', '2026-11-05', '2026-11-06']);
+    expect(monthDayDates(null, WEDNESDAY_NOON)).toHaveLength(30);
+  });
 });
 
 describe('rosterNote', () => {
@@ -106,9 +155,9 @@ describe('specialty and beats', () => {
   });
 
   it('falls back through beat tags and mediums before giving up', () => {
-    expect(specialtyOf({ ...row, reporting_beats: [] })).toBe('Local');
-    expect(specialtyOf({ ...row, reporting_beats: [], beat_tags: [] })).toBe('Text');
-    expect(specialtyOf({ ...row, reporting_beats: null, beat_tags: null, work_mediums: [] })).toBe('Freelancer');
+    expect(specialtyOf({ ...row, beats: [] })).toBe('Local');
+    expect(specialtyOf({ ...row, beats: [], beat_tags: [] })).toBe('Text');
+    expect(specialtyOf({ ...row, beats: null, beat_tags: null, work_mediums: [] })).toBe('Freelancer');
   });
 
   it('collects every beat for the filter, without duplicates', () => {
@@ -129,6 +178,7 @@ describe('toRosterMember', () => {
       note: 'Available 09:00–17:00 today',
       weekDays: [true, true, true, true, true, false, false],
       monthDays: monthDays(weekday, WEDNESDAY_NOON),
+      monthDayDates: monthDayDates(weekday, WEDNESDAY_NOON),
     });
   });
 
@@ -138,6 +188,26 @@ describe('toRosterMember', () => {
     expect(member.status).toBe('off');
     expect(member.openHours).toEqual([]);
     expect(member.note).toBe('Off today');
+  });
+
+  it('says someone is available when they have said they are free right now', () => {
+    // a Saturday, when the weekly pattern has them off
+    const weekend = new Date('2026-11-07T12:00:00.000Z');
+    const freeNow = toRosterMember({ ...row, available_now: true }, weekend);
+
+    expect(freeNow.status).toBe('available');
+    expect(freeNow.note).toBe('Free right now');
+
+    // and it does not turn being busy into being free
+    expect(toRosterMember({ ...row, available_now: false }, weekend).status).toBe('off');
+  });
+
+  it('marks someone free right now even without a weekly pattern', () => {
+    const member = toRosterMember({ ...row, availability: null, available_now: true }, WEDNESDAY_NOON);
+
+    expect(member.status).toBe('available');
+    expect(member.note).toBe('Free right now');
+    expect(member.openHours).toEqual([]);
   });
 
   it('still renders someone with no availability, or no name', () => {

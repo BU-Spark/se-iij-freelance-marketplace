@@ -143,8 +143,9 @@ tables are `users`, `editors`, and `freelancers`, matching the domain models in
 Editors publish assignments through `POST /api/assignments`, which stores them in the
 `assignments` table. The `/dashboard/assignments` discovery page reads the open rows
 directly from that table on the server and is rendered dynamically, so a newly posted
-assignment appears on the next request. The editor dashboard loads the same rows and
-lists them above its sample desk data.
+assignment appears on the next request. The editor dashboard and the freelancer task feed
+load the same rows, so what people see is exactly what an organization posted — there is no
+sample data to fall back on, and an empty desk simply says nothing is open.
 
 Onboarding lets a user pick one role or both. Each selected role gets a profile and
 a preferences step, so the flow is three steps for one role and five for both, and

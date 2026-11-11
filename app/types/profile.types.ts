@@ -1,3 +1,5 @@
+import type { AvailabilityException } from './availability.types';
+
 /** The roles a person can have. One person can have both. */
 export type ProfileRole = 'editor' | 'freelancer';
 
@@ -44,6 +46,7 @@ export type StoredAvailability = {
   days?: string[];
   timezone?: string;
   typicalWorkingWindow?: { startsAt?: string; endsAt?: string };
+  exceptions?: AvailabilityException[];
 };
 
 /** One row of users LEFT JOIN editors LEFT JOIN freelancers, as the profile needs it */
@@ -70,7 +73,9 @@ export type ProfileRow = {
   freelancer_location: string | null;
   rate: string | null;
   community_covered: string | null;
-  reporting_beats: string[] | null;
+  beats: string[] | null;
+  beat_other: string | null;
+  skills: string[] | null;
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   tools: string[] | null;

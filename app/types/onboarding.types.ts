@@ -43,6 +43,9 @@ export interface ProfileData {
   // freelancer -> Freelancer
   location: string;
   reportingBeats: string[];
+  /** free text shown only when `BEAT_OTHER` is one of the beats */
+  beatOther: string;
+  skills: string[];
   workMediums: string[];
   tools: string[];
   portfolio: PortfolioItem[];

@@ -23,6 +23,8 @@ export const MOCK_PROFILE: AccountProfile = {
         rate: '$1.10 / word',
         communityCovered: 'Hackney, Tower Hamlets',
         reportingBeats: ['Local government', 'Housing'],
+        beatOther: '',
+        skills: ['Investigative Journalism', 'Data Visualization'],
         beatTags: ['Accountability', 'Public money'],
         workMediums: ['Reporting', 'Explainers'],
         tools: ['Excel', 'Datawrapper'],

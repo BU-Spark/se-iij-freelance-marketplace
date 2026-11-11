@@ -1,11 +1,13 @@
 import type { AvailabilityStatus, HourWindow, RosterMember } from '../types/dashboard.types';
-import type { Weekday } from '../types/availability.types';
+import type { AvailabilityException, Weekday } from '../types/availability.types';
+import { addDays, dateKeyIn, dayOfWeek, sanitizeExceptions } from './availability.utils';
 
-/** The availability blob as stored today: a weekly pattern and one working window */
+/** The availability blob as stored today: a weekly pattern, one working window, and dated overrides */
 export type RosterAvailability = {
   timezone?: string;
   days?: string[];
   typicalWorkingWindow?: { startsAt?: string; endsAt?: string };
+  exceptions?: AvailabilityException[];
 };
 
 /** A freelancer as the roster query returns them */
@@ -14,10 +16,12 @@ export type RosterRow = {
   first_name: string;
   last_name: string;
   location: string | null;
-  reporting_beats: string[] | null;
+  beats: string[] | null;
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   availability: RosterAvailability | null;
+  /** the person's own "free right now" flag, which beats the weekly pattern */
+  available_now?: boolean | null;
 };
 
 /** Monday-first, matching the week strip and `availability.days` */
@@ -45,7 +49,12 @@ export function parseAvailability(raw: RosterAvailability | null): RosterAvailab
 
   if (days.length === 0 || startsAt === null || endsAt === null || endsAt <= startsAt) return null;
 
-  return { timezone: str(raw.timezone) || undefined, days, typicalWorkingWindow: raw.typicalWorkingWindow };
+  return {
+    timezone: str(raw.timezone) || undefined,
+    days,
+    typicalWorkingWindow: raw.typicalWorkingWindow,
+    exceptions: sanitizeExceptions(raw.exceptions),
+  };
 }
 
 /** The weekday and clock time where the freelancer is, not where the server is */
@@ -79,7 +88,8 @@ export function availabilityStatus(availability: RosterAvailability | null, now:
   if (!availability) return 'off';
 
   const { weekday, minutes } = localTime(now, availability.timezone);
-  const working = (availability.days ?? []).includes(WEEK[weekday]);
+  const override = exceptionOn(availability, dateKeyIn(now, availability.timezone));
+  const working = override ?? (availability.days ?? []).includes(WEEK[weekday]);
   if (!working) return 'off';
 
   const startsAt = minutesOf(availability.typicalWorkingWindow?.startsAt) ?? 0;
@@ -107,15 +117,25 @@ export function weekDays(availability: RosterAvailability | null): boolean[] {
   return WEEK.map((day) => days.includes(day));
 }
 
+/** The dated override for a day: true / false, or null when the weekly pattern still rules */
+export function exceptionOn(availability: RosterAvailability | null, dateKey: string): boolean | null {
+  const exception = (availability?.exceptions ?? []).find((entry) => entry.date === dateKey);
+  return exception ? exception.available : null;
+}
+
 /** The next 30 days, today first: the weekly pattern projected onto real dates */
 export function monthDays(availability: RosterAvailability | null, now: Date): boolean[] {
   const days = new Set(availability?.days ?? []);
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  return Array.from({ length: 30 }, (_, offset) => {
-    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
-    return days.has(WEEK[(date.getDay() + 6) % 7]);
-  });
+  return monthDayDates(availability, now).map(
+    (date) => exceptionOn(availability, date) ?? days.has(WEEK[dayOfWeek(date)])
+  );
+}
+
+/** The real dates behind `monthDays`, so the month grid can show which day each box is */
+export function monthDayDates(availability: RosterAvailability | null, now: Date): string[] {
+  const start = dateKeyIn(now, availability?.timezone);
+  return Array.from({ length: 30 }, (_, offset) => addDays(start, offset));
 }
 
 /** What the card says under the strips */
@@ -132,18 +152,20 @@ export function rosterNote(availability: RosterAvailability | null, status: Avai
 
 /** The first beat they report on, falling back to the next thing we know about them */
 export function specialtyOf(row: RosterRow): string {
-  return list(row.reporting_beats)[0] ?? list(row.beat_tags)[0] ?? list(row.work_mediums)[0] ?? 'Freelancer';
+  return list(row.beats)[0] ?? list(row.beat_tags)[0] ?? list(row.work_mediums)[0] ?? 'Freelancer';
 }
 
 /** Every beat this person covers, for the filter dropdown */
 export function beatsOf(row: RosterRow): string[] {
-  const beats = [...list(row.reporting_beats), ...list(row.beat_tags)];
+  const beats = [...list(row.beats), ...list(row.beat_tags)];
   return [...new Set(beats)];
 }
 
 export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMember {
   const availability = parseAvailability(row.availability);
-  const status = availabilityStatus(availability, now);
+  // saying "I'm free right now" outranks whatever the weekly pattern says about this hour
+  const freeNow = row.available_now === true;
+  const status = freeNow ? 'available' : availabilityStatus(availability, now);
 
   return {
     id: row.id,
@@ -153,8 +175,9 @@ export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMe
     city: str(row.location),
     status,
     openHours: status === 'off' ? [] : openHours(availability),
-    note: rosterNote(availability, status),
+    note: freeNow ? 'Free right now' : rosterNote(availability, status),
     weekDays: weekDays(availability),
     monthDays: monthDays(availability, now),
+    monthDayDates: monthDayDates(availability, now),
   };
 }

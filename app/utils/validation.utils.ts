@@ -1,4 +1,5 @@
 import type { OnboardingRole, ProfileData, ProfileErrors, Step } from '../types/onboarding.types';
+import { BEAT_OTHER } from '../onboarding/constants';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const URL_PATTERN = /^https?:\/\/\S+\.\S+/;
@@ -63,6 +64,10 @@ function validateEditor(d: ProfileData): ProfileErrors {
 function validateFreelancer(d: ProfileData): ProfileErrors {
   const e: ProfileErrors = {};
   if (d.reportingBeats.length === 0) e.reportingBeats = 'Pick at least one beat';
+  // "Other" only means something once the person says which beat they meant
+  if (d.reportingBeats.includes(BEAT_OTHER) && !d.beatOther.trim()) {
+    e.beatOther = 'Tell us which beat you cover';
+  }
   if (d.workMediums.length === 0) e.workMediums = 'Pick at least one medium';
   if (d.portfolio.some((item) => !isValidUrl(item.url))) e.portfolio = 'Link should start with http:// or https://';
   return e;

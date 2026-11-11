@@ -1,7 +1,6 @@
 .shell {
   /* one text size for every box and button on the page */
   --control-font-size: 14px;
-  min-height: 100vh;
   background: var(--bg);
 }
 
@@ -424,4 +423,88 @@
   background: #fff;
   font-size: 15px;
   color: var(--muted);
+}
+
+/* invitations that are still waiting on the freelancer */
+.pending {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.pendingIntro {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pendingIntro p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pendingTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.pendingRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.pendingWho {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pendingWho strong {
+  color: var(--navy-deep);
+  font-size: 15px;
+}
+
+.pendingStatus {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #fdf1d6;
+  color: #7a5600;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.pendingDeclined {
+  background: #f7e3e3;
+  color: #8a2f2f;
 }
