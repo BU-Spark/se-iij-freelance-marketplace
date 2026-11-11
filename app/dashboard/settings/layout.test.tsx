@@ -9,11 +9,6 @@ jest.mock('../../components/FreelancerWorkspace', () => ({
   FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
 }));
 
-const mockStore = jest.fn();
-jest.mock('../../hooks/useProfile', () => ({
-  useProfile: () => mockStore(),
-}));
-
 const renderLayout = () =>
   render(
     <SettingsLayout>
@@ -23,8 +18,6 @@ const renderLayout = () =>
 
 beforeEach(() => {
   mockPath = '/dashboard/settings';
-  mockStore.mockReset();
-  mockStore.mockReturnValue({ profile: null });
 });
 
 describe('Settings layout', () => {

@@ -4,8 +4,6 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
-import { useProfile } from '../../hooks/useProfile';
-import type { ProfileRole } from '../../types/profile.types';
 import styles from './settings.module.css';
 
 /** Settings is split by topic; each one is its own page so nothing shares a scroll with anything else */
@@ -20,13 +18,9 @@ const SECTIONS = [
  */
 export default function SettingsLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { profile } = useProfile();
-
-  // the header offers the desk or the pitch button depending on which side this person works on
-  const role: ProfileRole = profile?.roles.some((details) => details.role === 'editor') ? 'editor' : 'freelancer';
 
   return (
-    <FreelancerWorkspace role={role}>
+    <FreelancerWorkspace>
       <main className={styles.main}>
         <header className={styles.heading}>
           <p className={styles.eyebrow}>Your account</p>
