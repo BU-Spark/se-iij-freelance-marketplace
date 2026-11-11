@@ -47,6 +47,8 @@ function LoginForm() {
   const [verifyingDevice, setVerifyingDevice] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [submitting, setSubmitting] = useState(false);
+  /** Clerk bans a suspended account at sign-in; those people need the appeal form, not a password hint */
+  const [banned, setBanned] = useState(false);
 
   const firstClerkError = (error: unknown): { code?: string; longMessage?: string; message?: string } | undefined =>
     (error as { errors?: Array<{ code?: string; longMessage?: string; message?: string }> } | undefined)?.errors?.[0];
@@ -82,6 +84,7 @@ function LoginForm() {
 
     setSubmitting(true);
     setErrors({});
+    setBanned(false);
     try {
       const result = await signIn.create({ identifier: email.trim(), password });
 
@@ -110,6 +113,13 @@ function LoginForm() {
       setErrors({ form: messageFor(result.status) });
     } catch (error) {
       const clerkError = firstClerkError(error);
+
+      // A ban is not a wrong password, so send them to the appeal form instead of saying "try again"
+      if (clerkError?.code === 'user_banned') {
+        setBanned(true);
+        return;
+      }
+
       setErrors({ form: clerkError?.longMessage ?? clerkError?.message ?? 'Unable to log in. Please try again.' });
     } finally {
       setSubmitting(false);
@@ -241,6 +251,17 @@ function LoginForm() {
                 )}
               </button>
             </form>
+
+            {banned && (
+              <div className={styles.appeal}>
+                <p role="alert" className={styles.appealNote}>
+                  This account is suspended. If you think that is a mistake, you can ask the team to look again.
+                </p>
+                <Link href="/appeal" className={styles.appealButton}>
+                  Appeal this decision
+                </Link>
+              </div>
+            )}
 
             <p className={styles.signupPrompt}>
               New to StoryMatch? <Link href="/signup">Create an account</Link>
