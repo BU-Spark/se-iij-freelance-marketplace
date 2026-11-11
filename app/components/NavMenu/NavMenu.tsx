@@ -22,7 +22,6 @@ type NavMenuProps = {
   /** Small number bubbles, e.g. { pitches: 2 } */
   badges?: Record<string, number>;
   onClose: () => void;
-  onSignOut: () => void;
 };
 
 export default function NavMenu({
@@ -34,7 +33,6 @@ export default function NavMenu({
   settingsHref,
   badges = {},
   onClose,
-  onSignOut,
 }: NavMenuProps) {
   const labelId = useId();
   const items = NAV_ITEMS[activeRole];
@@ -52,10 +50,6 @@ export default function NavMenu({
           ›
         </span>
       </Link>
-      <button type="button" className={styles.signOut} onClick={onSignOut}>
-        <span aria-hidden="true">⇤</span>
-        Sign out
-      </button>
     </div>
   );
 

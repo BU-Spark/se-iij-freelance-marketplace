@@ -2,20 +2,20 @@
 
 import Link from 'next/link';
 import { useAuth } from '@clerk/nextjs';
-import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import ProfileContent from '../../components/Profile/ProfileContent';
 import { useToast } from '../../components/Toast/ToastProvider';
 import { useProfile } from '../../hooks/useProfile';
 import type { BasicInfo, RoleDetails } from '../../types/profile.types';
-import styles from './settings.module.css';
+import styles from '../settings/settings.module.css';
 
 const SAVE_FAILED = 'Could not save your profile. Please try again.';
 
 /**
- * Settings is the profile page: the same cards the profile panel shows, on a page. Availability is
- * not a section of its own — it opens with the role it belongs to.
+ * Settings → Profile: the same cards the profile panel shows, on their own page. Availability is
+ * not a section of its own — it opens with the role it belongs to. Sign-in details live on their
+ * own page, so this one is only about how the person appears to the other side of the desk.
  */
-export default function SettingsPage() {
+export default function SettingsProfilePage() {
   const { isLoaded } = useAuth();
   const { showToast } = useToast();
   const { profile, error, needsOnboarding, saveBasic, saveRole } = useProfile();
@@ -38,34 +38,32 @@ export default function SettingsPage() {
   const pending = !isLoaded || (!profile && !needsOnboarding && !error);
 
   return (
-    <FreelancerWorkspace>
-      <main className={styles.main}>
-        <header className={styles.heading}>
-          <h1>Settings</h1>
-          <p>Your profile and availability — the details editors and freelancers see about you.</p>
-        </header>
+    <section aria-labelledby="profile-heading">
+      <div className={styles.sectionHead}>
+        <h2 id="profile-heading">Profile</h2>
+        <p>How you appear to the other side of the desk. Keep it current so people can find you.</p>
+      </div>
 
-        {pending ? (
-          <p className={styles.status} role="status">
-            Loading your profile…
+      {pending ? (
+        <p className={styles.status} role="status">
+          Loading your profile…
+        </p>
+      ) : needsOnboarding ? (
+        <>
+          <p className={styles.notice}>
+            You haven&apos;t set up your profile yet. Onboarding is where it gets created — it only takes a minute.
           </p>
-        ) : needsOnboarding ? (
-          <>
-            <p className={styles.notice}>
-              You haven&apos;t set up your profile yet. Onboarding is where it gets created — it only takes a minute.
-            </p>
-            <Link href="/onboarding" className={styles.setupLink}>
-              Finish setting up your profile →
-            </Link>
-          </>
-        ) : profile ? (
-          <ProfileContent profile={profile} onSaveBasic={handleSaveBasic} onSaveRole={handleSaveRole} />
-        ) : (
-          <p className={styles.status} role="status">
-            {error ?? 'Your profile is unavailable right now.'}
-          </p>
-        )}
-      </main>
-    </FreelancerWorkspace>
+          <Link href="/onboarding" className={styles.setupLink}>
+            Finish setting up your profile →
+          </Link>
+        </>
+      ) : profile ? (
+        <ProfileContent profile={profile} onSaveBasic={handleSaveBasic} onSaveRole={handleSaveRole} />
+      ) : (
+        <p className={styles.status} role="status">
+          {error ?? 'Your profile is unavailable right now.'}
+        </p>
+      )}
+    </section>
   );
 }

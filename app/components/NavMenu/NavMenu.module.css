@@ -101,8 +101,7 @@
   gap: 4px;
 }
 
-.footerLink,
-.signOut {
+.footerLink {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -142,13 +141,7 @@
   color: #111827;
 }
 
-.signOut {
-  color: #9b2c1f;
-  font-weight: 500;
-}
-
-.footerLink:hover,
-.signOut:hover {
+.footerLink:hover {
   background: #f6f7f9;
 }
 /* the ☰ button that opens the menu */
