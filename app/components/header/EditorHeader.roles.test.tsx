@@ -7,9 +7,10 @@ import type { AccountProfile, ProfileRole } from '../../types/profile.types';
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
+let mockPathname = '/dashboard';
 
 jest.mock('next/navigation', () => ({
-  usePathname: () => '/dashboard',
+  usePathname: () => mockPathname,
   useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ push: mockPush, replace: mockReplace }),
 }));
@@ -40,6 +41,7 @@ const signedInAs = (...roles: ProfileRole[]) => {
 describe('EditorHeader workspaces', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockPathname = '/dashboard';
   });
 
   it('offers only the editor side to people who only have the editor role', async () => {
@@ -55,7 +57,8 @@ describe('EditorHeader workspaces', () => {
 
   it('offers only the freelancer side to people who only have the freelancer role', async () => {
     signedInAs('freelancer');
-    render(<EditorHeader initialRole="freelancer" />);
+    mockPathname = '/dashboard/freelancer';
+    render(<EditorHeader />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
 
@@ -84,8 +87,36 @@ describe('EditorHeader workspaces', () => {
 
   it('sends an editor-only person away from the freelancer workspace', async () => {
     signedInAs('editor');
-    render(<EditorHeader initialRole="freelancer" />);
+    mockPathname = '/dashboard/assignments';
+    render(<EditorHeader />);
 
     await waitFor(() => expect(mockReplace).toHaveBeenCalledWith('/dashboard'));
+  });
+
+  it('opens on the freelancer side on freelancer pages and keeps it there', async () => {
+    signedInAs('freelancer', 'editor');
+    mockPathname = '/dashboard/freelancer/make-a-pitch';
+    render(<EditorHeader />);
+
+    expect(screen.getByRole('link', { name: /make a pitch/i })).toHaveAttribute(
+      'href',
+      '/dashboard/freelancer/make-a-pitch'
+    );
+    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
+    expect(screen.getByRole('link', { name: /available assignments/i })).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole('radio', { name: /editor/i }));
+    expect(mockPush).toHaveBeenCalledWith('/dashboard');
+  });
+
+  it('uses the roles the server read until the profile loads', async () => {
+    useProfileMock.mockReturnValue({ profile: null, loading: true, error: null });
+    mockPathname = '/dashboard/assignments/a-1';
+    render(<EditorHeader initialRoles={['freelancer']} />);
+
+    // a freelancer-only person sees one assignment from their own side, never the editor's button
+    expect(screen.getByRole('link', { name: /make a pitch/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /new assignment/i })).not.toBeInTheDocument();
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });

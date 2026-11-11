@@ -1,12 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { useClerk } from '@clerk/nextjs';
 import SidePanel from '../SidePanel/SidePanel';
 import ProfileContent from './ProfileContent';
 import ProfileHero from './cards/ProfileHero';
 import BasicInfoDrawer from './BasicInfoDrawer';
 import RoleDrawer from './RoleDrawer';
 import type { AccountProfile, BasicInfo, ProfileRole, RoleDetails } from '../../types/profile.types';
+import styles from './Profile.module.css';
 
 /** Saves resolve true once the server has the change, so a failed save leaves the form open */
 type SaveResult = Promise<boolean> | boolean;
@@ -30,6 +32,7 @@ export default function ProfilePanel({
   onSaveRole,
   onSaveAvailable,
 }: ProfilePanelProps) {
+  const { signOut } = useClerk();
   const [open, setOpen] = useState<'basic' | ProfileRole | null>(null);
   const close = () => setOpen(null);
   // read from the profile each render, so a save shows up in the open drawer straight away
@@ -46,6 +49,12 @@ export default function ProfilePanel({
         // the little expand button opens the same cards on the settings page
         expandHref="/dashboard/settings"
         expandLabel="Open settings"
+        footer={
+          <button type="button" className={styles.signOut} onClick={() => signOut({ redirectUrl: '/' })}>
+            <span aria-hidden="true">⇤</span>
+            Sign out
+          </button>
+        }
       >
         <ProfileContent
           profile={profile}

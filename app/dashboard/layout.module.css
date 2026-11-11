@@ -1,0 +1,18 @@
+/* The shared frame for every dashboard page: the header on top, the page filling the rest */
+.workspace {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #f5f6f8;
+  color: var(--ink);
+}
+
+.workspace :focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.page {
+  /* a plain block, so pages that centre themselves with margin: 0 auto keep their full width */
+  flex: 1;
+}

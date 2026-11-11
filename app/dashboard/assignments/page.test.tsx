@@ -1,12 +1,8 @@
-import type { ReactNode } from 'react';
 import { render, screen, within } from '@testing-library/react';
 import AssignmentsPage from './page';
 import type { Assignment } from '../../types/assignments.types';
 import { getAssignment, listOpenAssignments } from '../../../lib/assignments';
 
-jest.mock('../../components/FreelancerWorkspace', () => ({
-  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
 jest.mock('../../../lib/workspace', () => ({ requireWorkspace: jest.fn() }));
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push: jest.fn(), refresh: jest.fn() }) }));

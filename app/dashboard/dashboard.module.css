@@ -1,6 +1,5 @@
 /* ============ Dashboard: layout, status bar and section headings ============ */
 .shell {
-  min-height: 100vh;
   background: #f5f6f8;
 }
 
@@ -206,8 +205,6 @@
   text-decoration-thickness: 3px;
   text-underline-offset: 3px;
 }
-
-
 
 /* ---- Phones and small tablets: stack the columns ---- */
 @media (max-width: 900px) {

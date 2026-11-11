@@ -4,12 +4,14 @@
 import { auth } from '@clerk/nextjs/server';
 import { redirect } from 'next/navigation';
 import { isSignedInUserAdmin } from '../../lib/auth';
-import { hasProfile } from '../../lib/profile';
+import { hasProfile, loadProfileRoles } from '../../lib/profile';
+import { EditorHeader } from '../components/header/EditorHeader';
 import DashboardLayout from './layout';
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn() }));
 jest.mock('../../lib/auth', () => ({ isSignedInUserAdmin: jest.fn() }));
-jest.mock('../../lib/profile', () => ({ hasProfile: jest.fn() }));
+jest.mock('../../lib/profile', () => ({ hasProfile: jest.fn(), loadProfileRoles: jest.fn() }));
+jest.mock('../components/header/EditorHeader', () => ({ EditorHeader: () => null }));
 jest.mock('next/navigation', () => ({
   redirect: jest.fn((url: string) => {
     throw new Error(`NEXT_REDIRECT:${url}`);
@@ -19,16 +21,25 @@ jest.mock('next/navigation', () => ({
 const authMock = auth as unknown as jest.Mock;
 const isAdminMock = isSignedInUserAdmin as jest.Mock;
 const hasProfileMock = hasProfile as jest.Mock;
+const loadRolesMock = loadProfileRoles as jest.Mock;
 const redirectMock = redirect as unknown as jest.Mock;
 const consoleMock = jest.spyOn(console, 'error').mockImplementation(() => {});
 
 const render = () => DashboardLayout({ children: 'dashboard' });
+
+/** The layout's frame: the shared header, then the page */
+type Frame = {
+  props: { children: [{ type: unknown; props: { initialRoles: string[] } }, { props: { children: unknown } }] };
+};
+const pageIn = (tree: unknown) => (tree as Frame).props.children[1].props.children;
+const headerIn = (tree: unknown) => (tree as Frame).props.children[0];
 
 describe('DashboardLayout', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     authMock.mockResolvedValue({ userId: 'clerk-1' });
     isAdminMock.mockResolvedValue(false);
+    loadRolesMock.mockResolvedValue(['editor']);
   });
 
   it('sends admins to the admin area', async () => {
@@ -43,14 +54,14 @@ describe('DashboardLayout', () => {
     isAdminMock.mockRejectedValue(new Error('clerk down'));
     hasProfileMock.mockResolvedValue(true);
 
-    await expect(render()).resolves.toBe('dashboard');
+    expect(pageIn(await render())).toBe('dashboard');
     expect(consoleMock).toHaveBeenCalled();
   });
 
   it('renders the page when the profile exists', async () => {
     hasProfileMock.mockResolvedValue(true);
 
-    await expect(render()).resolves.toBe('dashboard');
+    expect(pageIn(await render())).toBe('dashboard');
     expect(redirectMock).not.toHaveBeenCalled();
   });
 
@@ -65,7 +76,7 @@ describe('DashboardLayout', () => {
     // a database blip must not look like an unfinished profile
     hasProfileMock.mockRejectedValue(new Error('ECONNREFUSED'));
 
-    await expect(render()).resolves.toBe('dashboard');
+    expect(pageIn(await render())).toBe('dashboard');
     expect(redirectMock).not.toHaveBeenCalled();
     expect(consoleMock).toHaveBeenCalled();
   });
@@ -75,5 +86,21 @@ describe('DashboardLayout', () => {
 
     await expect(render()).rejects.toThrow('NEXT_REDIRECT:/login');
     expect(hasProfileMock).not.toHaveBeenCalled();
+  });
+
+  it('mounts the shared header once, with the roles the server read', async () => {
+    hasProfileMock.mockResolvedValue(true);
+    loadRolesMock.mockResolvedValue(['freelancer']);
+
+    const header = headerIn(await render());
+    expect(header.type).toBe(EditorHeader);
+    expect(header.props.initialRoles).toEqual(['freelancer']);
+  });
+
+  it('still renders the header when the roles cannot be read', async () => {
+    hasProfileMock.mockResolvedValue(true);
+    loadRolesMock.mockRejectedValue(new Error('ECONNREFUSED'));
+
+    expect(headerIn(await render()).props.initialRoles).toEqual([]);
   });
 });

@@ -108,13 +108,18 @@ export async function getAssignment(id: string): Promise<Assignment | null> {
   return rows[0] ? toAssignment(rows[0]) : null;
 }
 
-/** True when the assignment belongs to the editor's desk: same organization, or their own post */
+/**
+ * True when the assignment belongs to the editor's desk.
+ * A post made by an organization belongs to that organization only, so an editor who moves
+ * to another desk loses the right to change it; posts made before the editor joined an
+ * organization belong to whoever wrote them.
+ */
 export function belongsToViewer(viewer: AssignmentViewer, assignment: Assignment): boolean {
-  if (assignment.createdByUserId === viewer.userId) return true;
-  return Boolean(viewer.organizationId) && assignment.organizationId === viewer.organizationId;
+  if (assignment.organizationId) return viewer.organizationId === assignment.organizationId;
+  return assignment.createdByUserId === viewer.userId;
 }
 
-/** Editors may edit their organization's assignments */
+/** Only editors from the organization that posted the assignment may edit it */
 export function canEditAssignment(viewer: AssignmentViewer | null | undefined, assignment: Assignment): boolean {
   return isEditor(viewer) && belongsToViewer(viewer, assignment);
 }

@@ -1,6 +1,5 @@
 import { Suspense } from 'react';
 import { auth } from '@clerk/nextjs/server';
-import { EditorHeader } from '../components/header/EditorHeader';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
 import PageSearch from './components/PageSearch';
@@ -71,8 +70,6 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
 
   return (
     <div className={styles.shell}>
-      <EditorHeader />
-
       {/* ---- Status bar ---- */}
       <div className={styles.statusBar}>
         <div className={styles.statusLead}>
@@ -102,7 +99,14 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
         <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
       </Suspense>
 
-      {opened && <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard" />}
+      {opened && (
+        <AssignmentDrawer
+          assignment={opened.assignment}
+          canEdit={opened.canEdit}
+          showOrganization
+          closeHref="/dashboard"
+        />
+      )}
     </div>
   );
 }

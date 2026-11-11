@@ -1,0 +1,242 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* one card per sign-in concern, matching the profile cards' surface */
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 20px 20px;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+.dangerCard {
+  border-color: #f3d6dd;
+}
+
+.cardHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cardHint {
+  margin: 4px 0 0;
+  max-width: 52ch;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
+/* a single line of account detail, e.g. the email address */
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfcfe;
+}
+
+.rowIcon {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #e8edf6;
+  color: var(--navy);
+}
+
+.rowBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.rowValue {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow-wrap: anywhere;
+}
+
+.rowMeta {
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2fd;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--navy);
+}
+
+.badgeOk {
+  background: #e6f6ea;
+  color: var(--c-green-d);
+}
+
+/* ---- buttons ---- */
+.button,
+.buttonSmall,
+.buttonPrimary,
+.dangerButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #d5dae3;
+  background: #fff;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.button:hover:not(:disabled) {
+  background: #f5f7fb;
+}
+
+.buttonSmall {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d5dae3;
+  background: #fff;
+  font-size: 12px;
+  color: var(--ink);
+}
+
+.buttonPrimary {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: var(--navy-deep);
+  font-size: 14px;
+  color: #fff;
+}
+
+.dangerButton {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #f0c2cc;
+  background: #fff;
+  font-size: 13px;
+  color: #b3203f;
+}
+
+.dangerButton:hover {
+  background: #fdf2f5;
+}
+
+.button:disabled,
+.buttonSmall:disabled,
+.buttonPrimary:disabled,
+.dangerButton:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---- password form ---- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+  border-top: 1px solid #f0f2f6;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--navy);
+}
+
+.formError {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f3c9d2;
+  border-radius: 10px;
+  background: #fdf2f5;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #a51f3d;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* ---- sessions ---- */
+.sessionList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.session {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.currentSession {
+  border-color: #cfdcf5;
+  background: #f7faff;
+}

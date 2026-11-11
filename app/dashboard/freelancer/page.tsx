@@ -1,13 +1,11 @@
 import { auth } from '@clerk/nextjs/server';
-import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
-import { toDeskAssignment } from '../../utils/dashboard.utils';
+import { formatDeskDate, toDeskAssignment } from '../../utils/dashboard.utils';
 import FreelancerDashboard from './FreelancerDashboard';
 import RosterInvites from './RosterInvites';
 import styles from './freelancer.module.css';
-import { formatDeskDate } from '../../utils/dashboard.utils';
 
 // An invitation sent a moment ago has to show up on the next visit
 export const dynamic = 'force-dynamic';
@@ -34,17 +32,11 @@ export default async function FreelancerPage() {
   }
 
   return (
-    <FreelancerWorkspace>
-      <main className={styles.main}>
-        {/* declined invitations are left out: the editor sees the answer on their roster */}
-        <FreelancerDashboard
-          assignments={assignments}
-          freelancerId={freelancerId}
-          dateLabel={formatDeskDate(new Date())}
-        >
-          <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
-        </FreelancerDashboard>
-      </main>
-    </FreelancerWorkspace>
+    <main className={styles.main}>
+      {/* declined invitations are left out: the editor sees the answer on their roster */}
+      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} dateLabel={formatDeskDate(new Date())}>
+        <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
+      </FreelancerDashboard>
+    </main>
   );
 }

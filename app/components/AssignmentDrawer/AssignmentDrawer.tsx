@@ -13,10 +13,17 @@ type AssignmentDrawerProps = {
   closeHref: string;
   /** true for editors from the organization that posted it */
   canEdit?: boolean;
+  /** shows which organization posted it, on desks that need it */
+  showOrganization?: boolean;
 };
 
 /** The expanded view of one assignment, slid in from the right over the page that listed it */
-export default function AssignmentDrawer({ assignment, closeHref, canEdit = false }: AssignmentDrawerProps) {
+export default function AssignmentDrawer({
+  assignment,
+  closeHref,
+  canEdit = false,
+  showOrganization = false,
+}: AssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -78,7 +85,12 @@ export default function AssignmentDrawer({ assignment, closeHref, canEdit = fals
 
         <div className={styles.body}>
           {/* key: a different assignment starts out of edit mode */}
-          <AssignmentDetail key={assignment.id} assignment={assignment} canEdit={canEdit} />
+          <AssignmentDetail
+            key={assignment.id}
+            assignment={assignment}
+            canEdit={canEdit}
+            showOrganization={showOrganization}
+          />
         </div>
       </div>
     </>

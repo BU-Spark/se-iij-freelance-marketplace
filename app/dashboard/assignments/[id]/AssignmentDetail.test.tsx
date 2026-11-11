@@ -46,6 +46,19 @@ describe('AssignmentDetail', () => {
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 
+  it('says which organization posted it when the desk asks for it', () => {
+    render(<AssignmentDetail assignment={{ ...assignment, organizationId: 'meridian' }} canEdit showOrganization />);
+
+    expect(screen.getByText('Organization')).toBeInTheDocument();
+    expect(screen.getByText('The Meridian Post')).toBeInTheDocument();
+  });
+
+  it('leaves the organization off the freelancer view', () => {
+    render(<AssignmentDetail assignment={{ ...assignment, organizationId: 'meridian' }} canEdit={false} />);
+
+    expect(screen.queryByText('Organization')).not.toBeInTheDocument();
+  });
+
   it('opens the form filled with the saved values and saves the changes', async () => {
     const user = userEvent.setup();
     (global.fetch as jest.Mock).mockResolvedValue({ ok: true, json: async () => ({ saved: true }) });

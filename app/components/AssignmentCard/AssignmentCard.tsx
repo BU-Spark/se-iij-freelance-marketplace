@@ -3,6 +3,7 @@ import type { AssignmentStatus, DeskAssignment } from '../../types/dashboard.typ
 import { formatCompensation } from '../../utils/assignment.utils';
 import { formatDeadline, formatRate } from '../../utils/dashboard.utils';
 import { categoryColor } from '../../utils/category.utils';
+import { organizationName } from '../../utils/organization.utils';
 import styles from './AssignmentCard.module.css';
 
 const STATUS_LABEL: Record<AssignmentStatus, string> = {
@@ -29,6 +30,7 @@ function interestText(a: DeskAssignment, assignedName?: string): string {
 export default function AssignmentCard({ assignment: a, assignedName, onReview }: AssignmentCardProps) {
   const canReview = onReview && a.status !== 'assigned' && a.interestedIds.length > 0;
   const contactLine = [a.contact.name, a.contact.desk].filter(Boolean).join(', ');
+  const organization = organizationName(a.organizationId);
 
   return (
     <article className={`${styles.card} ${a.href ? styles.clickable : ''}`}>
@@ -52,6 +54,7 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
             a.title
           )}
         </h3>
+        {organization && <p className={styles.organization}>{organization}</p>}
         {contactLine && <p className={styles.contact}>Point of contact: {contactLine}</p>}
       </div>
 
