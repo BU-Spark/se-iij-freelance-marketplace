@@ -15,23 +15,31 @@ type TalentSearchProps = {
   filters: TalentFilters;
   options: TalentFilterOptions;
   results: TalentMember[];
+  /** freelancers already on this editor's roster */
+  invitedIds?: string[];
   loadFailed?: boolean;
 };
 
 const TYPING_DELAY_MS = 300;
 
 /*
- * Invites only live in this component's state for now, like the roster page.
- * TODO: save them through the roster API once it exists.
+ * Inviting saves the freelancer to the editor's roster through the same API the roster page uses,
+ * so the two pages agree about who has been invited.
  */
-export default function TalentSearch({ filters, options, results, loadFailed = false }: TalentSearchProps) {
+export default function TalentSearch({
+  filters,
+  options,
+  results,
+  invitedIds = [],
+  loadFailed = false,
+}: TalentSearchProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { showToast } = useToast();
   const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState(filters.q ?? '');
-  const [invited, setInvited] = useState<string[]>([]);
+  const [invited, setInvited] = useState<string[]>(invitedIds);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(typingTimer.current), []);
@@ -57,9 +65,26 @@ export default function TalentSearch({ filters, options, results, loadFailed = f
     apply({});
   };
 
-  const invite = (member: TalentMember) => {
-    setInvited((list) => [...list, member.id]);
-    showToast(`Invited ${member.name} to your roster`);
+  const invite = async (member: TalentMember) => {
+    try {
+      const response = await fetch('/api/roster/invites', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ freelancerIds: [member.id] }),
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        showToast(body?.error ?? 'Could not invite them right now.', 'error');
+        return;
+      }
+
+      setInvited((list) => (list.includes(member.id) ? list : [...list, member.id]));
+      showToast(`Invited ${member.name} to your roster`);
+    } catch (error) {
+      console.error('Could not invite the freelancer to the roster.', error);
+      showToast('Could not invite them right now.', 'error');
+    }
   };
 
   if (loadFailed) {
