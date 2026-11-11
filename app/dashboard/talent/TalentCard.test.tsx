@@ -46,6 +46,11 @@ describe('TalentCard', () => {
     expect(profile).toHaveTextContent('Audio');
     expect(profile).toHaveTextContent('Datawrapper');
 
+    const clip = screen.getByRole('link', { name: /council budget explainer/i });
+    expect(clip).toHaveAttribute('href', 'https://example.com/budget');
+    expect(clip).toHaveAttribute('target', '_blank');
+    expect(clip).toHaveAttribute('rel', 'noopener noreferrer');
+
     fireEvent.click(screen.getByRole('button', { name: 'Hide profile' }));
     expect(screen.queryByRole('region')).not.toBeInTheDocument();
   });

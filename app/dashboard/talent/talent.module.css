@@ -65,7 +65,8 @@
 }
 
 .toggle:focus-visible,
-.inviteSmall:focus-visible {
+.inviteSmall:focus-visible,
+.clip:focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;
 }
@@ -172,4 +173,49 @@
   color: var(--navy-deep);
   font-size: 12px;
   font-weight: 600;
+}
+
+.clips {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.clip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--navy-deep);
+  text-decoration: none;
+}
+
+.clip:hover {
+  border-color: #c9d0dc;
+  background: var(--bg);
+}
+
+.clipTitle {
+  min-width: 0;
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.clipType {
+  flex-shrink: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.clipDescription {
+  margin: 4px 2px 0;
+  color: var(--muted);
+  font-size: 13px;
 }
