@@ -3,70 +3,97 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import type { Weekday } from '../../types/availability.types';
-import type { AvailabilityStatus } from '../../types/dashboard.types';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import styles from './availability.module.css';
 
 const DAYS: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 type Draft = {
-  status: AvailabilityStatus;
+  /** the "free right now" switch, which editors see immediately */
+  freeNow: boolean;
   timezone: string;
   days: Weekday[];
   startsAt: string;
   endsAt: string;
 };
+
+/** The browser's own zone is a better guess than any fixed one */
+const browserTimeZone = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch {
+    return 'UTC';
+  }
+};
+
 const DEFAULT: Draft = {
-  status: 'available',
-  timezone: 'America/New_York',
+  freeNow: false,
+  timezone: browserTimeZone(),
   days: DAYS.slice(0, 5),
   startsAt: '09:00',
   endsAt: '17:00',
 };
 
-function validDraft(value: unknown): value is Draft {
-  if (!value || typeof value !== 'object') return false;
-  const draft = value as Record<string, unknown>;
-  if (
-    !['available', 'busy', 'off'].includes(String(draft.status)) ||
-    typeof draft.timezone !== 'string' ||
-    !Array.isArray(draft.days) ||
-    !draft.days.every((day) => DAYS.includes(day)) ||
-    typeof draft.startsAt !== 'string' ||
-    typeof draft.endsAt !== 'string' ||
-    !/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.startsAt) ||
-    !/^([01]\d|2[0-3]):[0-5]\d$/.test(draft.endsAt) ||
-    draft.endsAt <= draft.startsAt ||
-    (draft.status !== 'off' && draft.days.length === 0)
-  )
-    return false;
+const isTimeZone = (value: string) => {
   try {
-    new Intl.DateTimeFormat('en-US', { timeZone: draft.timezone });
+    new Intl.DateTimeFormat('en-US', { timeZone: value });
     return true;
   } catch {
     return false;
   }
-}
+};
 
+/** What the API sent, as a draft; anything unusable falls back to the defaults */
+const toDraft = (body: Record<string, unknown>): Draft => {
+  const days = Array.isArray(body.days) ? body.days.filter((day): day is string => typeof day === 'string') : null;
+
+  return {
+    freeNow: body.availableNow === true,
+    timezone: typeof body.timezone === 'string' && body.timezone.trim() ? body.timezone : DEFAULT.timezone,
+    days: days ? DAYS.filter((day) => days.includes(day)) : DEFAULT.days,
+    startsAt: typeof body.startsAt === 'string' ? body.startsAt : DEFAULT.startsAt,
+    endsAt: typeof body.endsAt === 'string' ? body.endsAt : DEFAULT.endsAt,
+  };
+};
+
+/** Saves through the profile API, so editors see the same hours the freelancer does */
 function AvailabilityForm({ userId }: { userId: string }) {
-  const storageKey = `iij:availability:${userId}`;
   const [draft, setDraft] = useState<Draft>(DEFAULT);
   const [ready, setReady] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed: unknown = JSON.parse(stored);
-        if (validDraft(parsed)) setDraft(parsed);
-        else setError('Saved availability could not be loaded. Please enter it again.');
+    let cancelled = false;
+    setReady(false);
+    setMessage('');
+    setError('');
+
+    (async () => {
+      try {
+        const response = await fetch('/api/profile/availability', { cache: 'no-store' });
+        if (cancelled) return;
+
+        if (!response.ok) {
+          const body = (await response.json().catch(() => null)) as { error?: string } | null;
+          setError(body?.error ?? 'Saved availability could not be loaded. Please enter it again.');
+          return;
+        }
+
+        const body = (await response.json().catch(() => null)) as Record<string, unknown> | null;
+        if (body) setDraft(toDraft(body));
+      } catch {
+        if (!cancelled) setError('Saved availability could not be loaded. Please enter it again.');
+      } finally {
+        if (!cancelled) setReady(true);
       }
-    } catch {
-      setError('Saved availability could not be loaded. Please enter it again.');
-    }
-    setReady(true);
-  }, [storageKey]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
 
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) => {
     setDraft((previous) => ({ ...previous, [key]: value }));
@@ -74,29 +101,55 @@ function AvailabilityForm({ userId }: { userId: string }) {
     setError('');
   };
 
-  const save = (event: FormEvent<HTMLFormElement>) => {
+  const save = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setMessage('');
+    setError('');
+
+    const timezone = draft.timezone.trim();
+
     if (draft.endsAt <= draft.startsAt) {
       setError('End time must be later than start time. Choose a window within one day.');
       return;
     }
-    if (draft.status !== 'off' && draft.days.length === 0) {
-      setError('Choose at least one working day, or set your status to Off.');
+
+    if (draft.days.length === 0 && !draft.freeNow) {
+      setError('Choose at least one working day, or say you are free right now.');
       return;
     }
-    const next = { ...draft, timezone: draft.timezone.trim() };
-    if (!validDraft(next)) {
+
+    if (!isTimeZone(timezone)) {
       setError('Enter a valid time zone, such as America/New_York or Europe/London.');
       return;
     }
+
+    setSaving(true);
     try {
-      localStorage.setItem(storageKey, JSON.stringify(next));
-      setDraft(next);
-      setError('');
-      setMessage('Availability saved on this browser.');
+      const response = await fetch('/api/profile/availability', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          availableNow: draft.freeNow,
+          timezone,
+          days: draft.days,
+          startsAt: draft.startsAt,
+          endsAt: draft.endsAt,
+        }),
+      });
+
+      const body = (await response.json().catch(() => null)) as { error?: string } | null;
+
+      if (!response.ok) {
+        setError(body?.error ?? 'Unable to save your availability right now.');
+        return;
+      }
+
+      setDraft((previous) => ({ ...previous, timezone }));
+      setMessage('Availability saved. Editors can see when you are free.');
     } catch {
-      setError('Unable to save in this browser. Your changes have not been saved.');
+      setError('Unable to save your availability right now.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -104,13 +157,9 @@ function AvailabilityForm({ userId }: { userId: string }) {
 
   return (
     <form onSubmit={save} className={styles.form}>
-      <label className={styles.field}>
-        Current status
-        <select value={draft.status} onChange={(event) => update('status', event.target.value as AvailabilityStatus)}>
-          <option value="available">Available</option>
-          <option value="busy">Busy</option>
-          <option value="off">Off</option>
-        </select>
+      <label className={styles.check}>
+        <input type="checkbox" checked={draft.freeNow} onChange={(event) => update('freeNow', event.target.checked)} />
+        <span>I&apos;m free right now</span>
       </label>
       <label className={styles.field}>
         Time zone
@@ -157,8 +206,8 @@ function AvailabilityForm({ userId }: { userId: string }) {
       <p>Working times use your selected time zone. Choose a start and end within the same day.</p>
       {error && <p role="alert">{error}</p>}
       {message && <p role="status">{message}</p>}
-      <button type="submit" className={styles.save}>
-        Save availability
+      <button type="submit" className={styles.save} disabled={saving}>
+        {saving ? 'Saving…' : 'Save availability'}
       </button>
     </form>
   );
@@ -170,8 +219,8 @@ export default function AvailabilityPage() {
     <FreelancerWorkspace>
       <main className={styles.main}>
         <h1>My availability</h1>
-        <p>Set your current status and usual working hours.</p>
-        <p>Saved only in this browser for your account. Editors cannot see these changes yet.</p>
+        <p>Set whether you are free right now and your usual working hours.</p>
+        <p>Editors use this to judge timing before they invite or assign you work.</p>
         {!isLoaded ? (
           <p role="status">Loading account…</p>
         ) : userId ? (
