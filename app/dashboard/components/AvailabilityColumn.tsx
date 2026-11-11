@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import SegmentedControl, { type SegmentOption } from './SegmentedControl';
 import RosterCard from '../../components/RosterCard/RosterCard';
 import type { RosterMember, RosterView } from '../../types/dashboard.types';
@@ -15,10 +16,12 @@ const VIEWS: SegmentOption<RosterView>[] = [
 
 type AvailabilityColumnProps = {
   roster: RosterMember[];
+  /** the roster could not be read, which is not the same as having nobody on it */
+  loadFailed?: boolean;
 };
 
 /** Left column of the dashboard: roster cards with a day / week / month toggle */
-export default function AvailabilityColumn({ roster }: AvailabilityColumnProps) {
+export default function AvailabilityColumn({ roster, loadFailed = false }: AvailabilityColumnProps) {
   const [view, setView] = useState<RosterView>('day');
 
   return (
@@ -36,11 +39,26 @@ export default function AvailabilityColumn({ roster }: AvailabilityColumnProps) 
       </div>
 
       <ul className={styles.list}>
-        {roster.map((m) => (
-          <li key={m.id}>
-            <RosterCard member={m} view={view} />
+        {loadFailed ? (
+          <li className={styles.emptyRoster} role="alert">
+            <strong>Your roster couldn&apos;t be loaded</strong>
+            <span>Please try again in a moment.</span>
           </li>
-        ))}
+        ) : roster.length === 0 ? (
+          <li className={styles.emptyRoster}>
+            <strong>No one on your roster yet</strong>
+            <span>
+              Freelancers you invite appear here once they accept.{' '}
+              <Link href="/dashboard/roster">Build your roster</Link>
+            </span>
+          </li>
+        ) : (
+          roster.map((m) => (
+            <li key={m.id}>
+              <RosterCard member={m} view={view} />
+            </li>
+          ))
+        )}
       </ul>
     </section>
   );
