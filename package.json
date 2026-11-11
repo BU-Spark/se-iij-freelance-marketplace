@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "db:migrate": "node scripts/migrate.mjs",
+    "admin:grant": "node scripts/make-admin.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --fix",
