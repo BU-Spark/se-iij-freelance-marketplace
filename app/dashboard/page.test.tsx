@@ -1,7 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import Dashboard from './page';
 import type { Assignment } from '../types/assignments.types';
-import { ASSIGNMENTS, ROSTER } from './constants';
+import { SAMPLE_ASSIGNMENTS } from '../../test/fixtures/assignments';
+import { ROSTER } from './constants';
 import { listOpenAssignments } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 
@@ -123,7 +124,7 @@ describe('Dashboard', () => {
   it('lists every assignment with its details', async () => {
     await renderDashboard();
     const column = screen.getByRole('region', { name: /assignments/i });
-    expect(within(column).getAllByRole('article')).toHaveLength(ASSIGNMENTS.length);
+    expect(within(column).getAllByRole('article')).toHaveLength(SAMPLE_ASSIGNMENTS.length);
 
     const card = within(column)
       .getByRole('heading', { name: /election night/i })
@@ -137,9 +138,9 @@ describe('Dashboard', () => {
     listOpenAssignmentsMock.mockResolvedValue([]);
     await renderDashboard();
 
-    expect(screen.getByRole('link', { name: ASSIGNMENTS[0].title })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: SAMPLE_ASSIGNMENTS[0].title })).toHaveAttribute(
       'href',
-      `/dashboard/assignments/${ASSIGNMENTS[0].id}`
+      `/dashboard/assignments/${SAMPLE_ASSIGNMENTS[0].id}`
     );
   });
 
@@ -150,9 +151,9 @@ describe('Dashboard', () => {
 
     const column = screen.getByRole('region', { name: /assignments/i });
     const cards = within(column).getAllByRole('article');
-    expect(cards).toHaveLength(ASSIGNMENTS.length + 1);
+    expect(cards).toHaveLength(SAMPLE_ASSIGNMENTS.length + 1);
     expect(within(cards[0]).getByRole('heading', { name: /posted to the database/i })).toBeInTheDocument();
-    expect(within(cards[1]).getByRole('heading', { name: ASSIGNMENTS[0].title })).toBeInTheDocument();
+    expect(within(cards[1]).getByRole('heading', { name: SAMPLE_ASSIGNMENTS[0].title })).toBeInTheDocument();
     expect(within(cards[0]).getByText('$800')).toBeInTheDocument();
 
     const counts = screen.getByRole('list', { name: /assignment counts/i });

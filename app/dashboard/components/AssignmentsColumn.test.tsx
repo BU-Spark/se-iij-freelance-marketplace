@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import AssignmentsColumn from './AssignmentsColumn';
-import { ASSIGNMENTS, ROSTER } from '../constants';
+import { ROSTER } from '../constants';
+import { SAMPLE_ASSIGNMENTS } from '../../../test/fixtures/assignments';
 
 const tab = (name: string) =>
   within(screen.getByRole('group', { name: /filter assignments/i })).getByRole('button', { name });
@@ -8,15 +9,15 @@ const cardFor = (title: string) => screen.getByRole('heading', { name: title }).
 
 describe('AssignmentsColumn', () => {
   it('shows every assignment on the All tab', () => {
-    render(<AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />);
+    render(<AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />);
     expect(tab('All')).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getAllByRole('article')).toHaveLength(ASSIGNMENTS.length);
+    expect(screen.getAllByRole('article')).toHaveLength(SAMPLE_ASSIGNMENTS.length);
   });
 
   it('shows only matching assignments when a tab is clicked', () => {
-    render(<AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />);
+    render(<AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />);
     fireEvent.click(tab('Invited'));
-    const invited = ASSIGNMENTS.filter((a) => a.status === 'invited');
+    const invited = SAMPLE_ASSIGNMENTS.filter((a) => a.status === 'invited');
     expect(screen.getAllByRole('article')).toHaveLength(invited.length);
   });
 
@@ -27,14 +28,14 @@ describe('AssignmentsColumn', () => {
   });
 
   it('shows who an assigned card belongs to', () => {
-    render(<AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />);
+    render(<AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />);
     expect(
       within(cardFor('Data Check: Transit ridership numbers')).getByText('Assigned to Priya Natarajan')
     ).toBeInTheDocument();
   });
 
   it('opens Review candidates and assigns someone', () => {
-    render(<AssignmentsColumn assignments={ASSIGNMENTS} roster={ROSTER} />);
+    render(<AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />);
     const election = 'Election Night Live Coverage: District 4';
 
     fireEvent.click(within(cardFor(election)).getByRole('button', { name: /review candidates/i }));
