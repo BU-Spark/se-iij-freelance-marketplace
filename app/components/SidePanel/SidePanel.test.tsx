@@ -26,3 +26,32 @@ describe('SidePanel', () => {
     expect(onClose).toHaveBeenCalledTimes(3);
   });
 });
+
+describe('stacked SidePanels', () => {
+  it('Escape closes only the top panel and keeps the page locked under the other', () => {
+    const closeProfile = jest.fn();
+    const closeRole = jest.fn();
+    const { rerender } = render(
+      <>
+        <SidePanel title="My profile" onClose={closeProfile}>
+          <p>Profile</p>
+        </SidePanel>
+        <SidePanel title="Editor details" onClose={closeRole}>
+          <p>Role</p>
+        </SidePanel>
+      </>
+    );
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(closeRole).toHaveBeenCalledTimes(1);
+    expect(closeProfile).not.toHaveBeenCalled();
+
+    // the top one goes away; the page behind My profile must not start scrolling
+    rerender(
+      <SidePanel title="My profile" onClose={closeProfile}>
+        <p>Profile</p>
+      </SidePanel>
+    );
+    expect(document.body.style.overflow).toBe('hidden');
+  });
+});

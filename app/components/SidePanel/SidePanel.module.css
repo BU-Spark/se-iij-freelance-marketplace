@@ -47,13 +47,15 @@
 }
 
 .head {
+  padding: 14px 16px 14px 20px;
+  background: #fff;
+  border-bottom: 1px solid #eceef2;
+}
+.headRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 16px 14px 20px;
-  background: #fff;
-  border-bottom: 1px solid #eceef2;
 }
 .title {
   margin: 0;
@@ -89,4 +91,22 @@
   padding: 12px 20px;
   background: #fff;
   border-top: 1px solid #eceef2;
+}
+
+/* dark navy header, matching the page drawers */
+.navy {
+  padding: 20px 16px 24px 24px;
+  background: var(--navy-deep);
+  border-bottom: 0;
+  color: #fff;
+}
+.navy .title {
+  color: #fff;
+}
+.navy .close {
+  color: rgba(255, 255, 255, 0.85);
+}
+.navy .close:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
 }
