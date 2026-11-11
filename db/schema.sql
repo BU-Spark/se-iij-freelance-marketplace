@@ -16,6 +16,9 @@ CREATE TABLE IF NOT EXISTS users (
   preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   -- The person's own "I'm free right now" flag, shown as the dot on their avatar
   available_now BOOLEAN NOT NULL DEFAULT FALSE,
+  -- Set by the Story Match team when an account may no longer sign in
+  suspended_at TIMESTAMPTZ,
+  suspension_reason TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT users_roles_allowed CHECK (roles <@ ARRAY['editor', 'freelancer']::TEXT[])
@@ -82,6 +85,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS available_now BOOLEAN NOT NULL DEFAULT FALSE;
+-- Admins suspend accounts from the Accounts tab; the Clerk ban stops the sign-in, these record why
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS suspension_reason TEXT;
 ALTER TABLE editors ADD COLUMN IF NOT EXISTS location TEXT;
 ALTER TABLE freelancers ADD COLUMN IF NOT EXISTS beat_other TEXT;
 ALTER TABLE freelancers ADD COLUMN IF NOT EXISTS skills TEXT[] NOT NULL DEFAULT '{}';
