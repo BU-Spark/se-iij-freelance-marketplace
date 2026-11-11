@@ -30,6 +30,8 @@ const PROFILE_SQL = `
     f.rate,
     f.community_covered,
     f.reporting_beats,
+    f.beat_other,
+    f.skills,
     f.beat_tags,
     f.work_mediums,
     f.tools,

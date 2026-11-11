@@ -36,6 +36,8 @@ const row: ProfileRow = {
   rate: '$1.10 / word',
   community_covered: 'Bristol',
   reporting_beats: ['Housing'],
+  beat_other: null,
+  skills: null,
   beat_tags: [],
   work_mediums: ['Reporting'],
   tools: ['Excel'],
