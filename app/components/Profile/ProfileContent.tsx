@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import BasicInfoCard from './cards/BasicInfoCard';
 import BasicInfoForm from './forms/BasicInfoForm';
+import AvailableToggle from './cards/AvailableToggle';
+import ProfileRow from './cards/ProfileRow';
 import RoleCard from './cards/RoleCard';
 import RoleForm from './forms/RoleForm';
 import RoleRow from './cards/RoleRow';
@@ -21,8 +23,10 @@ type ProfileContentProps = {
   onSaveBasic?: (basic: BasicInfo) => SaveResult;
   /** if given, each role card gets an Edit button */
   onSaveRole?: (details: RoleDetails) => SaveResult;
-  /** if given, basic info gets the "free right now" switch */
+  /** if given, shows the "free right now" switch */
   onSaveAvailable?: (availableNow: boolean) => SaveResult;
+  /** if given, basic info is a row that opens its own drawer instead of an expanded card */
+  onOpenBasic?: () => void;
   /** if given, each role is a row that opens its own drawer instead of an expanded card */
   onOpenRole?: (role: ProfileRole) => void;
 };
@@ -36,6 +40,7 @@ export default function ProfileContent({
   onSaveBasic,
   onSaveRole,
   onSaveAvailable,
+  onOpenBasic,
   onOpenRole,
 }: ProfileContentProps) {
   // which card is open as a form: 'basic', a role, or nothing
@@ -82,14 +87,27 @@ export default function ProfileContent({
         </section>
       )}
 
-      {editing === 'basic' && onSaveBasic ? (
+      {onSaveAvailable && (
+        <AvailableToggle availableNow={profile.basic.availableNow} onToggle={(next) => void onSaveAvailable(next)} />
+      )}
+
+      {onOpenBasic ? (
+        <>
+          <h3 className={styles.label}>About me</h3>
+          <ProfileRow
+            label="Basic info"
+            ariaLabel="Open Basic info"
+            icon="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 20c0-3.3 3.6-6 8-6s8 2.7 8 6"
+            accent="#1b3a6b"
+            tint="#e8edf6"
+            ink="#1b3a6b"
+            onOpen={onOpenBasic}
+          />
+        </>
+      ) : editing === 'basic' && onSaveBasic ? (
         <BasicInfoForm basic={profile.basic} onSave={saveBasic} onCancel={stopEditing} />
       ) : (
-        <BasicInfoCard
-          basic={profile.basic}
-          onEdit={onSaveBasic && (() => setEditing('basic'))}
-          onToggleAvailable={onSaveAvailable && ((next) => void onSaveAvailable(next))}
-        />
+        <BasicInfoCard basic={profile.basic} onEdit={onSaveBasic && (() => setEditing('basic'))} />
       )}
 
       <h3 className={styles.label}>My roles</h3>
