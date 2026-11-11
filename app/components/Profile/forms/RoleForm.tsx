@@ -40,8 +40,8 @@ export default function RoleForm({ details, onSave, onCancel }: RoleFormProps) {
     }
   };
 
-  // availability is shown on the card but only onboarding can change it
-  const editable = config.fields.filter((field) => field.type !== 'readonly');
+  // availability has its own controls in settings, so it is left out of this free-text form
+  const editable = config.fields.filter((field) => field.type !== 'readonly' && field.type !== 'availability');
 
   return (
     <InfoCard title={`Edit ${config.label} details`} accent={config.accent}>
