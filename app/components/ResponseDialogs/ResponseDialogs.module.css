@@ -1,0 +1,60 @@
+.label {
+  display: block;
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.reasons {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 20px;
+  padding: 0;
+  border: 0;
+}
+
+.reason {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  resize: vertical;
+}
+
+.error {
+  margin: 8px 0 16px;
+  color: #a32020;
+  font-size: 14px;
+}
+
+.primary,
+.secondary {
+  min-height: 44px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid var(--navy);
+  background: var(--navy);
+  color: var(--white);
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+}
