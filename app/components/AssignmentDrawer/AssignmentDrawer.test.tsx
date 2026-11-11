@@ -53,3 +53,21 @@ describe('AssignmentDrawer', () => {
     expect(screen.getByRole('heading', { name: 'Edit assignment' })).toBeInTheDocument();
   });
 });
+
+describe('AssignmentDrawer content slot', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  it('shows extra content under the details and leaves Escape to a popup opened inside it', async () => {
+    render(
+      <AssignmentDrawer assignment={assignment} closeHref="/dashboard">
+        <div role="dialog" aria-modal="true" aria-label="Decline">
+          inner popup
+        </div>
+      </AssignmentDrawer>
+    );
+
+    expect(screen.getByText('inner popup')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
+    expect(push).not.toHaveBeenCalled();
+  });
+});

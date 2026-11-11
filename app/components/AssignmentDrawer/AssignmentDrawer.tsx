@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Assignment } from '../../types/assignments.types';
@@ -15,6 +15,8 @@ type AssignmentDrawerProps = {
   canEdit?: boolean;
   /** shows which organization posted it, on desks that need it */
   showOrganization?: boolean;
+  /** shown under the details, e.g. the freelancer's response actions */
+  children?: ReactNode;
 };
 
 /** The expanded view of one assignment, slid in from the right over the page that listed it */
@@ -23,6 +25,7 @@ export default function AssignmentDrawer({
   closeHref,
   canEdit = false,
   showOrganization = false,
+  children,
 }: AssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -33,7 +36,9 @@ export default function AssignmentDrawer({
 
     // Escape closes the drawer
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') router.push(closeHref, { scroll: false });
+      // a popup opened from inside the drawer (e.g. Decline) closes first
+      if (e.key === 'Escape' && !panelRef.current?.querySelector('[aria-modal="true"]'))
+        router.push(closeHref, { scroll: false });
     };
     document.addEventListener('keydown', onKey);
 
@@ -91,6 +96,7 @@ export default function AssignmentDrawer({
             canEdit={canEdit}
             showOrganization={showOrganization}
           />
+          {children}
         </div>
       </div>
     </>

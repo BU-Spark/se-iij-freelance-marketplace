@@ -3,6 +3,7 @@ import type { Assignment } from '../../types/assignments.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import { requireWorkspace } from '../../../lib/workspace';
 import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
+import AssignmentResponse from '../../components/AssignmentResponse/AssignmentResponse';
 import AssignmentsBrowser from './AssignmentsBrowser';
 import { loadAssignmentView, type AssignmentView } from './loadAssignmentView';
 import styles from './assignments.module.css';
@@ -44,7 +45,12 @@ export default async function AssignmentsPage({ searchParams }: AssignmentsPageP
         <AssignmentsBrowser assignments={assignments} loadFailed={loadFailed} />
       </div>
       {opened && (
-        <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard/assignments" />
+        <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard/assignments">
+          {/* the people who posted it edit it; everyone else answers it */}
+          {!opened.canEdit && (
+            <AssignmentResponse assignmentId={opened.assignment.id} assignmentTitle={opened.assignment.title} />
+          )}
+        </AssignmentDrawer>
       )}
     </>
   );
