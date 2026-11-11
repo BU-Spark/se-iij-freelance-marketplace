@@ -135,3 +135,15 @@ CREATE TABLE IF NOT EXISTS account_appeals (
 
 CREATE INDEX IF NOT EXISTS account_appeals_status_created_idx ON account_appeals (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS account_appeals_user_idx ON account_appeals (user_id);
+
+-- An editor's roster: the freelancers they have invited to work with them. The row *is* the invite,
+-- so inviting again is a no-op and removing someone deletes it.
+CREATE TABLE IF NOT EXISTS roster_invites (
+  editor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  invited_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (editor_user_id, freelancer_user_id),
+  CONSTRAINT roster_invites_not_self CHECK (editor_user_id <> freelancer_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS roster_invites_freelancer_idx ON roster_invites (freelancer_user_id);
