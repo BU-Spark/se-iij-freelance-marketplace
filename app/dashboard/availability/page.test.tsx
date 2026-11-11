@@ -28,6 +28,29 @@ const SAVED = {
 
 const EMPTY = { availableNow: false, timezone: 'UTC', days: WEEKDAYS, startsAt: '09:00', endsAt: '17:00' };
 
+/** Today, keyed the way the calendar keys it, so the day buttons can be found */
+const TODAY = (() => {
+  const now = new Date();
+  const date = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return {
+    date,
+    label: new Intl.DateTimeFormat('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC',
+    }).format(new Date(`${date}T12:00:00Z`)),
+    weekday: now.getDay() >= 1 && now.getDay() <= 5,
+  };
+})();
+
+const dayButton = (label: string) => screen.getByRole('button', { name: (name) => name.startsWith(label) });
+
 const save = () => fireEvent.click(screen.getByRole('button', { name: /save availability/i }));
 
 beforeEach(() => {
@@ -76,8 +99,39 @@ describe('Availability page', () => {
         days: [...WEEKDAYS, 'saturday'],
         startsAt: '10:00',
         endsAt: '17:00',
+        exceptions: [],
       }),
     });
+  });
+
+  it('marks a single date the other way round from the usual week', async () => {
+    render(<AvailabilityPage />);
+    await screen.findByLabelText('Time zone');
+
+    fireEvent.click(dayButton(TODAY.label));
+    expect(screen.getByText('1 date differs from your usual week.')).toBeInTheDocument();
+
+    fetchMock.mockResolvedValueOnce(ok({ saved: true }));
+    save();
+    await screen.findByText(/availability saved/i);
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      days: WEEKDAYS,
+      exceptions: [{ date: TODAY.date, available: !TODAY.weekday }],
+    });
+  });
+
+  it('puts a date back on the usual week when it is clicked through', async () => {
+    render(<AvailabilityPage />);
+    await screen.findByLabelText('Time zone');
+
+    // a working day goes off, then on, then back; a weekend day only goes on, then back
+    for (let click = 0; click < (TODAY.weekday ? 3 : 2); click += 1) {
+      fireEvent.click(dayButton(TODAY.label));
+    }
+
+    expect(screen.getByText('Every date follows your usual week.')).toBeInTheDocument();
   });
 
   it('rejects reversed times, a dayless week, and an invalid time zone', async () => {
