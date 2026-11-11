@@ -24,3 +24,5 @@ export type TalentMember = RosterMember & {
   availableNow: boolean;
   profile: TalentProfile;
 };
+
+export type TalentFilterOptions = { beats: string[]; mediums: string[]; locations: string[] };
