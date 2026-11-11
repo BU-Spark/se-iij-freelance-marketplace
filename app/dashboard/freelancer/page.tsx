@@ -1,4 +1,5 @@
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
+import Link from 'next/link';
 import { ASSIGNMENTS } from '../constants';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import FreelancerDashboard from './FreelancerDashboard';
@@ -34,6 +35,9 @@ export default function FreelancerPage() {
         <p className={styles.eyebrow}>Freelancer workspace</p>
         <h1>Your assignment desk</h1>
         <p>Discover opportunities and keep your current work in view.</p>
+        <p>
+          <Link href="/dashboard/freelancer/pitches">View my pitches</Link>
+        </p>
         <FreelancerDashboard assignments={DEMO_ASSIGNMENTS} freelancerId={DEMO_FREELANCER_ID} />
       </main>
     </FreelancerWorkspace>
