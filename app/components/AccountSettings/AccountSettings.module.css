@@ -97,3 +97,85 @@
   background: #e6f6ea;
   color: var(--c-green-d);
 }
+
+/* ---- buttons ---- */
+.button,
+.buttonPrimary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.button {
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid #d5dae3;
+  background: #fff;
+  font-size: 13px;
+  color: var(--ink);
+}
+
+.button:hover:not(:disabled) {
+  background: #f5f7fb;
+}
+
+.buttonPrimary {
+  height: 40px;
+  padding: 0 16px;
+  border: 0;
+  background: var(--navy-deep);
+  font-size: 14px;
+  color: #fff;
+}
+
+.button:disabled,
+.buttonPrimary:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+/* ---- password form ---- */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+  border-top: 1px solid #f0f2f6;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.checkbox input {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--navy);
+}
+
+.formError {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #f3c9d2;
+  border-radius: 10px;
+  background: #fdf2f5;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #a51f3d;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
