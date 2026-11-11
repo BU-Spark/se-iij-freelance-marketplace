@@ -406,3 +406,23 @@ textarea.input {
   text-decoration: underline;
 }
 
+
+/* Sign out lives at the bottom of My profile, not in the menu */
+.signOut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-weight: 500;
+  color: #9b2c1f;
+  text-align: left;
+  cursor: pointer;
+}
+.signOut:hover {
+  background: #fdf3f1;
+}

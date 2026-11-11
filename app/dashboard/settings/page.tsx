@@ -6,15 +6,16 @@ import ProfileContent from '../../components/Profile/ProfileContent';
 import { useToast } from '../../components/Toast/ToastProvider';
 import { useProfile } from '../../hooks/useProfile';
 import type { BasicInfo, RoleDetails } from '../../types/profile.types';
-import styles from './settings.module.css';
+import styles from '../settings/settings.module.css';
 
 const SAVE_FAILED = 'Could not save your profile. Please try again.';
 
 /**
- * Settings is the profile page: the same cards the profile panel shows, on a page. Availability is
- * not a section of its own — it opens with the role it belongs to.
+ * Settings → Profile: the same cards the profile panel shows, on their own page. Availability is
+ * not a section of its own — it opens with the role it belongs to. Sign-in details live on their
+ * own page, so this one is only about how the person appears to the other side of the desk.
  */
-export default function SettingsPage() {
+export default function SettingsProfilePage() {
   const { isLoaded } = useAuth();
   const { showToast } = useToast();
   const { profile, error, needsOnboarding, saveBasic, saveRole } = useProfile();
@@ -37,11 +38,11 @@ export default function SettingsPage() {
   const pending = !isLoaded || (!profile && !needsOnboarding && !error);
 
   return (
-    <main className={styles.main}>
-      <header className={styles.heading}>
-        <h1>Settings</h1>
-        <p>Your profile and availability — the details editors and freelancers see about you.</p>
-      </header>
+    <section aria-labelledby="profile-heading">
+      <div className={styles.sectionHead}>
+        <h2 id="profile-heading">Profile</h2>
+        <p>How you appear to the other side of the desk. Keep it current so people can find you.</p>
+      </div>
 
       {pending ? (
         <p className={styles.status} role="status">
@@ -63,6 +64,6 @@ export default function SettingsPage() {
           {error ?? 'Your profile is unavailable right now.'}
         </p>
       )}
-    </main>
+    </section>
   );
 }

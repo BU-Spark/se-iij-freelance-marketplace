@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { useAuth } from '@clerk/nextjs';
-import SettingsPage from './page';
+import SettingsProfilePage from './page';
 import { ToastProvider } from '../../components/Toast/ToastProvider';
 import { MOCK_PROFILE } from '../../components/Profile/config/constants';
 
@@ -40,7 +40,7 @@ const store = (overrides: Record<string, unknown> = {}) => ({
 const renderPage = () =>
   render(
     <ToastProvider>
-      <SettingsPage />
+      <SettingsProfilePage />
     </ToastProvider>
   );
 
@@ -57,13 +57,21 @@ afterAll(() => {
   global.fetch = originalFetch;
 });
 
-describe('Settings page', () => {
-  it('shows the profile cards', () => {
+describe('Settings profile page', () => {
+  it('shows only the profile cards', () => {
     renderPage();
 
-    expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Profile' })).toBeInTheDocument();
     expect(screen.getByText('Basic info')).toBeInTheDocument();
     expect(screen.getByText('My roles')).toBeInTheDocument();
+  });
+
+  it('leaves sign-in details to their own page', () => {
+    renderPage();
+
+    expect(screen.queryByRole('heading', { name: 'Sign-in email' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Password' })).not.toBeInTheDocument();
+    expect(screen.queryByText("Where you're signed in")).not.toBeInTheDocument();
   });
 
   it('leaves the availability editor to the role it belongs to', () => {
