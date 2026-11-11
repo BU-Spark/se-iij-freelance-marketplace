@@ -102,6 +102,20 @@
 }
 
 .footerLink,
+.signOut {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
 /* the person's own row: avatar, name and what the row leads to */
 .who {
   flex: 1;
@@ -122,20 +136,6 @@
 .chevron {
   font-size: 18px;
   color: #9aa1ad;
-}
-
-.signOut {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  border: none;
-  border-radius: 10px;
-  background: transparent;
-  font: inherit;
-  text-align: left;
-  text-decoration: none;
-  cursor: pointer;
 }
 
 .footerLink {
