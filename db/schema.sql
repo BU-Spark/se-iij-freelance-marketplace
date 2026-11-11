@@ -119,3 +119,19 @@ BEGIN
       ADD CONSTRAINT users_roles_allowed CHECK (roles <@ ARRAY['editor', 'freelancer']::TEXT[]);
   END IF;
 END $$;
+
+-- A suspended person can ask the team to look again. The form is public because a ban blocks sign-in,
+-- so the account is matched by email rather than by whoever is calling.
+CREATE TABLE IF NOT EXISTS account_appeals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Kept even if the account is later deleted, so the team can still read what was sent
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  message TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'reviewing', 'resolved', 'dismissed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS account_appeals_status_created_idx ON account_appeals (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS account_appeals_user_idx ON account_appeals (user_id);
