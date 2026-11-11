@@ -5,7 +5,7 @@ import SegmentedControl, { type SegmentOption } from '../components/SegmentedCon
 import PitchListItem from '../../components/PitchListItem/PitchListItem';
 import PitchDetail from '../../components/PitchDetail/PitchDetail';
 import PitchActions from '../../components/PitchActions/PitchActions';
-import type { Pitch, PitchFilter, PitchStatus } from '../../types/dashboard.types';
+import type { Pitch, PitchFeedback, PitchFilter, PitchStatus } from '../../types/dashboard.types';
 import styles from './pitches.module.css';
 
 const FILTERS: SegmentOption<PitchFilter>[] = [
@@ -28,6 +28,7 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
   // our own copy of the pitches, so we can change their status on screen
   // TODO: save status changes to the backend once the API exists
   const [items, setItems] = useState(pitches);
+  const [feedbackByPitch, setFeedbackByPitch] = useState<Record<string, PitchFeedback>>({});
   const [filter, setFilter] = useState<PitchFilter>('all');
   const [selectedId, setSelectedId] = useState<string | undefined>(pitches[0]?.id);
 
@@ -81,9 +82,12 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
             <>
               <PitchDetail pitch={selected} />
               <PitchActions
+                key={selected.id}
                 status={selected.status}
                 freelancerName={selected.freelancer.name}
+                savedFeedback={feedbackByPitch[selected.id]}
                 onChange={(status) => setStatus(selected.id, status)}
+                onSubmitFeedback={(feedback) => setFeedbackByPitch((saved) => ({ ...saved, [selected.id]: feedback }))}
               />
             </>
           ) : (

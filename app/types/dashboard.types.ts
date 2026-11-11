@@ -2,6 +2,9 @@
 
 export type AvailabilityStatus = 'available' | 'busy' | 'off';
 
+/** An invitation waits for the freelancer; only an accepted one puts them on the roster */
+export type RosterInviteStatus = 'pending' | 'accepted' | 'declined';
+
 /** open = posted, invited = waiting on a freelancer (shown as "pending"), assigned = taken */
 export type AssignmentStatus = 'open' | 'invited' | 'assigned';
 
@@ -14,6 +17,13 @@ export type ViewerRole = 'editor' | 'freelancer';
 export type RateUnit = 'word' | 'hour' | 'flat';
 /** Where a pitch is in the editor's review */
 export type PitchStatus = 'new' | 'reviewed' | 'negotiating' | 'accepted' | 'declined';
+
+export type PitchFeedback = {
+  decision: 'accepted' | 'rejected' | 'revision_requested';
+  comments: string;
+  strengths: string;
+  improvements: string;
+};
 
 /** The tabs above the inbox: every status, plus "all" */
 export type PitchFilter = 'all' | PitchStatus;
@@ -29,8 +39,10 @@ export type RosterMember = {
   /** every beat they cover, so the roster can filter on more than the headline */
   beats?: string[];
   city: string;
-  /** ISO timestamp of when the editor added them to their roster */
+  /** ISO timestamp of when the editor added them; only set on an editor's own roster */
   invitedAt?: string;
+  /** where the invite stands; only set when this member has an invite row */
+  inviteStatus?: RosterInviteStatus;
   status: AvailabilityStatus;
   openHours: HourWindow[];
   note: string;

@@ -1,14 +1,19 @@
 import type { ReactNode } from 'react';
+import type { ProfileRole } from '../../types';
 import { EditorHeader } from '../header/EditorHeader';
 import styles from './FreelancerWorkspace.module.css';
 
-export type FreelancerWorkspaceProps = { children: ReactNode };
+export type FreelancerWorkspaceProps = {
+  children: ReactNode;
+  /** which side of the desk this page belongs to; the header opens on that side */
+  role?: ProfileRole;
+};
 
-/** Freelancer pages share the editor's header, opened on the freelancer side */
-export function FreelancerWorkspace({ children }: FreelancerWorkspaceProps) {
+/** Pages that live in a workspace share the header, opened on that workspace's side */
+export function FreelancerWorkspace({ children, role = 'freelancer' }: FreelancerWorkspaceProps) {
   return (
     <div className={styles.workspace}>
-      <EditorHeader initialRole="freelancer" />
+      <EditorHeader initialRole={role} />
       {children}
     </div>
   );

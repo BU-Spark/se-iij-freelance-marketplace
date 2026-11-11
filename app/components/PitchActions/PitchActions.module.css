@@ -7,6 +7,48 @@
   border-top: 1px solid #eceef2;
 }
 
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.field textarea,
+.field select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #d5dae3;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 400;
+}
+
+.field textarea {
+  resize: vertical;
+}
+
+.savedFeedback {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f7f8fa;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.savedFeedback h3,
+.savedFeedback p {
+  margin: 0;
+}
+
 .note {
   margin: 0;
   font-size: 14px;
@@ -19,49 +61,19 @@
   gap: 10px;
 }
 
-/* shared button shape */
-.secondary,
-.primary,
-.done {
+.primary {
   height: 44px;
   padding: 0 20px;
   border-radius: 12px;
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-}
-
-/* Decline / Negotiate */
-.secondary {
-  border: 1px solid #d5dae3;
-  background: #fff;
-  color: var(--ink);
-}
-.secondary:hover:not(:disabled) {
-  background: #f7f8fa;
-}
-
-/* Accept pitch */
-.primary {
   border: 0;
   background: var(--navy-deep);
   color: #fff;
   box-shadow: 0 4px 12px -4px rgba(15, 35, 71, 0.5);
 }
 
-/* Accepted ✓ */
-.done {
-  border: 1px solid #b9e2c9;
-  background: #e8f6ee;
-  color: #17663a;
-}
-
-.secondary:disabled,
-.primary:disabled,
-.done:disabled {
+.primary:disabled {
   cursor: default;
-}
-.secondary:disabled {
-  background: #f0f2f5;
-  color: #4a5468;
 }

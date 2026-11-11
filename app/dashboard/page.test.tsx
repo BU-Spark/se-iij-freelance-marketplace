@@ -3,6 +3,7 @@ import Dashboard from './page';
 import type { Assignment } from '../types/assignments.types';
 import { ASSIGNMENTS, ROSTER } from './constants';
 import { listOpenAssignments } from '../../lib/assignments';
+import { loadEditorRoster } from '../../lib/roster';
 
 // EditorHeader has its own tests; swap it for a simple stand-in so these tests only check the dashboard
 jest.mock('../components/header/EditorHeader', () => ({
@@ -16,14 +17,17 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(async () => ({ userId: 'clerk-1' })) }));
+jest.mock('../../lib/workspace', () => ({ requireWorkspace: jest.fn() }));
 jest.mock('../../lib/assignments', () => ({
   listOpenAssignments: jest.fn(),
   loadAssignmentViewer: jest.fn(async () => viewer),
 }));
+jest.mock('../../lib/roster', () => ({ loadEditorRoster: jest.fn() }));
 
 const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 
 const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
+const loadEditorRosterMock = loadEditorRoster as jest.Mock;
 
 const renderDashboard = async () => render(await Dashboard());
 
@@ -49,6 +53,11 @@ describe('Dashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     listOpenAssignmentsMock.mockResolvedValue([]);
+    loadEditorRosterMock.mockResolvedValue({
+      members: ROSTER.slice(0, 2),
+      pending: [ROSTER[2]],
+      invitable: ROSTER.slice(3),
+    });
   });
 
   it('renders the shared header and the status bar with real numbers', async () => {
@@ -60,14 +69,46 @@ describe('Dashboard', () => {
     expect(within(counts).getByText('1 assigned')).toBeInTheDocument();
   });
 
-  it('lists every roster member with the roster count', async () => {
+  it('shows only the freelancers who accepted a place on the editor roster', async () => {
     await renderDashboard();
     const column = screen.getByRole('region', { name: /availability/i });
-    expect(within(column).getByText(`5 of ${ROSTER.length} on roster`)).toBeInTheDocument();
-    ROSTER.forEach((m) => {
+    const accepted = ROSTER.slice(0, 2);
+    const onToday = accepted.filter((m) => m.status !== 'off').length;
+
+    expect(within(column).getByText(`${onToday} of ${accepted.length} on roster`)).toBeInTheDocument();
+    accepted.forEach((m) => {
       expect(within(column).getByRole('heading', { level: 3, name: m.name })).toBeInTheDocument();
     });
-    expect(within(column).getByText(ROSTER[0].note)).toBeInTheDocument();
+    expect(within(column).getByText(accepted[0].note)).toBeInTheDocument();
+
+    // a pending invite and the wider directory stay out of the availability column
+    ROSTER.slice(2).forEach((m) => {
+      expect(within(column).queryByRole('heading', { level: 3, name: m.name })).not.toBeInTheDocument();
+    });
+  });
+
+  it('says the roster could not be loaded when it fails, rather than pretending it is empty', async () => {
+    const consoleMock = jest.spyOn(console, 'error').mockImplementation(() => {});
+    loadEditorRosterMock.mockRejectedValue(new Error('db down'));
+    await renderDashboard();
+    const column = screen.getByRole('region', { name: /availability/i });
+
+    expect(within(column).getByRole('alert')).toHaveTextContent(/couldn't be loaded/i);
+    expect(within(column).queryByText(/no one on your roster yet/i)).not.toBeInTheDocument();
+    consoleMock.mockRestore();
+  });
+
+  it('points at the roster page when the editor has none yet', async () => {
+    loadEditorRosterMock.mockResolvedValue({ members: [], pending: [ROSTER[0]], invitable: ROSTER.slice(1) });
+    await renderDashboard();
+    const column = screen.getByRole('region', { name: /availability/i });
+
+    expect(within(column).getByText(/no one on your roster yet/i)).toBeInTheDocument();
+    expect(within(column).getByRole('link', { name: /build your roster/i })).toHaveAttribute(
+      'href',
+      '/dashboard/roster'
+    );
+    expect(within(column).queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
   });
 
   it('shows the range and filter toggles with the defaults pressed', async () => {

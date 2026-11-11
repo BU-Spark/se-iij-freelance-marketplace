@@ -1,6 +1,10 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import OnboardingPage from './page';
 
+// This suite exercises the full multi-step flow and can exceed Jest's 5s
+// per-test default when it runs alongside the rest of the suite.
+jest.setTimeout(15000);
+
 type FakeAddress = {
   emailAddress: string;
   verification: { status: string };
@@ -53,6 +57,14 @@ beforeEach(() => {
 
 const chip = (label: string) => screen.getByRole('button', { name: new RegExp(`^[+✓]\\s*${label}$`, 'i') });
 
+/** Type into a searchable tag picker and choose the matching option from its list */
+const addTag = (label: RegExp, value: string) => {
+  const input = screen.getByLabelText(label);
+  fireEvent.focus(input);
+  fireEvent.change(input, { target: { value } });
+  fireEvent.click(screen.getByRole('option', { name: value }));
+};
+
 const type = (label: RegExp, value: string) => {
   const input = screen.getByLabelText(label);
   fireEvent.change(input, { target: { value } });
@@ -91,7 +103,7 @@ const fillEditorStep = async () => {
   type(/last name/i, 'Jenkins');
   type(/work email/i, 'sarah@newsroom.example');
   type(/position \/ title/i, 'News Editor');
-  fireEvent.click(chip('Politics'));
+  addTag(/search desks/i, 'Politics');
   await verifyWorkEmail();
 };
 
@@ -99,14 +111,14 @@ const fillFreelancerStep = () => {
   type(/first name/i, 'Alex');
   type(/last name/i, 'Rivera');
   type(/^email/i, 'alex@example.com');
-  fireEvent.click(chip('Climate'));
-  fireEvent.click(chip('Photo'));
+  addTag(/search beats/i, 'Climate/Environment');
+  addTag(/search mediums/i, 'Photo');
 };
 
 /** On the second profile step the shared account fields are already collected */
 const fillFreelancerRoleOnly = () => {
-  fireEvent.click(chip('Climate'));
-  fireEvent.click(chip('Photo'));
+  addTag(/search beats/i, 'Climate/Environment');
+  addTag(/search mediums/i, 'Photo');
 };
 
 /** The JSON body posted to /api/onboarding by the most recent submit */
@@ -208,7 +220,7 @@ describe('Onboarding page', () => {
       type(/last name/i, 'Jenkins');
       type(/work email/i, 'sarah@newsroom.example');
       type(/position \/ title/i, 'News Editor');
-      fireEvent.click(chip('Politics'));
+      addTag(/search desks/i, 'Politics');
       await verifyWorkEmail();
       next();
       submit();
@@ -252,7 +264,7 @@ describe('Onboarding page', () => {
       type(/last name/i, 'Jenkins');
       type(/work email/i, 'sarah@newsroom.example');
       type(/position \/ title/i, 'News Editor');
-      fireEvent.click(chip('Politics'));
+      addTag(/search desks/i, 'Politics');
 
       next();
 
@@ -345,6 +357,7 @@ describe('Onboarding page', () => {
 
     it('shows freelancer-only fields', () => {
       expect(screen.getByRole('heading', { name: /^beats$/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /^skills$/i })).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: /^mediums$/i })).toBeInTheDocument();
       expect(screen.getByLabelText(/portfolio link/i)).toBeInTheDocument();
       expect(screen.queryByLabelText(/position \/ title/i)).not.toBeInTheDocument();
@@ -361,6 +374,30 @@ describe('Onboarding page', () => {
       next();
       expect(screen.getByText(/pick at least one beat/i)).toBeInTheDocument();
       expect(screen.getByText(/pick at least one medium/i)).toBeInTheDocument();
+    });
+
+    it('asks which beat when "Other/Not listed here" is picked', () => {
+      addTag(/search beats/i, 'Other/Not listed here');
+      addTag(/search mediums/i, 'Photo');
+      next();
+
+      expect(screen.getByLabelText(/your beat/i)).toBeInTheDocument();
+      expect(screen.getByText(/tell us which beat you cover/i)).toBeInTheDocument();
+    });
+
+    it('sends the other beat and the skills with the profile', async () => {
+      fillFreelancerStep();
+      addTag(/search beats/i, 'Other/Not listed here');
+      type(/your beat/i, 'Water rights in the Central Valley');
+      addTag(/search skills/i, 'Investigative Journalism');
+      next();
+      submit();
+
+      await screen.findByRole('heading', { level: 1, name: /you're all set, alex/i }, { timeout: 2000 });
+
+      const body = postedPayload();
+      expect(body.freelancer.beatOther).toBe('Water rights in the Central Valley');
+      expect(body.freelancer.skills).toEqual(['Investigative Journalism']);
     });
 
     it('reaches the success screen with valid details', async () => {
@@ -578,7 +615,7 @@ describe('Onboarding page', () => {
       // the second role must not overwrite the shared details
       expect(body.user.firstName).toBe('Sarah');
       expect(body.editor.jobTitle).toBe('News Editor');
-      expect(body.freelancer.reportingBeats).toEqual(['Climate']);
+      expect(body.freelancer.reportingBeats).toEqual(['Climate/Environment']);
       expect(screen.getByText(/both profiles are live/i)).toBeInTheDocument();
     });
 

@@ -243,3 +243,118 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* roster invitations waiting on this freelancer */
+.invites {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 24px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.invitesTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: var(--navy-deep);
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+}
+
+.invitesCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #fff;
+  font-family: var(--font-sans, inherit);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.invitesIntro {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.inviteList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.inviteRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.inviteWho {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.inviteWho strong {
+  color: var(--navy-deep);
+  font-size: 15px;
+}
+
+.inviteActions {
+  display: flex;
+  gap: 8px;
+}
+
+.inviteAccept,
+.inviteDecline {
+  min-height: 38px;
+  padding: 0 16px;
+  border: 1px solid var(--navy);
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.inviteAccept {
+  background: var(--navy);
+  color: #fff;
+}
+
+.inviteDecline {
+  background: #fff;
+  color: var(--navy);
+}
+
+.inviteAccept:disabled,
+.inviteDecline:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.inviteAnswered {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}

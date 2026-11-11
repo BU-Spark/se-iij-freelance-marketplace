@@ -14,10 +14,12 @@ export type RosterRow = {
   first_name: string;
   last_name: string;
   location: string | null;
-  reporting_beats: string[] | null;
+  beats: string[] | null;
   beat_tags: string[] | null;
   work_mediums: string[] | null;
   availability: RosterAvailability | null;
+  /** the person's own "free right now" flag, which beats the weekly pattern */
+  available_now?: boolean | null;
 };
 
 /** Monday-first, matching the week strip and `availability.days` */
@@ -132,18 +134,20 @@ export function rosterNote(availability: RosterAvailability | null, status: Avai
 
 /** The first beat they report on, falling back to the next thing we know about them */
 export function specialtyOf(row: RosterRow): string {
-  return list(row.reporting_beats)[0] ?? list(row.beat_tags)[0] ?? list(row.work_mediums)[0] ?? 'Freelancer';
+  return list(row.beats)[0] ?? list(row.beat_tags)[0] ?? list(row.work_mediums)[0] ?? 'Freelancer';
 }
 
 /** Every beat this person covers, for the filter dropdown */
 export function beatsOf(row: RosterRow): string[] {
-  const beats = [...list(row.reporting_beats), ...list(row.beat_tags)];
+  const beats = [...list(row.beats), ...list(row.beat_tags)];
   return [...new Set(beats)];
 }
 
 export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMember {
   const availability = parseAvailability(row.availability);
-  const status = availabilityStatus(availability, now);
+  // saying "I'm free right now" outranks whatever the weekly pattern says about this hour
+  const freeNow = row.available_now === true;
+  const status = freeNow ? 'available' : availabilityStatus(availability, now);
 
   return {
     id: row.id,
@@ -153,7 +157,7 @@ export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMe
     city: str(row.location),
     status,
     openHours: status === 'off' ? [] : openHours(availability),
-    note: rosterNote(availability, status),
+    note: freeNow ? 'Free right now' : rosterNote(availability, status),
     weekDays: weekDays(availability),
     monthDays: monthDays(availability, now),
   };

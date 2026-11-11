@@ -1,14 +1,35 @@
+import { auth } from '@clerk/nextjs/server';
 import { EditorHeader } from '../../components/header/EditorHeader';
+import { loadEditorRoster } from '../../../lib/roster';
+import { requireWorkspace } from '../../../lib/workspace';
+import type { RosterMember } from '../../types/dashboard.types';
 import RosterBrowser from './RosterBrowser';
-import { ROSTER_INVITABLE, ROSTER_MEMBERS } from './constants';
 import styles from './roster.module.css';
 
-export default function RosterPage() {
+// A new invite has to show up on the next visit
+export const dynamic = 'force-dynamic';
+
+export default async function RosterPage() {
+  // The roster belongs to the editor desk
+  await requireWorkspace('editor');
+
+  let members: RosterMember[] = [];
+  let pending: RosterMember[] = [];
+  let invitable: RosterMember[] = [];
+  let loadFailed = false;
+
+  try {
+    const { userId } = await auth();
+    if (userId) ({ members, pending, invitable } = await loadEditorRoster(userId));
+  } catch (error) {
+    console.error('Failed to load the roster.', error);
+    loadFailed = true;
+  }
+
   return (
     <div className={styles.shell}>
       <EditorHeader />
-      {/* sample data until the roster API exists */}
-      <RosterBrowser members={ROSTER_MEMBERS} invitable={ROSTER_INVITABLE} />
+      <RosterBrowser members={members} pending={pending} invitable={invitable} loadFailed={loadFailed} />
     </div>
   );
 }

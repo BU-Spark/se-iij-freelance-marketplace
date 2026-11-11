@@ -1,8 +1,11 @@
+import { auth } from '@clerk/nextjs/server';
 import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import Link from 'next/link';
+import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster';
 import { ASSIGNMENTS } from '../constants';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import FreelancerDashboard from './FreelancerDashboard';
+import RosterInvites from './RosterInvites';
 import styles from './freelancer.module.css';
 
 // Demo ownership is explicit until the API supplies assignments for the authenticated user.
@@ -28,7 +31,19 @@ const DEMO_ASSIGNMENTS: DeskAssignment[] = [
   },
 ];
 
-export default function FreelancerPage() {
+// An invitation sent a moment ago has to show up on the next visit
+export const dynamic = 'force-dynamic';
+
+export default async function FreelancerPage() {
+  let invites: RosterInvite[] = [];
+
+  try {
+    const { userId } = await auth();
+    if (userId) invites = await listInvitesForFreelancer(userId);
+  } catch (error) {
+    console.error('Failed to load roster invitations.', error);
+  }
+
   return (
     <FreelancerWorkspace>
       <main className={styles.main}>
@@ -38,6 +53,8 @@ export default function FreelancerPage() {
         <p>
           <Link href="/dashboard/freelancer/pitches">View my pitches</Link>
         </p>
+        {/* declined invitations are left out: the editor sees the answer on their roster */}
+        <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
         <FreelancerDashboard assignments={DEMO_ASSIGNMENTS} freelancerId={DEMO_FREELANCER_ID} />
       </main>
     </FreelancerWorkspace>

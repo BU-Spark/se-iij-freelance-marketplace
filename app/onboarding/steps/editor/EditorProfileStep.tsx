@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { ChipGroup, Field, OrgPicker, Section } from '../../../components';
+import { Field, OrgPicker, Section, TagInput } from '../../../components';
 import shared from '../../onboarding.module.css';
 import FormStep from '../FormStep';
 import PhotoField from '../../fields/PhotoField';
 import ShortBioField from '../../fields/ShortBioField';
 import { TOPICS } from '../../constants';
-import { fieldError, toggleValue } from '../../helpers';
+import { fieldError } from '../../helpers';
 import { isFreeEmailDomain } from '../../../utils/validation.utils';
 import type { EmailAddressResource } from '@clerk/shared/types';
 import type {
@@ -252,17 +252,20 @@ export default function EditorProfileStep(p: EditorProfileStepProps) {
 
       <Section
         title="Desks you staff"
-        hint="Freelancers filter by these when they pitch."
+        hint="Search the desks you staff and add as many as apply."
         color="var(--c-red)"
         error={err('desks')}
       >
-        <ChipGroup
-          options={TOPICS}
-          selected={data.desks}
-          onToggle={(value) => {
-            update('desks', toggleValue(data.desks, value));
+        <TagInput
+          tags={data.desks}
+          onChange={(tags) => {
+            update('desks', tags);
             touch('desks');
           }}
+          suggestions={TOPICS}
+          allowCustom={false}
+          ariaLabel="Search desks"
+          placeholder="Search desks…"
         />
       </Section>
 

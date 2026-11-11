@@ -47,12 +47,14 @@ export default function RoleForm({ details, onSave, onCancel }: RoleFormProps) {
     <InfoCard title={`Edit ${config.label} details`} accent={config.accent}>
       <form className={styles.form} onSubmit={submit} noValidate>
         {editable.map((field) => (
-          <Field key={field.key} label={field.label}>
+          <Field key={field.key} label={field.label} group={field.type === 'chips'}>
             {field.type === 'chips' ? (
               <TagInput
                 tags={asTags(facts[field.key])}
                 onChange={(tags) => set(field.key, tags)}
-                placeholder="Type a value and press Enter"
+                suggestions={field.options}
+                ariaLabel={field.label}
+                placeholder={field.options ? 'Type to search, or add your own' : 'Type a value and press Enter'}
               />
             ) : field.type === 'org' ? (
               <select

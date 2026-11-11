@@ -1,5 +1,6 @@
 import { db } from './db';
-import type { ProfileRow } from '../app/types/profile.types';
+import { profileRoles } from '../app/utils/profile.utils';
+import type { ProfileRole, ProfileRow } from '../app/types/profile.types';
 
 /**
  * Everything the profile screen and the onboarding seed need, in one row.
@@ -29,7 +30,9 @@ const PROFILE_SQL = `
     f.location AS freelancer_location,
     f.rate,
     f.community_covered,
-    f.reporting_beats,
+    f.beats,
+    f.beat_other,
+    f.skills,
     f.beat_tags,
     f.work_mediums,
     f.tools,
@@ -67,4 +70,10 @@ export async function ensureBasicUser(
 export async function loadProfileRow(clerkId: string): Promise<ProfileRow | null> {
   const result = await db.query<ProfileRow>(PROFILE_SQL, [clerkId]);
   return result.rows[0] ?? null;
+}
+
+/** The roles this person actually holds, used to decide which workspaces they may open */
+export async function loadProfileRoles(clerkId: string): Promise<ProfileRole[]> {
+  const row = await loadProfileRow(clerkId);
+  return row ? profileRoles(row) : [];
 }
