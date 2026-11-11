@@ -27,6 +27,47 @@ const member = (overrides: Partial<TalentMember> = {}): TalentMember => ({
 });
 
 describe('TalentCard', () => {
+  it('starts collapsed and opens into the full profile', () => {
+    render(<TalentCard member={member()} invited={false} onInvite={jest.fn()} />);
+
+    const toggle = screen.getByRole('button', { name: 'View profile' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.queryByText('Local politics reporter.')).not.toBeInTheDocument();
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'Hide profile' })).toHaveAttribute('aria-expanded', 'true');
+    const profile = screen.getByRole('region', { name: "Sarah Jenkins's profile" });
+    expect(profile).toHaveTextContent('Local politics reporter.');
+    expect(profile).toHaveTextContent('Ten years covering Leeds council.');
+    expect(profile).toHaveTextContent('West Yorkshire');
+    expect(profile).toHaveTextContent('£300/day');
+    expect(profile).toHaveTextContent('Housing');
+    expect(profile).toHaveTextContent('Audio');
+    expect(profile).toHaveTextContent('Datawrapper');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Hide profile' }));
+    expect(screen.queryByRole('region')).not.toBeInTheDocument();
+  });
+
+  it('says so when there is nothing more to show', () => {
+    render(
+      <TalentCard
+        member={member({
+          beats: [],
+          city: '',
+          mediums: [],
+          profile: { shortBio: '', longBio: '', communityCovered: '', rate: '', tools: [], portfolio: [] },
+        })}
+        invited={false}
+        onInvite={jest.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'View profile' }));
+    expect(screen.getByText(/hasn.t added more to their profile yet/i)).toBeInTheDocument();
+  });
+
   it('invites, and shows Invited once done', () => {
     const onInvite = jest.fn();
     const { rerender } = render(<TalentCard member={member()} invited={false} onInvite={onInvite} />);
