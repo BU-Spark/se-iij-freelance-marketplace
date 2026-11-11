@@ -11,7 +11,6 @@ function setup(overrides: Partial<React.ComponentProps<typeof NavMenu>> = {}) {
     currentPath: '/dashboard',
     settingsHref: '/dashboard/settings',
     onClose: jest.fn(),
-    onSignOut: jest.fn(),
     ...overrides,
   };
   render(<NavMenu {...props} roles={[...props.roles]} />);
@@ -64,9 +63,8 @@ describe('NavMenu', () => {
     expect(screen.getByRole('link', { name: /my settings/i })).toHaveAttribute('href', '/dashboard/settings');
   });
 
-  it('signs out', async () => {
-    const props = setup();
-    await userEvent.click(screen.getByRole('button', { name: /sign out/i }));
-    expect(props.onSignOut).toHaveBeenCalled();
+  it('has no sign out of its own', () => {
+    setup();
+    expect(screen.queryByRole('button', { name: /sign out/i })).not.toBeInTheDocument();
   });
 });

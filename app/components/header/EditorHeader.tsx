@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useClerk } from '@clerk/nextjs';
 import type { ProfileRole } from '../../types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
 import ProfileButton from '../Profile/ProfileButton';
@@ -15,7 +14,6 @@ import styles from './editorHeader.module.css';
 export function EditorHeader({ initialRole }: { initialRole?: ProfileRole } = {}) {
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut } = useClerk();
   const { profile } = useProfile();
 
   const myName = profile ? fullName(profile) : '';
@@ -54,7 +52,6 @@ export function EditorHeader({ initialRole }: { initialRole?: ProfileRole } = {}
         }}
         currentPath={pathname}
         settingsHref="/dashboard/settings"
-        onSignOut={() => signOut({ redirectUrl: '/' })}
       />
 
       <div className={styles.actions}>

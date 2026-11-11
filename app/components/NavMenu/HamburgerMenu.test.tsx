@@ -10,7 +10,6 @@ function setup() {
     onRoleChange: jest.fn(),
     currentPath: '/dashboard',
     settingsHref: '/dashboard/settings',
-    onSignOut: jest.fn(),
   };
   render(<HamburgerMenu {...props} />);
   return props;
@@ -33,13 +32,5 @@ describe('HamburgerMenu', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Close Menu' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  });
-
-  it('passes sign out through', async () => {
-    const props = setup();
-    await userEvent.click(screen.getByRole('button', { name: 'Open menu' }));
-    await userEvent.click(screen.getByRole('button', { name: /sign out/i }));
-
-    expect(props.onSignOut).toHaveBeenCalled();
   });
 });

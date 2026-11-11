@@ -1,14 +1,21 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { useAuth } from '@clerk/nextjs';
 import ProfilePanel from './ProfilePanel';
 import { MOCK_PROFILE } from './config/constants';
 
-jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
+const mockSignOut = jest.fn();
+
+jest.mock('@clerk/nextjs', () => ({
+  useAuth: jest.fn(),
+  useClerk: () => ({ signOut: mockSignOut }),
+}));
 
 const onlyFreelancer = { ...MOCK_PROFILE, roles: [MOCK_PROFILE.roles[0]] };
 const originalFetch = global.fetch;
 
 beforeEach(() => {
+  mockSignOut.mockClear();
   // editing a role mounts its availability card, which asks for that role's saved pattern
   jest.mocked(useAuth).mockReturnValue({ userId: 'user-a', isLoaded: true } as ReturnType<typeof useAuth>);
   global.fetch = jest.fn().mockResolvedValue({
@@ -322,5 +329,13 @@ describe('ProfilePanel', () => {
         })
       )
     );
+  });
+
+  it('signs out from the panel', async () => {
+    render(<ProfilePanel profile={MOCK_PROFILE} onClose={jest.fn()} />);
+
+    await userEvent.click(screen.getByRole('button', { name: /sign out/i }));
+
+    expect(mockSignOut).toHaveBeenCalledWith({ redirectUrl: '/' });
   });
 });

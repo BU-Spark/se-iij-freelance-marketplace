@@ -9,6 +9,11 @@ jest.mock('../../hooks/useProfile', () => ({
   useProfile: () => mockStore(),
 }));
 
+// the panel's footer signs out through Clerk
+jest.mock('@clerk/nextjs', () => ({
+  useClerk: () => ({ signOut: jest.fn() }),
+}));
+
 jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams('panel=profile'),
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
