@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
-import { useAuth } from '@clerk/nextjs';
 import type { Weekday } from '../../types/availability.types';
-import { FreelancerWorkspace } from '../../components/FreelancerWorkspace';
 import styles from './availability.module.css';
 
 const DAYS: Weekday[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
@@ -56,8 +54,8 @@ const toDraft = (body: Record<string, unknown>): Draft => {
   };
 };
 
-/** Saves through the profile API, so editors see the same hours the freelancer does */
-function AvailabilityForm({ userId }: { userId: string }) {
+/** Saves through the profile API, so editors and freelancers see the same hours the person set */
+export default function AvailabilityForm({ userId }: { userId: string }) {
   const [draft, setDraft] = useState<Draft>(DEFAULT);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -210,25 +208,5 @@ function AvailabilityForm({ userId }: { userId: string }) {
         {saving ? 'Saving…' : 'Save availability'}
       </button>
     </form>
-  );
-}
-
-export default function AvailabilityPage() {
-  const { userId, isLoaded } = useAuth();
-  return (
-    <FreelancerWorkspace>
-      <main className={styles.main}>
-        <h1>My availability</h1>
-        <p>Set whether you are free right now and your usual working hours.</p>
-        <p>Editors use this to judge timing before they invite or assign you work.</p>
-        {!isLoaded ? (
-          <p role="status">Loading account…</p>
-        ) : userId ? (
-          <AvailabilityForm key={userId} userId={userId} />
-        ) : (
-          <p>Please sign in to edit your availability.</p>
-        )}
-      </main>
-    </FreelancerWorkspace>
   );
 }
