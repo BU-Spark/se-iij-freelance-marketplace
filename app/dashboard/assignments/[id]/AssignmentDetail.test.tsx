@@ -99,11 +99,15 @@ describe('AssignmentDetail', () => {
     expect(global.fetch).not.toHaveBeenCalled();
   });
 
-  it('links sample assignments back to the dashboard without an Edit button', () => {
-    render(<AssignmentDetail assignment={assignment} canEdit={false} isSample />);
+  it('links back to the assignments list and hides Edit from people who cannot edit', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit={false} />);
 
-    expect(screen.getByRole('link', { name: /back to dashboard/i })).toHaveAttribute('href', '/dashboard');
-    expect(screen.getByText(/sample assignment/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /back to assignments/i })).toHaveAttribute(
+      'href',
+      '/dashboard/assignments'
+    );
+    expect(screen.getByText(/posted jan 1, 2030/i)).toBeInTheDocument();
+    expect(screen.queryByText(/sample assignment/i)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
   });
 });

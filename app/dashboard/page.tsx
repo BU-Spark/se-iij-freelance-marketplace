@@ -5,7 +5,7 @@ import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
 import PageSearch from './components/PageSearch';
 import styles from './dashboard.module.css';
-import { ASSIGNMENTS, ROSTER } from './constants';
+import { ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
 import type { RosterMember } from '../types/dashboard.types';
@@ -51,9 +51,8 @@ export default async function Dashboard() {
     rosterFailed = true;
   }
 
-  // Assignments posted to the database sit above the sample desk data
-  const samples = ASSIGNMENTS.map((a) => ({ ...a, href: `/dashboard/assignments/${a.id}` }));
-  const assignments = [...posted.map(toDeskAssignment), ...samples];
+  // Everything in the desk comes from the database: no sample cards sit under the real posts
+  const assignments = posted.map(toDeskAssignment);
   const counts = countByStatus(assignments);
 
   return (
