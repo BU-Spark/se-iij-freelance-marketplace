@@ -1,6 +1,5 @@
 import { auth } from '@clerk/nextjs/server';
 import { notFound } from 'next/navigation';
-import { EditorHeader } from '../../../components/header/EditorHeader';
 import { canEditAssignment, canViewAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
 import AssignmentDetail from './AssignmentDetail';
 import styles from '../assignments.module.css';
@@ -22,7 +21,6 @@ export default async function AssignmentPage({ params }: AssignmentPageProps) {
 
   return (
     <div className={styles.shell}>
-      <EditorHeader />
       <AssignmentDetail assignment={assignment} canEdit={canEditAssignment(viewer, assignment)} />
     </div>
   );

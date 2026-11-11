@@ -1,7 +1,6 @@
 .shell {
   /* one text size for every box and button on the page */
   --control-font-size: 14px;
-  min-height: 100vh;
   background: var(--bg);
 }
 

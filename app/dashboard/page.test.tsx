@@ -5,11 +5,6 @@ import { ROSTER } from './constants';
 import { listOpenAssignments } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 
-// EditorHeader has its own tests; swap it for a simple stand-in so these tests only check the dashboard
-jest.mock('../components/header/EditorHeader', () => ({
-  EditorHeader: () => <header>Header</header>,
-}));
-
 // No real browser URL in tests; pretend there's no "?new=assignment"
 jest.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
@@ -68,7 +63,7 @@ describe('Dashboard', () => {
     });
   });
 
-  it('renders the shared header and counts what the database returned', async () => {
+  it('counts what the database returned', async () => {
     listOpenAssignmentsMock.mockResolvedValue([
       postedAssignment,
       post({ id: 'posted-2', status: 'invited', title: 'Waiting on someone' }),
@@ -77,7 +72,6 @@ describe('Dashboard', () => {
 
     await renderDashboard();
 
-    expect(screen.getByRole('banner')).toBeInTheDocument();
     const counts = screen.getByRole('list', { name: /assignment counts/i });
     expect(within(counts).getByText('1 open')).toBeInTheDocument();
     expect(within(counts).getByText('1 pending')).toBeInTheDocument();

@@ -11,7 +11,6 @@ jest.mock('next/navigation', () => ({
   }),
   useRouter: () => ({ refresh: jest.fn(), push: jest.fn() }),
 }));
-jest.mock('../../../components/header/EditorHeader', () => ({ EditorHeader: () => <header>Header</header> }));
 jest.mock('../../../../lib/db', () => ({ db: { query: jest.fn() } }));
 jest.mock('../../../../lib/assignments', () => ({
   ...jest.requireActual('../../../../lib/assignments'),

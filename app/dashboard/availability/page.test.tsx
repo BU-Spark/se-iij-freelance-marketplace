@@ -1,12 +1,8 @@
-import type { ReactNode } from 'react';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useAuth } from '@clerk/nextjs';
 import AvailabilityPage from './page';
 
 jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
-jest.mock('../../components/FreelancerWorkspace', () => ({
-  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
 
 const auth = jest.mocked(useAuth);
 const account = (userId: string) => auth.mockReturnValue({ userId, isLoaded: true } as ReturnType<typeof useAuth>);

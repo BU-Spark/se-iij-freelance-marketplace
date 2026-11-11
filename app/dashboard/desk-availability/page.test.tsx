@@ -1,12 +1,8 @@
-import type { ReactNode } from 'react';
 import { render, screen } from '@testing-library/react';
 import { useAuth } from '@clerk/nextjs';
 import DeskAvailabilityPage from './page';
 
 jest.mock('@clerk/nextjs', () => ({ useAuth: jest.fn() }));
-jest.mock('../../components/FreelancerWorkspace', () => ({
-  FreelancerWorkspace: ({ children }: { children: ReactNode }) => <>{children}</>,
-}));
 
 const auth = jest.mocked(useAuth);
 const originalFetch = global.fetch;

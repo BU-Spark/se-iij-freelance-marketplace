@@ -1,4 +1,3 @@
-import { EditorHeader } from '../../components/header/EditorHeader';
 import { requireWorkspace } from '../../../lib/workspace';
 import PitchInbox from './PitchInbox';
 import { PITCHES } from './constants';
@@ -10,7 +9,6 @@ export default async function PitchesPage() {
 
   return (
     <div className={styles.shell}>
-      <EditorHeader />
       <PitchInbox pitches={PITCHES} />
     </div>
   );
