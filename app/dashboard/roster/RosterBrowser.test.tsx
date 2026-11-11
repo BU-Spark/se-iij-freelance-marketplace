@@ -138,9 +138,13 @@ describe('RosterBrowser', () => {
     expect(dialog.getByText('1 selected')).toBeInTheDocument();
     fireEvent.click(dialog.getByRole('button', { name: 'Add 1 to roster' }));
 
-    expect(await screen.findByText('Added Jonah Park to your roster')).toBeInTheDocument();
+    expect(await screen.findByText(/invited jonah park — they will appear once they accept/i)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(cardNames()).toEqual(['Amara Diallo', 'Jonah Park', 'Sarah Jenkins']);
+    // an invitation is not on the roster until the freelancer accepts
+    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
+    expect(screen.getByRole('heading', { name: /waiting on a response/i })).toBeInTheDocument();
+    expect(screen.getByText('Jonah Park')).toBeInTheDocument();
+    expect(screen.getByText('Pending response')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -148,6 +152,28 @@ describe('RosterBrowser', () => {
     });
     // nobody is left to invite
     expect(screen.getByRole('button', { name: /invite freelancers/i })).toBeDisabled();
+  });
+
+  it('shows who has not answered yet, and can cancel the invitation', async () => {
+    const waiting = member({ id: 'user-5', name: 'Rosa Vega', inviteStatus: 'pending' });
+    renderPage(<RosterBrowser members={members} pending={[waiting]} invitable={[]} />);
+
+    expect(screen.getByText('Pending response')).toBeInTheDocument();
+    expect(cardNames()).not.toContain('Rosa Vega');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel invite' }));
+
+    expect(await screen.findByText('Cancelled the invitation to Rosa Vega')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /waiting on a response/i })).not.toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites/user-5', { method: 'DELETE' });
+  });
+
+  it('marks an invitation the freelancer turned down', () => {
+    const declined = member({ id: 'user-6', name: 'Tomás Reyes', inviteStatus: 'declined' });
+    renderPage(<RosterBrowser members={members} pending={[declined]} invitable={[]} />);
+
+    expect(screen.getByText('Declined')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
   });
 
   it('keeps the invite list open when the roster API refuses', async () => {

@@ -14,12 +14,13 @@ export default async function RosterPage() {
   await requireWorkspace('editor');
 
   let members: RosterMember[] = [];
+  let pending: RosterMember[] = [];
   let invitable: RosterMember[] = [];
   let loadFailed = false;
 
   try {
     const { userId } = await auth();
-    if (userId) ({ members, invitable } = await loadEditorRoster(userId));
+    if (userId) ({ members, pending, invitable } = await loadEditorRoster(userId));
   } catch (error) {
     console.error('Failed to load the roster.', error);
     loadFailed = true;
@@ -28,7 +29,7 @@ export default async function RosterPage() {
   return (
     <div className={styles.shell}>
       <EditorHeader />
-      <RosterBrowser members={members} invitable={invitable} loadFailed={loadFailed} />
+      <RosterBrowser members={members} pending={pending} invitable={invitable} loadFailed={loadFailed} />
     </div>
   );
 }
