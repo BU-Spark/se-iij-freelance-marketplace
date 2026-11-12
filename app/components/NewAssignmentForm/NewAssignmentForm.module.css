@@ -57,6 +57,12 @@ textarea.input {
   font-size: 13px;
   color: var(--muted);
 }
+/* $ … USD money box; reuses .input, adds room for the $ and USD */
+.money {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
 /* .money .moneyInput is more specific than .input, so this padding wins */
 .money .moneyInput {
   width: 100%;
