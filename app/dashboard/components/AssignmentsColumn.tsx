@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import SegmentedControl, { type SegmentOption } from './SegmentedControl';
 import AssignmentCard from '../../components/AssignmentCard/AssignmentCard';
 import ReviewCandidates from '../../components/ReviewCandidates/ReviewCandidates';
+import AssignmentsTable from './AssignmentsTable';
+import useLocalStorage from '../../hooks/useLocalStorage';
 import type { DeskAssignment, DeskFilter, RosterMember } from '../../types/dashboard.types';
 import { filterAssignments } from '../../utils/dashboard.utils';
 import styles from '../dashboard.module.css';
@@ -13,6 +15,14 @@ const FILTERS: SegmentOption<DeskFilter>[] = [
   { value: 'open', label: 'Open' },
   { value: 'invited', label: 'Invited' },
   { value: 'assigned', label: 'Assigned' },
+];
+
+/** comfort = the cards; table = one dense row each */
+type DeskView = 'comfort' | 'table';
+
+const VIEWS: SegmentOption<DeskView>[] = [
+  { value: 'comfort', label: 'comfort' },
+  { value: 'table', label: 'table' },
 ];
 
 type AssignmentsColumnProps = {
@@ -30,6 +40,8 @@ export default function AssignmentsColumn({ assignments, roster }: AssignmentsCo
     setItems(assignments);
   }, [assignments]);
   const [filter, setFilter] = useState<DeskFilter>('all');
+  // remembered between visits, so an editor who prefers rows keeps rows
+  const [view, setView] = useLocalStorage<DeskView>('desk-assignment-view', 'comfort');
   // which assignment's "Review candidates" popup is open (none = undefined)
   const [reviewingId, setReviewingId] = useState<string | undefined>();
 
@@ -52,11 +64,16 @@ export default function AssignmentsColumn({ assignments, roster }: AssignmentsCo
         <h2 id="assignments-heading" className={styles.sectionTitle}>
           Assignments
         </h2>
-        <SegmentedControl label="Filter assignments" options={FILTERS} value={filter} onChange={setFilter} />
+        <div className={styles.sectionControls}>
+          <SegmentedControl label="Assignment layout" options={VIEWS} value={view} onChange={setView} />
+          <SegmentedControl label="Filter assignments" options={FILTERS} value={filter} onChange={setFilter} />
+        </div>
       </div>
 
       {visible.length === 0 ? (
         <p className={styles.sectionSub}>No {filterLabel} assignments.</p>
+      ) : view === 'table' ? (
+        <AssignmentsTable assignments={visible} assignedName={nameOf} onReview={setReviewingId} />
       ) : (
         <ul className={styles.list}>
           {visible.map((a) => (

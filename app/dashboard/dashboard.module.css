@@ -171,6 +171,15 @@
   color: var(--muted);
 }
 
+/* layout + filter switches sit together on the right of the heading */
+.sectionControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
 .list {
   display: flex;
   flex-direction: column;
@@ -204,6 +213,126 @@
   text-decoration-color: var(--c-yellow);
   text-decoration-thickness: 3px;
   text-underline-offset: 3px;
+}
+
+/* ---- Dense table layout: one row per assignment ---- */
+.tableWrap {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  padding: 12px 14px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--line);
+}
+
+.table thead th {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  background: #f8fafc;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child th,
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: #fafbfd;
+}
+
+/* the whole row is the way into the assignment drawer */
+.clickableRow {
+  cursor: pointer;
+}
+
+.clickableRow:focus-within {
+  outline: 2px solid var(--c-blue);
+  outline-offset: -2px;
+}
+
+.tableTitle {
+  min-width: 220px;
+  font-weight: 600;
+  color: var(--navy-deep);
+}
+
+.tableTitle a {
+  color: inherit;
+}
+
+.tableTitle a:hover {
+  text-decoration: underline;
+}
+
+.tableSub {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+.tableAction {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tableActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* points into the drawer, so the row reads as clickable */
+.rowArrow {
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+}
+
+.tableReview {
+  padding: 6px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--navy-deep);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tableReview:hover {
+  background: #eef2f8;
+}
+
+/* text for screen readers only */
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ---- Phones and small tablets: stack the columns ---- */
