@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import PitchDetail from './PitchDetail';
 import { PITCHES } from '../../../test/fixtures/pitches';
+import { pitchHeading } from '../../utils/pitch.utils';
 
 const pitch = PITCHES[0]; // shadow-budget-city-hall
 
@@ -10,7 +11,7 @@ describe('PitchDetail', () => {
   });
 
   it('shows the title, tags and who sent it', () => {
-    expect(screen.getByRole('heading', { name: pitch.slug })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: pitchHeading(pitch.slug) })).toBeInTheDocument();
     expect(screen.getByText(pitch.category)).toBeInTheDocument();
     pitch.tags.forEach((t) => expect(screen.getByText(t)).toBeInTheDocument());
     expect(screen.getByText(pitch.freelancer.name)).toBeInTheDocument();
