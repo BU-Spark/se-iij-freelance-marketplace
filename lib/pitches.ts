@@ -1,5 +1,8 @@
 import { db } from './db';
+import { STATUS_FOR_DECISION } from '../app/utils/pitch.utils';
 import type { Pitch, PitchFeedback, PitchStatus } from '../app/types/dashboard.types';
+
+export { STATUS_FOR_DECISION };
 
 /** A row from the `pitches` table, joined to the freelancer's name */
 export type PitchRow = {
@@ -193,13 +196,6 @@ export async function createPitch(freelancerUserId: string, pitch: NewPitch): Pr
   const row = await getPitch(inserted.id);
   return row ? toPitch(row) : null;
 }
-
-/** The status a decision puts the pitch in; mirrors what the desk's PitchActions shows */
-export const STATUS_FOR_DECISION: Record<PitchFeedback['decision'], PitchStatus> = {
-  accepted: 'accepted',
-  rejected: 'declined',
-  revision_requested: 'negotiating',
-};
 
 /** Moves a pitch along the desk's review. Returns false when the id matches no pitch. */
 export async function setPitchStatus(pitchId: string, status: PitchStatus): Promise<boolean> {

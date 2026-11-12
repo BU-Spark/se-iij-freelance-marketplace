@@ -53,3 +53,15 @@ export function parsePitchDraft(body: Record<string, unknown>): PitchDraft {
 export function formatPitchCompensation({ amount, currency, unit }: PitchCompensation): string {
   return `${currency} ${amount.trim()} / ${unit}`;
 }
+
+/**
+ * The status each feedback decision puts the pitch in. Shared by the desk's review form and the
+ * API, so the status on screen is the one stored; "request revision" lands in negotiating.
+ */
+export const STATUS_FOR_DECISION: Record<PitchFeedback['decision'], PitchStatus> = {
+  accepted: 'accepted',
+  rejected: 'declined',
+  revision_requested: 'negotiating',
+};
+
+export const statusForDecision = (decision: PitchFeedback['decision']): PitchStatus => STATUS_FOR_DECISION[decision];
