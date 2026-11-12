@@ -1,9 +1,10 @@
-import type { RosterMember } from '../types/dashboard.types';
+import type { RosterMember } from '../../app/types/dashboard.types';
 
-/* ------------------------------------------------------------------ */
-/*  Temporary static data for the dashboard                            */
-/*  TODO: replace with data from the backend once the API exists       */
-/* ------------------------------------------------------------------ */
+/*
+ * Hand-built roster members for tests only. Nothing in the app renders these: the desk, the roster
+ * page and the talent directory all read real rows (see `lib/roster.ts` / `toRosterMember`), so
+ * this file must never be imported from app code.
+ */
 
 /** "1101100" → [true, true, false, true, true, false, false]; spaces are ignored */
 const pattern = (s: string) =>
@@ -12,7 +13,7 @@ const pattern = (s: string) =>
     .split('')
     .map((c) => c === '1');
 
-export const ROSTER: RosterMember[] = [
+export const SAMPLE_ROSTER: RosterMember[] = [
   {
     id: 'marcus',
     name: 'Marcus Thorne',

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import AssignmentsColumn from './AssignmentsColumn';
-import { ROSTER } from '../constants';
 import { SAMPLE_ASSIGNMENTS } from '../../../test/fixtures/assignments';
+import { SAMPLE_ROSTER as ROSTER } from '../../../test/fixtures/roster';
 
 const tab = (name: string) =>
   within(screen.getByRole('group', { name: /filter assignments/i })).getByRole('button', { name });

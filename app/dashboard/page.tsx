@@ -4,7 +4,6 @@ import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
 import PageSearch from './components/PageSearch';
 import styles from './dashboard.module.css';
-import { ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
 import type { Assignment } from '../types/assignments.types';
 import type { RosterMember } from '../types/dashboard.types';
@@ -91,12 +90,12 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
         <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
 
         {/* ---- Right column: assignments ---- */}
-        <AssignmentsColumn assignments={assignments} roster={ROSTER} />
+        <AssignmentsColumn assignments={assignments} roster={roster} />
       </main>
 
       {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
       <Suspense fallback={null}>
-        <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
+        <NewAssignmentFromUrl closeHref="/dashboard" roster={roster} />
       </Suspense>
 
       {opened && (
