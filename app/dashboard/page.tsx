@@ -5,12 +5,11 @@ import AssignmentsColumn from './components/AssignmentsColumn';
 import PageSearch from './components/PageSearch';
 import styles from './dashboard.module.css';
 import { NewAssignmentFromUrl } from '../components';
-import type { Assignment } from '../types/assignments.types';
-import type { RosterMember } from '../types/dashboard.types';
-import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments';
+import type { AssignmentStatus, RosterMember } from '../types/dashboard.types';
+import { countAssignmentsByStatus, listDeskAssignments, loadAssignmentViewer } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 import { requireWorkspace } from '../../lib/workspace';
-import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
+import { formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 import AssignmentDrawer from '../components/AssignmentDrawer/AssignmentDrawer';
 import { loadAssignmentView, type AssignmentView } from './assignments/loadAssignmentView';
 
@@ -30,12 +29,17 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
   // The editor desk is only for people with the editor role
   await requireWorkspace('editor');
 
-  let posted: Assignment[] = [];
+  // The first page of the desk's own assignments, plus the real totals for the status bar
+  let posted: Awaited<ReturnType<typeof listDeskAssignments>>['items'] = [];
+  let nextCursor: string | null = null;
+  let counts: Record<AssignmentStatus, number> = { open: 0, invited: 0, assigned: 0 };
   try {
-    // Only the assignments the editor's own organization posted
     const { userId } = await auth();
     const viewer = userId ? await loadAssignmentViewer(userId) : null;
-    posted = await listOpenAssignments(viewer);
+    const [page, statusCounts] = await Promise.all([listDeskAssignments(viewer), countAssignmentsByStatus(viewer)]);
+    posted = page.items;
+    nextCursor = page.nextCursor;
+    counts = statusCounts;
   } catch (error) {
     console.error('Failed to load assignments.', error);
   }
@@ -65,7 +69,6 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
 
   // Everything in the desk comes from the database: no sample cards sit under the real posts
   const assignments = posted.map(toDeskAssignment);
-  const counts = countByStatus(assignments);
 
   return (
     <div className={styles.shell}>
@@ -90,7 +93,12 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
         <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
 
         {/* ---- Right column: assignments ---- */}
-        <AssignmentsColumn assignments={assignments} roster={roster} />
+        <AssignmentsColumn
+          assignments={assignments}
+          roster={roster}
+          nextCursor={nextCursor}
+          total={counts.open + counts.invited + counts.assigned}
+        />
       </main>
 
       {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}

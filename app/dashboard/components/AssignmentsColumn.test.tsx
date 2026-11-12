@@ -133,4 +133,26 @@ describe('AssignmentsColumn', () => {
 
     expect(push).toHaveBeenCalledWith('/dashboard?assignment=election-d4', { scroll: false });
   });
+
+  it('loads the next page when Load more is clicked', async () => {
+    const first = SAMPLE_ASSIGNMENTS[0];
+    const next = { ...first, id: 'next-1', title: 'Next page assignment' };
+    fetchMock.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ items: [next], nextCursor: null }),
+    });
+
+    render(<AssignmentsColumn assignments={[first]} roster={ROSTER} nextCursor="page-2" total={2} />);
+
+    expect(screen.getByText('Showing 1 of 2')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Load more' }));
+
+    expect(await screen.findByRole('heading', { level: 3, name: 'Next page assignment' })).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/assignments?after=page-2',
+      expect.objectContaining({ cache: 'no-store' })
+    );
+    expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
+  });
 });

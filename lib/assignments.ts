@@ -1,5 +1,6 @@
 import { db } from './db';
 import type { Assignment } from '../app/types/assignments.types';
+import type { AssignmentStatus } from '../app/types/dashboard.types';
 
 /** A row from the `assignments` table, as `pg` returns it */
 type AssignmentRow = {
@@ -101,6 +102,79 @@ export async function listOpenAssignments(viewer?: AssignmentViewer | null): Pro
     `SELECT ${ASSIGNMENT_COLUMNS} FROM assignments WHERE status = 'open' ORDER BY created_at DESC`
   );
   return rows.map(toAssignment);
+}
+
+/** One page of the desk's assignments, newest first */
+export type AssignmentPage = {
+  items: Assignment[];
+  /** pass back as `after` for the next page; null when this was the last one */
+  nextCursor: string | null;
+};
+
+/** How many assignments the desk loads at a time */
+export const DESK_PAGE_SIZE = 20;
+
+/** The WHERE clause that decides which assignments a viewer may see */
+function viewerScope(viewer: AssignmentViewer | null | undefined): { clause: string; params: unknown[] } {
+  if (!isEditor(viewer)) return { clause: `status = 'open'`, params: [] };
+  if (viewer.organizationId) return { clause: 'organization_id = $1', params: [viewer.organizationId] };
+  return { clause: 'organization_id IS NULL AND created_by_user_id = $1', params: [viewer.userId] };
+}
+
+/**
+ * The desk's assignments, a page at a time, newest first. The cursor is the last id on the page:
+ * `(created_at, id)` makes the sort stable even when two posts share a timestamp.
+ */
+export async function listDeskAssignments(
+  viewer: AssignmentViewer | null | undefined,
+  { limit = DESK_PAGE_SIZE, after = null }: { limit?: number; after?: string | null } = {}
+): Promise<AssignmentPage> {
+  const scope = viewerScope(viewer);
+  const params = [...scope.params];
+  let cursorClause = '';
+
+  if (after) {
+    // a stale or hand-edited cursor just means "start again from the top"
+    if (!UUID_PATTERN.test(after)) return { items: [], nextCursor: null };
+    params.push(after);
+    cursorClause = `AND (created_at, id) < (SELECT created_at, id FROM assignments WHERE id = $${params.length})`;
+  }
+
+  params.push(limit + 1);
+
+  const { rows } = await db.query<AssignmentRow>(
+    `SELECT ${ASSIGNMENT_COLUMNS} FROM assignments
+      WHERE ${scope.clause} ${cursorClause}
+      ORDER BY created_at DESC, id DESC
+      LIMIT $${params.length}`,
+    params
+  );
+
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+
+  return {
+    items: page.map(toAssignment),
+    nextCursor: hasMore ? page[page.length - 1].id : null,
+  };
+}
+
+/** Every assignment the viewer can see, counted by status — the status bar must not depend on a page */
+export async function countAssignmentsByStatus(
+  viewer: AssignmentViewer | null | undefined
+): Promise<Record<AssignmentStatus, number>> {
+  const scope = viewerScope(viewer);
+  const { rows } = await db.query<{ status: AssignmentStatus; total: string }>(
+    `SELECT status, COUNT(*)::text AS total
+       FROM assignments
+      WHERE ${scope.clause}
+      GROUP BY status`,
+    scope.params
+  );
+
+  const counts: Record<AssignmentStatus, number> = { open: 0, invited: 0, assigned: 0 };
+  for (const row of rows) counts[row.status] = Number(row.total);
+  return counts;
 }
 
 /** One assignment by id, or null when it does not exist (or the id is not a UUID) */
