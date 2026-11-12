@@ -104,6 +104,13 @@ export default function FreelancerDashboard({
             category={category}
             location={location}
             categories={categories}
+            resultsLabel={
+              matching.length
+                ? `Showing ${matching.length} of ${relevant.length} assignments`
+                : relevant.length === 0
+                  ? 'No open assignments yet. New work shows up here as editors post it.'
+                  : 'No matching tasks. Try changing or clearing your filters.'
+            }
             locations={locations}
             onQueryChange={(value) => {
               setQuery(value);
@@ -116,13 +123,6 @@ export default function FreelancerDashboard({
             }}
             onClear={() => showStatus('all')}
           />
-          <p role="status" className={styles.feedStatus}>
-            {matching.length
-              ? `Showing ${matching.length} of ${relevant.length} assignments`
-              : relevant.length === 0
-                ? 'No open assignments yet. New work shows up here as editors post it.'
-                : 'No matching tasks. Try changing or clearing your filters.'}
-          </p>
           <ul className={styles.grid}>
             {matching.map((task) => (
               <li key={task.id}>
