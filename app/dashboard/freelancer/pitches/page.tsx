@@ -1,12 +1,28 @@
 import Link from 'next/link';
-import { PITCHES, PITCH_STATUS_LABEL } from '../../pitches/constants';
+import { auth } from '@clerk/nextjs/server';
+import type { Pitch } from '../../../types/dashboard.types';
+import { listPitchesForFreelancer, loadPitchViewer } from '../../../../lib/pitches';
+import { requireWorkspace } from '../../../../lib/workspace';
+import { PITCH_STATUS_LABEL } from '../../pitches/constants';
 import { categoryColor } from '../../../utils/category.utils';
 import { timeAgo } from '../../../utils/dashboard.utils';
-import { DEMO_FREELANCER_ID } from './constants';
 import styles from './myPitches.module.css';
 
-export default function MyPitchesPage() {
-  const pitches = PITCHES.filter((pitch) => pitch.freelancer.id === DEMO_FREELANCER_ID);
+// A review changes the statuses shown here, so the list is never served from a cache
+export const dynamic = 'force-dynamic';
+
+export default async function MyPitchesPage() {
+  await requireWorkspace('freelancer');
+
+  // The pitches this freelancer sent; a failed load shows the empty state rather than crashing
+  let pitches: Pitch[] = [];
+  try {
+    const { userId } = await auth();
+    const viewer = userId ? await loadPitchViewer(userId) : null;
+    pitches = viewer ? await listPitchesForFreelancer(viewer.userId) : [];
+  } catch (error) {
+    console.error('Failed to load your pitches.', error);
+  }
 
   return (
     <div className={styles.shell}>

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import PitchDetail from './PitchDetail';
-import { PITCHES } from '../../dashboard/pitches/constants';
+import { PITCHES } from '../../../test/fixtures/pitches';
 
 const pitch = PITCHES[0]; // shadow-budget-city-hall
 
