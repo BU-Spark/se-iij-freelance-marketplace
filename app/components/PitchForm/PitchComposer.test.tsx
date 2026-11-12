@@ -57,7 +57,7 @@ it('validates the pitch, sends it, and forgets the saved draft', async () => {
   expect(screen.getByRole('alert')).toHaveTextContent('correct the highlighted fields');
   // Error text is associated separately, keeping the input names stable.
   fillValidDraft();
-  expect(screen.getByLabelText(/Generated slug/)).toHaveValue('city-budget-investigation');
+  expect(screen.queryByLabelText(/slug/i)).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: /Politics/ })).toHaveAttribute('aria-pressed', 'true');
 
   const fetchMock = respond(201, { pitch: { id: 'pitch-1' } });
