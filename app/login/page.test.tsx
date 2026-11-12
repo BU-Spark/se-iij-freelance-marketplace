@@ -45,7 +45,7 @@ beforeEach(() => {
 
 const fillCredentials = () => {
   fireEvent.change(screen.getByLabelText(/email/i), { target: { value: 'sarah@newsroom.example' } });
-  fireEvent.change(screen.getByLabelText(/password/i), { target: { value: 'correct horse' } });
+  fireEvent.change(screen.getByLabelText(/^password$/i), { target: { value: 'correct horse' } });
   fireEvent.click(screen.getByRole('button', { name: /log in/i }));
 };
 
@@ -62,9 +62,19 @@ describe('Login page', () => {
   it('renders the returning-user login form', () => {
     expect(screen.getByRole('heading', { level: 1, name: /log in to storymatch/i })).toBeInTheDocument();
     expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toHaveAttribute('type', 'password');
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /create an account/i })).toHaveAttribute('href', '/signup');
+  });
+
+  it('reveals and rehides the password text', () => {
+    const password = screen.getByLabelText(/^password$/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /show password/i }));
+    expect(password).toHaveAttribute('type', 'text');
+
+    fireEvent.click(screen.getByRole('button', { name: /hide password/i }));
+    expect(password).toHaveAttribute('type', 'password');
   });
 
   it('validates required credentials', () => {
@@ -177,7 +187,7 @@ describe('Login page', () => {
     await screen.findByLabelText(/verification code/i);
     fireEvent.click(screen.getByRole('button', { name: /use a different account/i }));
 
-    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^password$/i)).toBeInTheDocument();
     expect(screen.queryByLabelText(/verification code/i)).not.toBeInTheDocument();
   });
 });
