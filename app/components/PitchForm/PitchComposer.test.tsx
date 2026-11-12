@@ -31,14 +31,14 @@ it('generates stable slugs and validates structured compensation and invites', (
   expect(errors.deadline).toBeTruthy();
 });
 
-it('validates, reviews a pitch, preserves edits, and saves without sending', () => {
+it('validates the pitch on send and confirms nothing was sent yet', () => {
   render(<PitchComposer />);
-  fireEvent.click(screen.getByRole('button', { name: 'Review pitch' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Send pitch' }));
   expect(screen.getByRole('alert')).toHaveTextContent('correct the highlighted fields');
   // Error text is associated separately, keeping the input names stable.
   change('Pitch title', 'City budget investigation');
   change('Recipient editor email', 'editor@example.com');
-  change('Category', 'Politics');
+  fireEvent.click(screen.getByRole('button', { name: /Politics/ }));
   change('Summary', 'Follow the money');
   change('Story angle and reporting plan', 'Interview residents and examine public records.');
   change('Location', 'Remote');
@@ -47,20 +47,16 @@ it('validates, reviews a pitch, preserves edits, and saves without sending', () 
   change('Proposed compensation', '0.75');
   change('Collaborator emails (optional)', 'partner@example.com');
   expect(screen.getByLabelText(/Generated slug/)).toHaveValue('city-budget-investigation');
-  fireEvent.click(screen.getByRole('button', { name: 'Review pitch' }));
-  expect(screen.getByRole('region', { name: 'Pitch preview' })).toBeInTheDocument();
-  expect(screen.getByText('$0.75')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Submit pitch' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Back to editing' }));
+  expect(screen.getByRole('button', { name: /Politics/ })).toHaveAttribute('aria-pressed', 'true');
+  fireEvent.click(screen.getByRole('button', { name: 'Send pitch' }));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(screen.getByRole('status')).toHaveTextContent('Sending to editors is not connected yet');
   expect(screen.getByLabelText('Pitch title')).toHaveValue('City budget investigation');
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
-  expect(screen.getByRole('status')).toHaveTextContent('No pitch or invitations have been sent');
 });
 
 it('restores partial drafts and isolates signed-in accounts', () => {
   const view = render(<PitchComposer />);
   change('Pitch title', 'My unfinished idea');
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
   view.unmount();
   const restored = render(<PitchComposer />);
   expect(screen.getByLabelText('Pitch title')).toHaveValue('My unfinished idea');
@@ -77,7 +73,7 @@ it('handles damaged drafts and blocked storage', () => {
   jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
     throw new Error('Blocked');
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  change('Pitch title', 'Retained in form!');
   expect(screen.getByRole('alert')).toHaveTextContent('Unable to save');
-  expect(screen.getByLabelText('Pitch title')).toHaveValue('Retained in form');
+  expect(screen.getByLabelText('Pitch title')).toHaveValue('Retained in form!');
 });

@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react';
 import type { PitchDraft, PitchFormErrors } from '../../types/pitchForm.types';
 import { TOPICS } from '../../onboarding/constants';
+import ChipGroup from '../ChipGroup/ChipGroup';
 import { CompensationFields } from './CompensationFields';
 import { pitchSlug } from './pitchForm.utils';
 import styles from './PitchForm.module.css';
@@ -8,10 +10,11 @@ export type PitchFormProps = {
   draft: PitchDraft;
   errors: PitchFormErrors;
   onChange: (patch: Partial<PitchDraft>) => void;
-  onReview: () => void;
-  onSaveDraft: () => void;
+  onSend: () => void;
+  /** shown in the footer beside the send button, e.g. the send result */
+  notice?: ReactNode;
 };
-export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: PitchFormProps) {
+export function PitchForm({ draft, errors, onChange, onSend, notice }: PitchFormProps) {
   const field = (
     key: Exclude<keyof PitchDraft, 'compensation' | 'category'>,
     label: string,
@@ -55,37 +58,29 @@ export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: Pi
       className={styles.form}
       onSubmit={(event) => {
         event.preventDefault();
-        onReview();
+        onSend();
       }}
     >
+      {/* one category, picked with chips like "Project type" on New Assignment */}
+      <fieldset className={styles.fieldset} aria-describedby={errors.category ? 'category-error' : undefined}>
+        <legend className={styles.label}>Category</legend>
+        <ChipGroup
+          options={TOPICS}
+          selected={draft.category ? [draft.category] : []}
+          onToggle={(topic) => onChange({ category: topic })}
+        />
+        {errors.category && (
+          <p id="category-error" className={styles.error}>
+            {errors.category}
+          </p>
+        )}
+      </fieldset>
       {field('title', 'Pitch title', false, 'text', 'e.g. Inside the city budget shortfall')}
       <label>
         <span className={styles.label}>Generated slug</span>
         <input readOnly className={styles.slug} value={pitchSlug(draft.title)} placeholder="Fills in from the title" />
       </label>
-      <div className={styles.row}>
-        {field('editorEmail', 'Recipient editor email', false, 'email', 'editor@outlet.com')}
-        <label>
-          <span className={styles.label}>Category</span>
-          <select
-            aria-label="Category"
-            value={draft.category}
-            aria-invalid={Boolean(errors.category)}
-            aria-describedby={errors.category ? 'category-error' : undefined}
-            onChange={(event) => onChange({ category: event.target.value })}
-          >
-            <option value="">Choose a category</option>
-            {TOPICS.map((topic) => (
-              <option key={topic}>{topic}</option>
-            ))}
-          </select>
-          {errors.category && (
-            <span id="category-error" className={styles.error}>
-              {errors.category}
-            </span>
-          )}
-        </label>
-      </div>
+      {field('editorEmail', 'Recipient editor email', false, 'email', 'editor@outlet.com')}
       {field('summary', 'Summary', true, 'text', 'The story in two or three sentences…')}
       {field('description', 'Story angle and reporting plan', true, 'text', 'Angle, sources, access, timeline…')}
       <div className={styles.row}>
@@ -100,13 +95,11 @@ export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: Pi
       />
       <div>
         {field('inviteEmails', 'Collaborator emails (optional)', true, 'text', 'name@example.com, other@example.com')}
-        <p className={styles.hint}>Separate emails with commas. Saving a draft does not send invitations.</p>
+        <p className={styles.hint}>Separate emails with commas.</p>
       </div>
       <div className={styles.actions}>
-        <button type="button" onClick={onSaveDraft}>
-          Save draft
-        </button>
-        <button type="submit">Review pitch</button>
+        {notice && <div className={styles.notice}>{notice}</div>}
+        <button type="submit">Send pitch</button>
       </div>
     </form>
   );

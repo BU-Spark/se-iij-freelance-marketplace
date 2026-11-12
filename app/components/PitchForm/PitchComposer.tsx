@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@clerk/nextjs';
 import type { PitchDraft, PitchFormErrors } from '../../types/pitchForm.types';
 import { PitchForm } from './PitchForm';
-import { PitchPreview } from './PitchPreview';
+import styles from './PitchForm.module.css';
 import { EMPTY_PITCH, isPitchDraft, validatePitch } from './pitchForm.utils';
 
 function AccountPitchComposer({ userId }: { userId: string }) {
@@ -11,9 +11,9 @@ function AccountPitchComposer({ userId }: { userId: string }) {
   const [draft, setDraft] = useState<PitchDraft>(EMPTY_PITCH);
   const [errors, setErrors] = useState<PitchFormErrors>({});
   const [ready, setReady] = useState(false);
-  const [reviewing, setReviewing] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem(key);
@@ -27,56 +27,63 @@ function AccountPitchComposer({ userId }: { userId: string }) {
     }
     setReady(true);
   }, [key]);
-  const save = () => {
+
+  // the draft saves itself in this browser on every change
+  const update = (patch: Partial<PitchDraft>) => {
+    const next = { ...draft, ...patch };
+    setDraft(next);
     setMessage('');
+    setErrors((current) => {
+      const touched = Object.keys(patch) as Array<keyof PitchDraft>;
+      if (!touched.some((field) => current[field])) return current;
+      const rest = { ...current };
+      touched.forEach((field) => delete rest[field]);
+      return rest;
+    });
     try {
-      localStorage.setItem(key, JSON.stringify(draft));
+      localStorage.setItem(key, JSON.stringify(next));
       setError('');
-      setMessage('Draft saved in this browser. No pitch or invitations have been sent.');
     } catch {
       setError('Unable to save your draft in this browser. Your changes remain in the form.');
     }
   };
-  const review = () => {
+
+  const send = () => {
     const nextErrors = validatePitch(draft);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
-      setError('Please correct the highlighted fields before reviewing.');
+      setMessage('');
+      setError('Please correct the highlighted fields before sending.');
       return;
     }
+    // TODO: POST to the pitches API once it exists
     setError('');
-    setMessage('');
-    setReviewing(true);
+    setMessage('Your pitch is saved in this browser. Sending to editors is not connected yet.');
   };
+
   if (!ready) return <p role="status">Loading draft…</p>;
   return (
     <>
-      {error && <p role="alert">{error}</p>}
-      {message && <p role="status">{message}</p>}
-      {reviewing ? (
-        <PitchPreview
-          draft={draft}
-          onEdit={() => {
-            setReviewing(false);
-            setMessage('');
-          }}
-          onSaveDraft={save}
-        />
-      ) : (
-        <PitchForm
-          draft={draft}
-          errors={errors}
-          onChange={(patch) => {
-            setDraft((previous) => ({ ...previous, ...patch }));
-            setMessage('');
-          }}
-          onReview={review}
-          onSaveDraft={save}
-        />
-      )}
+      <PitchForm
+        draft={draft}
+        errors={errors}
+        onChange={update}
+        onSend={send}
+        notice={
+          <>
+            {error && (
+              <p role="alert" className={styles.alert}>
+                {error}
+              </p>
+            )}
+            {message && <p role="status">{message}</p>}
+          </>
+        }
+      />
     </>
   );
 }
+
 export function PitchComposer() {
   const { userId, isLoaded } = useAuth();
   if (!isLoaded) return <p role="status">Loading account…</p>;

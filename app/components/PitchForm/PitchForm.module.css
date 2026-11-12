@@ -140,6 +140,31 @@
   border-top: 1px solid #eceef2;
   background: #fff;
 }
+.notice {
+  flex: 1 1 200px;
+  margin-right: auto;
+  font-size: 14px;
+  color: var(--muted);
+}
+.notice p {
+  margin: 0;
+}
+.notice .alert {
+  color: var(--c-red);
+}
+/* "Category" chip group */
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.fieldset > legend {
+  margin-bottom: 10px;
+}
+.fieldset .error {
+  margin: 8px 0 0;
+}
 .actions button {
   height: 44px;
   padding: 0 20px;

@@ -3,10 +3,9 @@
 Import public components and their Props with named imports from `app/components/PitchForm`.
 The Next.js route remains a default export.
 
-- `PitchComposer`: account-scoped local draft container, validation and review state.
-- `PitchForm` / `PitchFormProps`: controlled form; accepts `draft`, `errors`, `onChange`, `onReview`, `onSaveDraft`.
+- `PitchComposer`: account-scoped local draft container (auto-saves on every change) and send validation.
+- `PitchForm` / `PitchFormProps`: controlled form; accepts `draft`, `errors`, `onChange`, `onSend`, and an optional footer `notice`.
 - `CompensationFields` / `CompensationFieldsProps`: controlled USD amount field.
-- `PitchPreview` / `PitchPreviewProps`: read-only review with edit and draft-save callbacks.
 - `PitchDraft`, `PitchCompensation`, `PitchFormErrors`: exported shared types from `app/types/pitchForm.types.ts`.
 
 Example:
@@ -18,9 +17,9 @@ import type { PitchDraft, PitchFormProps } from './components/PitchForm';
 
 ## Persistence and backend handoff
 
-Drafts are saved explicitly under `iij:pitch-draft:<Clerk user ID>` in localStorage.
-Partial drafts can be saved. Review requires valid fields. Nothing is sent to editors or collaborators.
-The submit button remains disabled until an authenticated submission API is supplied.
+Drafts are saved automatically under `iij:pitch-draft:<Clerk user ID>` in localStorage.
+Partial drafts are kept. Send pitch requires valid fields, but nothing is sent to editors or collaborators
+until an authenticated submission API is supplied (see the TODO in `PitchComposer`).
 
 The generated slug is derived from the title and is not guaranteed unique; the server must resolve uniqueness.
 Compensation amount stays a string while editing to preserve decimal input. Validate and normalize it at the API boundary.
