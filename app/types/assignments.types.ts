@@ -16,6 +16,8 @@ export type Assignment = {
   deadline: Date | null;
   compensation: string;
   status: AssignmentStatus;
+  /** the freelancer who took it on, once an editor assigned someone; absent on older fixtures */
+  assignedToUserId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

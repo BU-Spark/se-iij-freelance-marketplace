@@ -1,20 +1,31 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import AssignmentsColumn from './AssignmentsColumn';
+import { ToastProvider } from '../../components/Toast/ToastProvider';
 import { SAMPLE_ASSIGNMENTS } from '../../../test/fixtures/assignments';
 import { SAMPLE_ROSTER as ROSTER } from '../../../test/fixtures/roster';
 
 const push = jest.fn();
 jest.mock('next/navigation', () => ({ useRouter: () => ({ push }) }));
 
+const originalFetch = global.fetch;
+const fetchMock = jest.fn();
+
 const tab = (name: string) =>
   within(screen.getByRole('group', { name: /filter assignments/i })).getByRole('button', { name });
-const cardFor = (title: string) => screen.getByRole('heading', { name: title }).closest('article')!;
+const cardFor = (title: string) => screen.getByRole('heading', { level: 3, name: title }).closest('article')!;
 
 describe('AssignmentsColumn', () => {
   // the layout choice is remembered in localStorage, so start each test from the cards
   beforeEach(() => {
     window.localStorage.clear();
     push.mockClear();
+    fetchMock.mockReset();
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => ({ saved: true }) });
+    global.fetch = fetchMock as unknown as typeof fetch;
+  });
+
+  afterAll(() => {
+    global.fetch = originalFetch;
   });
 
   it('shows every assignment on the All tab', () => {
@@ -43,7 +54,7 @@ describe('AssignmentsColumn', () => {
     ).toBeInTheDocument();
   });
 
-  it('opens Review candidates and assigns someone', () => {
+  it('opens Review candidates and assigns someone', async () => {
     render(<AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />);
     const election = 'Election Night Live Coverage: District 4';
 
@@ -54,8 +65,33 @@ describe('AssignmentsColumn', () => {
     expect(within(dialog).getByRole('button', { name: 'Assign Jonah Weiss' })).toBeDisabled();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Assign Marcus Thorne' }));
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    // saved first, then the card changes
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/assignments/election-d4/assign',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ memberId: 'marcus' }) })
+    );
     expect(within(cardFor(election)).getByText('Assigned to Marcus Thorne')).toBeInTheDocument();
+  });
+
+  it('keeps the popup open and says so when the assignment will not save', async () => {
+    fetchMock.mockResolvedValue({ ok: false, status: 500, json: async () => ({ error: 'nope' }) });
+    render(
+      <ToastProvider>
+        <AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />
+      </ToastProvider>
+    );
+    const election = 'Election Night Live Coverage: District 4';
+
+    fireEvent.click(within(cardFor(election)).getByRole('button', { name: /review candidates/i }));
+    const dialog = screen.getByRole('dialog', { name: election });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Assign Marcus Thorne' }));
+
+    expect(await screen.findByText(/could not assign this freelancer/i)).toBeInTheDocument();
+    // still open, and the card still says nobody is on it
+    expect(screen.getByRole('dialog', { name: election })).toBeInTheDocument();
+    expect(within(cardFor(election)).queryByText(/assigned to/i)).not.toBeInTheDocument();
   });
 
   it('switches to the dense table view and remembers the choice', () => {

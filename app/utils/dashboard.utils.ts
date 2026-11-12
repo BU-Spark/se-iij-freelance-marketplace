@@ -91,6 +91,7 @@ export function toDeskAssignment(a: Assignment): DeskAssignment {
     compensation: a.compensation,
     organizationId: a.organizationId,
     interestedIds: [],
+    assignedToId: a.assignedToUserId ?? undefined,
     href: assignmentDrawerHref('/dashboard', a.id),
   };
 }

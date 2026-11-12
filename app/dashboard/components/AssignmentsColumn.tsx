@@ -6,6 +6,7 @@ import AssignmentCard from '../../components/AssignmentCard/AssignmentCard';
 import ReviewCandidates from '../../components/ReviewCandidates/ReviewCandidates';
 import AssignmentsTable from './AssignmentsTable';
 import useLocalStorage from '../../hooks/useLocalStorage';
+import { useToast } from '../../components/Toast/ToastProvider';
 import type { DeskAssignment, DeskFilter, RosterMember } from '../../types/dashboard.types';
 import { filterAssignments } from '../../utils/dashboard.utils';
 import styles from '../dashboard.module.css';
@@ -32,8 +33,8 @@ type AssignmentsColumnProps = {
 
 /** Right column of the dashboard: assignment cards, status tabs and the Review candidates popup */
 export default function AssignmentsColumn({ assignments, roster }: AssignmentsColumnProps) {
-  // our own copy, so assigning someone updates the cards on screen
-  // TODO: save to the backend once the API exists
+  const { showToast } = useToast();
+  // our own copy, so assigning someone updates the desk without a full reload
   const [items, setItems] = useState(assignments);
   // a refresh after posting sends a new list, so keep the copy in step
   useEffect(() => {
@@ -50,12 +51,26 @@ export default function AssignmentsColumn({ assignments, roster }: AssignmentsCo
   const reviewing = items.find((a) => a.id === reviewingId);
   const nameOf = (id?: string) => roster.find((m) => m.id === id)?.name;
 
-  // mark one assignment as assigned to this person, then close the popup
-  const assign = (assignmentId: string, memberId: string) => {
-    setItems((list) =>
-      list.map((a) => (a.id === assignmentId ? { ...a, status: 'assigned', assignedToId: memberId } : a))
-    );
-    setReviewingId(undefined);
+  // save the choice first: a failed request must not look like a successful assignment
+  const assign = async (assignmentId: string, memberId: string) => {
+    try {
+      const response = await fetch(`/api/assignments/${assignmentId}/assign`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ memberId }),
+      });
+
+      if (!response.ok) throw new Error('assign failed');
+
+      setItems((list) =>
+        list.map((a) => (a.id === assignmentId ? { ...a, status: 'assigned', assignedToId: memberId } : a))
+      );
+      setReviewingId(undefined);
+      showToast('Assigned. The freelancer now sees it on their desk.', 'success');
+    } catch {
+      // leave the popup open so the editor can try again or pick someone else
+      showToast('Could not assign this freelancer. Please try again.', 'error');
+    }
   };
 
   return (

@@ -71,6 +71,8 @@ CREATE TABLE IF NOT EXISTS assignments (
   deadline TIMESTAMPTZ,
   compensation TEXT NOT NULL DEFAULT '',
   status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'invited', 'assigned')),
+  -- The freelancer who took it on; set when an editor assigns someone, cleared if that account goes
+  assigned_to_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -78,6 +80,9 @@ CREATE TABLE IF NOT EXISTS assignments (
 -- One slug per organization; COALESCE so organization-less posts also stay unique
 CREATE UNIQUE INDEX IF NOT EXISTS assignments_org_slug_key ON assignments (COALESCE(organization_id, ''), slug);
 CREATE INDEX IF NOT EXISTS assignments_created_by_idx ON assignments (created_by_user_id);
+
+-- In-place migration for databases created before assignments remembered who took them
+ALTER TABLE assignments ADD COLUMN IF NOT EXISTS assigned_to_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (status, deadline);
 
 -- Columns added after the initial release; CREATE TABLE IF NOT EXISTS skips existing tables
