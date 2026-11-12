@@ -7,6 +7,134 @@
   border-top: 1px solid #eceef2;
 }
 
+.note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.currentStatus {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+}
+
+.currentStatus strong {
+  color: var(--ink);
+}
+
+/* step one: the three decisions, as big tap targets */
+.choices {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  border: 1px solid #d5dae3;
+  border-radius: 12px;
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.choice:hover {
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.choice:focus-visible {
+  outline: none;
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* each answer keeps its own colour: negotiate amber, accept green, decline red */
+.choice[data-decision='revision_requested'] {
+  border-color: var(--c-yellow);
+}
+
+.choice[data-decision='accepted'] {
+  border-color: var(--c-green);
+}
+
+.choice[data-decision='rejected'] {
+  border-color: var(--c-red);
+}
+
+.choice[data-decision='revision_requested']:hover,
+.choice[data-decision='revision_requested']:focus-visible {
+  border-color: var(--c-amber);
+  box-shadow: 0 0 0 4px rgba(245, 158, 43, 0.2);
+}
+
+.choice[data-decision='accepted']:hover,
+.choice[data-decision='accepted']:focus-visible {
+  border-color: var(--c-green-d);
+  box-shadow: 0 0 0 4px rgba(76, 187, 71, 0.2);
+}
+
+.choice[data-decision='rejected']:hover,
+.choice[data-decision='rejected']:focus-visible {
+  border-color: var(--c-red);
+  box-shadow: 0 0 0 4px rgba(229, 57, 91, 0.16);
+}
+
+.choiceLabel {
+  font-weight: 600;
+  color: var(--navy-deep);
+}
+
+.choiceHint {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* step two: the notes that go with the chosen decision */
+.review {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chosen {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f7f8fa;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.chosen strong {
+  color: var(--ink);
+}
+
+.change {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border: 0;
+  background: none;
+  color: var(--c-blue);
+  text-decoration: underline;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -49,15 +177,10 @@
   margin: 0;
 }
 
-.note {
-  margin: 0;
-  font-size: 14px;
-  color: var(--muted);
-}
-
 .buttons {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
 }
 
@@ -76,4 +199,11 @@
 
 .primary:disabled {
   cursor: default;
+}
+
+/* narrow panels: stack the three decisions */
+@media (max-width: 640px) {
+  .choices {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
