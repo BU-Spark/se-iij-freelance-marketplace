@@ -64,5 +64,4 @@ export const STATUS_FOR_DECISION: Record<PitchFeedback['decision'], PitchStatus>
   revision_requested: 'negotiating',
 };
 
-export const statusForDecision = (decision: PitchFeedback['decision']): PitchStatus =>
-  STATUS_FOR_DECISION[decision];
+export const statusForDecision = (decision: PitchFeedback['decision']): PitchStatus => STATUS_FOR_DECISION[decision];

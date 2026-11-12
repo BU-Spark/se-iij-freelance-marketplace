@@ -10,12 +10,7 @@ type PitchActionsProps = {
   onSubmitFeedback: (feedback: PitchFeedback) => void;
 };
 
-export default function PitchActions({
-  status,
-  freelancerName,
-  savedFeedback,
-  onSubmitFeedback,
-}: PitchActionsProps) {
+export default function PitchActions({ status, freelancerName, savedFeedback, onSubmitFeedback }: PitchActionsProps) {
   const initialDecision = savedFeedback?.decision ?? decisionForStatus(status);
   const [decision, setDecision] = useState<PitchFeedback['decision']>(initialDecision);
   const [comments, setComments] = useState(savedFeedback?.comments ?? '');
