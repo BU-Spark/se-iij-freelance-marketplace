@@ -1,0 +1,84 @@
+/* Same page frame and card look as the Organizations page, so the two freelancer lists read alike */
+.intro {
+  margin-top: 28px;
+}
+.intro h1 {
+  margin: 8px 0;
+  color: var(--navy-deep);
+  font-family: var(--font-serif);
+}
+.intro > p:last-child {
+  color: var(--muted);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  gap: 16px;
+  padding: 0;
+  margin: 24px 0;
+  list-style: none;
+}
+.card {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: var(--white);
+  border: 1px solid #dfe4ec;
+  border-radius: 12px;
+}
+
+.body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+.heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.name {
+  margin: 0;
+  color: var(--navy-deep);
+  font-size: 17px;
+  font-weight: 700;
+}
+.role,
+.city {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.org {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+}
+
+.desks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+.desk {
+  padding: 3px 8px;
+  border-radius: 16px;
+  background: #e7f0ff;
+  color: #174ea6;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.email {
+  color: var(--muted);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
