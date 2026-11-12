@@ -44,6 +44,14 @@ describe('AssignmentDetail', () => {
     render(<AssignmentDetail assignment={assignment} canEdit={false} />);
 
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+  });
+
+  it('offers Delete next to Edit to the editors who may delete it', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit />);
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
   it('says which organization posted it when the desk asks for it', () => {

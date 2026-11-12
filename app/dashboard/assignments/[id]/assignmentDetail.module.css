@@ -80,7 +80,8 @@
 
 .editButton,
 .primary,
-.secondary {
+.secondary,
+.danger {
   min-height: 40px;
   padding: 8px 18px;
   border-radius: 10px;
@@ -89,8 +90,14 @@
   font-weight: 600;
   cursor: pointer;
 }
-.editButton {
+/* edit + delete sit together on the right of the top row */
+.cardActions {
   margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.editButton {
   border: 1px solid var(--c-blue);
   background: transparent;
   color: var(--c-blue);
@@ -98,6 +105,39 @@
 .editButton:hover,
 .secondary:hover {
   background: #eef2fd;
+}
+
+.deleteButton {
+  min-height: 40px;
+  padding: 8px 18px;
+  border: 1px solid #e0b4b4;
+  border-radius: 10px;
+  background: #fff;
+  color: #a8231a;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.deleteButton:hover {
+  background: #fdecec;
+}
+.danger {
+  border: 1px solid #a8231a;
+  background: #a8231a;
+  color: #fff;
+}
+.danger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.confirmText {
+  margin: 0;
+  /* the modal body has no padding of its own; each popup brings its content's */
+  padding: 20px 28px;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .actions {
@@ -116,14 +156,16 @@
   color: var(--ink);
 }
 .primary:disabled,
-.secondary:disabled {
+.secondary:disabled,
+.danger:disabled {
   opacity: 0.6;
   cursor: default;
 }
 
 .editButton:focus-visible,
 .primary:focus-visible,
-.secondary:focus-visible {
+.secondary:focus-visible,
+.danger:focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;
 }

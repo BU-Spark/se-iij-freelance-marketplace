@@ -1,7 +1,7 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
-import { canEditAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
+import { canEditAssignment, deleteAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
 import {
   combineLengthAndTime,
   isRecord,
@@ -12,6 +12,35 @@ import {
 export const runtime = 'nodejs';
 
 type RouteContext = { params: Promise<{ id: string }> };
+
+/** Deletes an assignment. Only editors from the organization that posted it may do this. */
+export async function DELETE(_request: Request, { params }: RouteContext) {
+  const { userId } = await auth();
+
+  if (!userId) {
+    return NextResponse.json({ error: 'You must be signed in to delete an assignment.' }, { status: 401 });
+  }
+
+  const { id } = await params;
+
+  try {
+    const [viewer, existing] = await Promise.all([loadAssignmentViewer(userId), getAssignment(id)]);
+
+    // Same answer for "missing" and "someone else's" so ids from other organizations don't leak
+    if (!existing || !viewer || !canEditAssignment(viewer, existing)) {
+      return NextResponse.json({ error: 'Assignment not found.' }, { status: 404 });
+    }
+
+    if (!(await deleteAssignment(existing.id))) {
+      return NextResponse.json({ error: 'Assignment not found.' }, { status: 404 });
+    }
+
+    return NextResponse.json({ deleted: true, id: existing.id });
+  } catch (error) {
+    console.error('Failed to delete assignment.', error);
+    return NextResponse.json({ error: 'Unable to delete the assignment right now.' }, { status: 500 });
+  }
+}
 
 /** Updates an assignment. Only editors from the organization that posted it may do this. */
 export async function PATCH(request: Request, { params }: RouteContext) {

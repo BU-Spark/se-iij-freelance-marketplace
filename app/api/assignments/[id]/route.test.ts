@@ -3,9 +3,9 @@
  */
 import { auth } from '@clerk/nextjs/server';
 import { db } from '../../../../lib/db';
-import { getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
+import { deleteAssignment, getAssignment, loadAssignmentViewer } from '../../../../lib/assignments';
 import type { Assignment } from '../../../types/assignments.types';
-import { PATCH } from './route';
+import { DELETE, PATCH } from './route';
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn() }));
 jest.mock('../../../../lib/db', () => ({ db: { query: jest.fn() } }));
@@ -13,12 +13,14 @@ jest.mock('../../../../lib/assignments', () => ({
   ...jest.requireActual('../../../../lib/assignments'),
   getAssignment: jest.fn(),
   loadAssignmentViewer: jest.fn(),
+  deleteAssignment: jest.fn(),
 }));
 
 const authMock = auth as unknown as jest.Mock;
 const queryMock = db.query as jest.Mock;
 const getAssignmentMock = getAssignment as jest.Mock;
 const loadViewerMock = loadAssignmentViewer as jest.Mock;
+const deleteMock = deleteAssignment as jest.Mock;
 
 const existing: Assignment = {
   id: 'assignment-1',
@@ -146,5 +148,55 @@ describe('PATCH /api/assignments/[id]', () => {
     const response = await patch(edit);
 
     expect(response.status).toBe(500);
+  });
+});
+
+const remove = (id = 'assignment-1') =>
+  DELETE(new Request(`http://localhost/api/assignments/${id}`, { method: 'DELETE' }), {
+    params: Promise.resolve({ id }),
+  });
+
+describe('DELETE /api/assignments/[id]', () => {
+  beforeEach(() => {
+    jest.resetAllMocks();
+    authMock.mockResolvedValue({ userId: 'clerk-1' });
+    getAssignmentMock.mockResolvedValue(existing);
+    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
+    deleteMock.mockResolvedValue(true);
+  });
+
+  it('rejects anonymous requests', async () => {
+    authMock.mockResolvedValue({ userId: null });
+
+    expect((await remove()).status).toBe(401);
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
+  it("deletes an assignment the editor's organization posted", async () => {
+    const response = await remove();
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ deleted: true, id: existing.id });
+    expect(deleteMock).toHaveBeenCalledWith(existing.id);
+  });
+
+  it('will not delete an assignment from another organization', async () => {
+    loadViewerMock.mockResolvedValue({ userId: 'user-9', roles: ['editor'], organizationId: 'org-9' });
+
+    expect((await remove()).status).toBe(404);
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
+  it('answers 404 when someone else already deleted it', async () => {
+    deleteMock.mockResolvedValue(false);
+
+    expect((await remove()).status).toBe(404);
+  });
+
+  it('reports a database failure', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    deleteMock.mockRejectedValue(new Error('down'));
+
+    expect((await remove()).status).toBe(500);
   });
 });
