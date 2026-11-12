@@ -1,6 +1,6 @@
 import { db } from './db';
 import { STATUS_FOR_DECISION } from '../app/utils/pitch.utils';
-import type { Pitch, PitchFeedback, PitchStatus } from '../app/types/dashboard.types';
+import type { ArchivedPitch, Pitch, PitchFeedback, PitchStatus } from '../app/types/dashboard.types';
 
 export { STATUS_FOR_DECISION };
 
@@ -80,16 +80,33 @@ export async function loadPitchViewer(clerkId: string): Promise<PitchViewer | nu
   return row ? { userId: row.id, roles: row.roles ?? [] } : null;
 }
 
-/** Every pitch sent to this editor, newest first */
+/** Every pitch sent to this editor that is still on the desk, newest first — declined ones sit in the archive */
 export async function listPitchesForEditor(editorUserId: string): Promise<Pitch[]> {
   const { rows } = await db.query<PitchRow>(
     `SELECT ${PITCH_COLUMNS}
      ${PITCH_FROM}
      WHERE p.target_editor_user_id = $1
+       AND p.status <> 'declined'
      ORDER BY p.submitted_at DESC`,
     [editorUserId]
   );
   return rows.map(toPitch);
+}
+
+/**
+ * The pitches this editor declined, most recently decided first. This is the archive: it keeps
+ * declined pitches out of the inbox without throwing away the decision or its notes.
+ */
+export async function listArchivedPitchesForEditor(editorUserId: string): Promise<ArchivedPitch[]> {
+  const { rows } = await db.query<PitchRow>(
+    `SELECT ${PITCH_COLUMNS}
+     ${PITCH_FROM}
+     WHERE p.target_editor_user_id = $1
+       AND p.status = 'declined'
+     ORDER BY COALESCE(p.feedback_at, p.updated_at) DESC`,
+    [editorUserId]
+  );
+  return rows.map((row) => ({ ...toPitch(row), feedback: row.feedback }));
 }
 
 /** Every pitch this freelancer has sent, newest first */

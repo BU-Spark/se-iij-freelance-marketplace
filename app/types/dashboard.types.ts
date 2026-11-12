@@ -107,3 +107,9 @@ export type Pitch = {
   /** the full pitch: angle, reporting plan and sources */
   description: string;
 };
+
+/**
+ * A declined pitch, kept out of the inbox. It carries the decision the editor stored, so the
+ * archive can show why the pitch was passed on.
+ */
+export type ArchivedPitch = Pitch & { feedback: PitchFeedback | null };

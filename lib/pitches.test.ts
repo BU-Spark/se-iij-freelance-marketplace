@@ -8,6 +8,7 @@ import {
   createPitch,
   findEditorByEmail,
   getPitch,
+  listArchivedPitchesForEditor,
   listPitchesForEditor,
   listPitchesForFreelancer,
   loadPitchViewer,
@@ -81,7 +82,7 @@ describe('toPitch', () => {
 });
 
 describe('listPitchesForEditor', () => {
-  it('scopes to the editor inbox, newest first', async () => {
+  it('scopes to the editor inbox, newest first, and leaves declined pitches to the archive', async () => {
     queryMock.mockResolvedValue({ rows: [row] });
 
     const pitches = await listPitchesForEditor(EDITOR_ID);
@@ -89,10 +90,48 @@ describe('listPitchesForEditor', () => {
     const sql = String(queryMock.mock.calls[0][0]);
     expect(sql).toContain('FROM pitches p');
     expect(sql).toContain('p.target_editor_user_id = $1');
+    expect(sql).toContain("p.status <> 'declined'");
     expect(sql).toContain('ORDER BY p.submitted_at DESC');
     expect(queryMock.mock.calls[0][1]).toEqual([EDITOR_ID]);
     expect(pitches).toHaveLength(1);
     expect(pitches[0].freelancer.name).toBe('Marcus Thorne');
+  });
+});
+
+describe('listArchivedPitchesForEditor', () => {
+  const declined: PitchRow = {
+    ...row,
+    status: 'declined',
+    feedback: {
+      decision: 'rejected',
+      comments: 'Not for this desk.',
+      strengths: '',
+      improvements: 'Bring a local angle.',
+    },
+    feedback_at: new Date('2026-11-05T12:00:00.000Z'),
+  };
+
+  it('reads only declined pitches, most recently decided first, with their notes', async () => {
+    queryMock.mockResolvedValue({ rows: [declined] });
+
+    const pitches = await listArchivedPitchesForEditor(EDITOR_ID);
+
+    const sql = String(queryMock.mock.calls[0][0]);
+    expect(sql).toContain('p.target_editor_user_id = $1');
+    expect(sql).toContain("p.status = 'declined'");
+    expect(sql).toContain('ORDER BY COALESCE(p.feedback_at, p.updated_at) DESC');
+    expect(queryMock.mock.calls[0][1]).toEqual([EDITOR_ID]);
+    expect(pitches[0].status).toBe('declined');
+    expect(pitches[0].feedback).toEqual(declined.feedback);
+  });
+
+  it('keeps a decline that was saved without notes readable', async () => {
+    queryMock.mockResolvedValue({ rows: [{ ...declined, feedback: null }] });
+
+    const [pitch] = await listArchivedPitchesForEditor(EDITOR_ID);
+
+    expect(pitch.feedback).toBeNull();
+    expect(pitch.slug).toBe(row.slug);
   });
 });
 

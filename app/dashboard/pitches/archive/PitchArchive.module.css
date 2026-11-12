@@ -1,0 +1,46 @@
+.back {
+  display: inline-block;
+  margin-bottom: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--c-blue);
+}
+
+.lede {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* the notes the editor left when they declined the pitch */
+.decision {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #eceef2;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.decisionTitle {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 17px;
+  color: var(--navy-deep);
+}
+
+.decision p {
+  margin: 0;
+}
+
+.decision strong {
+  color: var(--ink);
+}
