@@ -29,6 +29,8 @@ describe('NavMenu', () => {
     setup({ activeRole: 'freelancer' });
     expect(screen.getByRole('link', { name: /available assignments/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /my pitches/i })).toHaveAttribute('href', '/dashboard/freelancer/pitches');
+    // In progress work sits on the Available assignments page, so there is no separate My assignments link
+    expect(screen.queryByRole('link', { name: /my assignments/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /make a pitch/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /roster/i })).not.toBeInTheDocument();
   });
