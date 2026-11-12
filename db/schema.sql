@@ -189,3 +189,38 @@ BEGIN
       ADD CONSTRAINT roster_invites_status_allowed CHECK (status IN ('pending', 'accepted', 'declined'));
   END IF;
 END $$;
+
+-- A freelancer's story idea, sent to one editor. The composer asks for the editor's email, so a
+-- pitch points at a person rather than an organization. The editor's feedback is stored on the
+-- pitch itself, because the freelancer reads the same row from their own workspace.
+CREATE TABLE IF NOT EXISTS pitches (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  -- The editor whose inbox the pitch lands in; chosen by email in the composer
+  target_editor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  slug TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT '',
+  -- Extra labels the inbox shows as grey tags, e.g. {"City Hall", "Investigative feature"}
+  tags TEXT[] NOT NULL DEFAULT '{}',
+  summary TEXT NOT NULL DEFAULT '',
+  description TEXT NOT NULL DEFAULT '',
+  location TEXT NOT NULL DEFAULT '',
+  length TEXT NOT NULL DEFAULT '',
+  -- Free text, because freelancers write "two weeks after greenlight", not always a date
+  deadline TEXT NOT NULL DEFAULT '',
+  compensation TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'reviewed', 'negotiating', 'accepted', 'declined')),
+  -- { decision, comments, strengths, improvements }; set when the editor shares a decision
+  feedback JSONB,
+  feedback_at TIMESTAMPTZ,
+  submitted_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- One slug per freelancer per editor, so re-sending the same idea is a conflict, not a duplicate
+CREATE UNIQUE INDEX IF NOT EXISTS pitches_freelancer_editor_slug_key
+  ON pitches (freelancer_user_id, target_editor_user_id, slug);
+-- The editor's inbox reads newest first; "My pitches" reads one freelancer's own list
+CREATE INDEX IF NOT EXISTS pitches_target_editor_idx ON pitches (target_editor_user_id, submitted_at DESC);
+CREATE INDEX IF NOT EXISTS pitches_freelancer_idx ON pitches (freelancer_user_id, submitted_at DESC);
