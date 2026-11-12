@@ -24,13 +24,16 @@ type PitchInboxProps = {
   pitches: Pitch[];
 };
 
+/** What a review sends: feedback carries the decision, a plain status just moves the pitch */
+type PitchUpdate = { status: PitchStatus } | { feedback: PitchFeedback };
+
 export default function PitchInbox({ pitches }: PitchInboxProps) {
-  // our own copy of the pitches, so we can change their status on screen
-  // TODO: save status changes to the backend once the API exists
+  // our own copy of the pitches, so a saved review can move them without a reload
   const [items, setItems] = useState(pitches);
   const [feedbackByPitch, setFeedbackByPitch] = useState<Record<string, PitchFeedback>>({});
   const [filter, setFilter] = useState<PitchFilter>('all');
   const [selectedId, setSelectedId] = useState<string | undefined>(pitches[0]?.id);
+  const [error, setError] = useState('');
 
   const visible = items.filter((p) => matches(p, filter));
   // look in all items, so the open pitch stays open even if its new status hides it from this tab
@@ -44,9 +47,25 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
     setSelectedId(items.find((p) => matches(p, next))?.id);
   };
 
-  // change one pitch's status and keep all the others the same
-  const setStatus = (id: string, status: PitchStatus) =>
-    setItems((list) => list.map((p) => (p.id === id ? { ...p, status } : p)));
+  // Save on the desk, then move the pitch on screen to the status the API reports
+  const save = async (id: string, update: PitchUpdate) => {
+    setError('');
+    try {
+      const response = await fetch(`/api/pitches/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(update),
+      });
+      if (!response.ok) throw new Error(`The review could not be saved (${response.status}).`);
+
+      const { status } = (await response.json()) as { status: PitchStatus };
+      setItems((list) => list.map((p) => (p.id === id ? { ...p, status } : p)));
+      if ('feedback' in update) setFeedbackByPitch((saved) => ({ ...saved, [id]: update.feedback }));
+    } catch (cause) {
+      console.error('Failed to save a pitch review.', cause);
+      setError('Your review could not be saved. Check your connection and try again.');
+    }
+  };
 
   return (
     <main className={styles.page}>
@@ -57,6 +76,12 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
         </p>
         <SegmentedControl label="Filter pitches" options={FILTERS} value={filter} onChange={changeFilter} />
       </div>
+
+      {error && (
+        <p role="alert" className={styles.empty}>
+          {error}
+        </p>
+      )}
 
       <div className={styles.layout}>
         <section aria-labelledby="inbox-heading">
@@ -86,8 +111,7 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
                 status={selected.status}
                 freelancerName={selected.freelancer.name}
                 savedFeedback={feedbackByPitch[selected.id]}
-                onChange={(status) => setStatus(selected.id, status)}
-                onSubmitFeedback={(feedback) => setFeedbackByPitch((saved) => ({ ...saved, [selected.id]: feedback }))}
+                onSubmitFeedback={(feedback) => void save(selected.id, { feedback })}
               />
             </>
           ) : (

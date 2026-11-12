@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import type { PitchFeedback, PitchStatus } from '../../types/dashboard.types';
+import { statusForDecision } from '../../utils/pitch.utils';
 import styles from './PitchActions.module.css';
 
 type PitchActionsProps = {
   status: PitchStatus;
   freelancerName: string;
   savedFeedback?: PitchFeedback;
-  onChange: (status: PitchStatus) => void;
   onSubmitFeedback: (feedback: PitchFeedback) => void;
 };
 
@@ -14,7 +14,6 @@ export default function PitchActions({
   status,
   freelancerName,
   savedFeedback,
-  onChange,
   onSubmitFeedback,
 }: PitchActionsProps) {
   const initialDecision = savedFeedback?.decision ?? decisionForStatus(status);
@@ -32,9 +31,8 @@ export default function PitchActions({
       strengths: strengths.trim(),
       improvements: improvements.trim(),
     };
-    const nextStatus = statusForDecision(decision);
+    // The API derives the status from the decision, so this only has to send the notes
     onSubmitFeedback(feedback);
-    onChange(nextStatus);
     setSubmitted(true);
   };
 
@@ -128,10 +126,4 @@ function decisionForStatus(status: PitchStatus): PitchFeedback['decision'] {
   if (status === 'accepted') return 'accepted';
   if (status === 'declined') return 'rejected';
   return 'revision_requested';
-}
-
-function statusForDecision(decision: PitchFeedback['decision']): PitchStatus {
-  if (decision === 'accepted') return 'accepted';
-  if (decision === 'rejected') return 'declined';
-  return 'reviewed';
 }

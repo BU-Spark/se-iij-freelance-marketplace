@@ -3,25 +3,15 @@ import PitchActions from './PitchActions';
 
 describe('PitchActions', () => {
   it('shows structured decision and feedback fields', () => {
-    render(
-      <PitchActions status="new" freelancerName="Marcus Thorne" onChange={jest.fn()} onSubmitFeedback={jest.fn()} />
-    );
+    render(<PitchActions status="new" freelancerName="Marcus Thorne" onSubmitFeedback={jest.fn()} />);
     ['Decision', 'Comments', 'Strengths', 'Improvements'].forEach((label) =>
       expect(screen.getByLabelText(label)).toBeInTheDocument()
     );
   });
 
-  it('submits structured feedback and updates the pitch status', () => {
-    const onChange = jest.fn();
+  it('submits structured feedback and reports the resulting status', () => {
     const onSubmitFeedback = jest.fn();
-    render(
-      <PitchActions
-        status="new"
-        freelancerName="Marcus Thorne"
-        onChange={onChange}
-        onSubmitFeedback={onSubmitFeedback}
-      />
-    );
+    render(<PitchActions status="new" freelancerName="Marcus Thorne" onSubmitFeedback={onSubmitFeedback} />);
     fireEvent.change(screen.getByLabelText('Decision'), { target: { value: 'accepted' } });
     fireEvent.change(screen.getByLabelText('Comments'), { target: { value: 'Strong fit.' } });
     fireEvent.change(screen.getByLabelText('Strengths'), { target: { value: 'Clear angle.' } });
@@ -33,21 +23,17 @@ describe('PitchActions', () => {
       strengths: 'Clear angle.',
       improvements: 'Add a source.',
     });
-    expect(onChange).toHaveBeenCalledWith('accepted');
     expect(screen.getByRole('status')).toHaveTextContent('Current pitch status: Accepted');
   });
 
   it.each([
-    ['rejected', 'declined'],
-    ['revision_requested', 'reviewed'],
-  ] as const)('maps the %s feedback decision to %s', (decision, expectedStatus) => {
-    const onChange = jest.fn();
-    render(
-      <PitchActions status="new" freelancerName="Marcus Thorne" onChange={onChange} onSubmitFeedback={jest.fn()} />
-    );
+    ['rejected', 'Rejected'],
+    ['revision_requested', 'Revision requested'],
+  ] as const)('reports the %s decision as %s', (decision, expectedLabel) => {
+    render(<PitchActions status="new" freelancerName="Marcus Thorne" onSubmitFeedback={jest.fn()} />);
     fireEvent.change(screen.getByLabelText('Decision'), { target: { value: decision } });
     fireEvent.change(screen.getByLabelText('Comments'), { target: { value: 'Please see the notes.' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit feedback' }));
-    expect(onChange).toHaveBeenCalledWith(expectedStatus);
+    expect(screen.getByRole('status')).toHaveTextContent(`Current pitch status: ${expectedLabel}`);
   });
 });
