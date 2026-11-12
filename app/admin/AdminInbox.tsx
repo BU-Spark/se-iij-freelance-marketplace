@@ -9,10 +9,10 @@ import type { FlagReport, FlagStatus, FlagTarget } from '../types/admin.types';
 import styles from './admin.module.css';
 
 /** One tab per kind of flagged thing, so the team reviews like with like */
-const TABS: { value: FlagTarget; label: string; noun: string }[] = [
-  { value: 'pitch', label: 'Pitches', noun: 'pitches' },
-  { value: 'account', label: 'Accounts', noun: 'accounts' },
-  { value: 'assignment', label: 'Assignments', noun: 'assignments' },
+const TABS: { value: FlagTarget; label: string; noun: string; single: string }[] = [
+  { value: 'pitch', label: 'Pitches', noun: 'pitches', single: 'Flagged pitch' },
+  { value: 'account', label: 'Accounts', noun: 'accounts', single: 'Flagged account' },
+  { value: 'assignment', label: 'Assignments', noun: 'assignments', single: 'Flagged assignment' },
 ];
 
 type View = 'queue' | 'closed';
@@ -27,7 +27,7 @@ const STATUS_LABELS: Record<FlagStatus, string> = {
 /** What the team sees after changing a flag */
 const MESSAGES: Record<FlagStatus, string> = {
   open: 'Flag reopened.',
-  reviewing: 'Flag moved to review.',
+  reviewing: 'Flag marked as in review.',
   resolved: 'Flag resolved. You can still change it under Closed.',
   dismissed: 'Flag dismissed. You can still change it under Closed.',
 };
@@ -35,8 +35,9 @@ const MESSAGES: Record<FlagStatus, string> = {
 const isClosed = (status: FlagStatus) => status === 'resolved' || status === 'dismissed';
 
 /**
- * The queue of flags raised from across the marketplace, split by what was flagged.
- * Decisions are never final: closed flags stay under "Closed", where they can be reopened or changed.
+ * The queue of flags raised from across the marketplace, split by what was flagged. Each card says
+ * what it is, why it is here, and carries its own buttons. Decisions are never final: closed flags
+ * stay under "Closed", where they can be reopened or changed.
  */
 export default function AdminInbox({ reports }: { reports: FlagReport[] }) {
   const [tab, setTab] = useState<FlagTarget>('pitch');
@@ -102,24 +103,42 @@ export default function AdminInbox({ reports }: { reports: FlagReport[] }) {
             : `Resolved and dismissed ${current.noun} will show here.`}
         </p>
       ) : (
-        <ul className={styles.list}>
+        <ul className={styles.cards}>
           {shown.map((report) => (
-            <li key={report.id} className={clsx(styles.row, styles[report.status])}>
-              <div className={styles.rowTop}>
-                <h2 className={styles.rowTitle}>{report.targetLabel}</h2>
-                <span className={clsx(styles.status, styles[report.status])}>{STATUS_LABELS[report.status]}</span>
+            <li key={report.id} className={clsx(styles.card, styles[`edge_${report.targetType}`])}>
+              <div className={styles.cardTop}>
+                <span className={styles.kind}>
+                  <span className={clsx(styles.kindDot, styles[`kind_${report.targetType}`])} aria-hidden="true" />
+                  {current.single}
+                  {report.status !== 'open' && (
+                    <span className={clsx(styles.status, styles[report.status])}>{STATUS_LABELS[report.status]}</span>
+                  )}
+                </span>
+                <time className={styles.meta} dateTime={report.createdAt}>
+                  {timeAgo(new Date(report.createdAt))}
+                </time>
               </div>
+
+              <div>
+                <h3 className={styles.cardTitle}>{report.targetLabel}</h3>
+                <p className={styles.meta}>
+                  Reported by <strong>{report.reporterName}</strong>
+                </p>
+              </div>
+
               <p className={styles.reason}>
-                <span className={styles.reasonLabel}>Reason</span>
+                <span className={styles.reasonLabel}>Why it was flagged</span>
                 {report.reason}
               </p>
-              <div className={styles.rowFooter}>
-                <p className={styles.meta}>
-                  Reported by <strong>{report.reporterName}</strong> ·{' '}
-                  <time dateTime={report.createdAt}>{timeAgo(new Date(report.createdAt))}</time>
+
+              <div className={styles.cardFooter}>
+                <p className={styles.hint}>
+                  {isClosed(report.status)
+                    ? 'Changed your mind? You can switch the decision or reopen it.'
+                    : 'Dismiss if nothing is wrong. Resolve once you have dealt with it.'}
                 </p>
                 <div className={styles.actions} role="group" aria-label={`Actions for ${report.targetLabel}`}>
-                  {report.status === 'open' && button(report, 'reviewing', 'Start review')}
+                  {report.status === 'open' && button(report, 'reviewing', 'Mark in review')}
                   {!isClosed(report.status) && button(report, 'dismissed', 'Dismiss')}
                   {!isClosed(report.status) && button(report, 'resolved', 'Resolve', true)}
                   {report.status === 'resolved' && button(report, 'dismissed', 'Change to dismissed')}

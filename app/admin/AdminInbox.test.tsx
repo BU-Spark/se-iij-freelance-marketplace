@@ -48,7 +48,9 @@ describe('AdminInbox', () => {
     expect(row).toHaveTextContent('City council budget leak');
     expect(row).toHaveTextContent('Looks like spam');
     expect(row).toHaveTextContent('Reported by Ada Editor');
-    expect(row).toHaveTextContent('New');
+    expect(row).toHaveTextContent('Flagged pitch');
+    // every card carries its own buttons
+    expect(within(actionsFor('City council budget leak')).getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
   });
 
   it('switches type, and shows an empty state when there is none', async () => {
@@ -62,13 +64,14 @@ describe('AdminInbox', () => {
     expect(screen.getByText('All clear')).toBeInTheDocument();
   });
 
-  it('moves a new flag into review', async () => {
+  it('marks a new flag as in review', async () => {
     renderInbox();
 
-    await click('City council budget leak', 'Start review');
+    await click('City council budget leak', 'Mark in review');
 
-    expect(screen.getByText('In review')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Start review' })).not.toBeInTheDocument();
+    expect(screen.getByText('Flag marked as in review.')).toBeInTheDocument();
+    expect(within(screen.getByRole('listitem')).getByText('In review')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Mark in review' })).not.toBeInTheDocument();
   });
 
   it.each([
