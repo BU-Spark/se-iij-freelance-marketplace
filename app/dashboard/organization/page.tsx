@@ -1,18 +1,24 @@
 import { auth } from '@clerk/nextjs/server';
 import Avatar from '../../components/Avatar/Avatar';
-import { countAssignmentsByStatus, loadAssignmentViewer } from '../../../lib/assignments';
+import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
+import { countAssignmentsByStatus, listDeskAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import { listOrganizationTeam, type OrganizationMember } from '../../../lib/organization';
 import { requireWorkspace } from '../../../lib/workspace';
 import type { AssignmentStatus } from '../../types/dashboard.types';
+import { toDeskAssignment } from '../../utils/dashboard.utils';
 import { organizationName } from '../../utils/organization.utils';
+import { loadAssignmentView, type AssignmentView } from '../assignments/loadAssignmentView';
+import AssignmentsTable from '../components/AssignmentsTable';
 import styles from './organization.module.css';
 
 /*
- * The organization view: who works here, and how much this organization has on the go.
- * Organizations are still a TEXT id on `editors`, so everything here is scoped to the viewer's own.
+ * The organization view: who works here, and every post this organization has on the go
+ * (open, pending and assigned), rather than only the open ones the desk shows by default.
  */
 
 export const dynamic = 'force-dynamic';
+
+type OrganizationPageProps = { searchParams?: Promise<Record<string, string | string[] | undefined>> };
 
 const STATS: { key: AssignmentStatus; label: string }[] = [
   { key: 'open', label: 'Open' },
@@ -20,7 +26,7 @@ const STATS: { key: AssignmentStatus; label: string }[] = [
   { key: 'assigned', label: 'Assigned' },
 ];
 
-export default async function OrganizationPage() {
+export default async function OrganizationPage({ searchParams }: OrganizationPageProps) {
   // The organization view belongs to the editor side of the desk
   await requireWorkspace('editor');
 
@@ -30,13 +36,16 @@ export default async function OrganizationPage() {
 
   let team: OrganizationMember[] = [];
   let counts: Record<AssignmentStatus, number> = { open: 0, invited: 0, assigned: 0 };
+  let posts: Awaited<ReturnType<typeof listDeskAssignments>>['items'] = [];
 
   if (organizationId) {
     try {
-      const [statusCounts, members] = await Promise.all([
+      const [page, statusCounts, members] = await Promise.all([
+        listDeskAssignments(viewer),
         countAssignmentsByStatus(viewer),
         listOrganizationTeam(organizationId),
       ]);
+      posts = page.items;
       counts = statusCounts;
       team = members;
     } catch (error) {
@@ -44,7 +53,23 @@ export default async function OrganizationPage() {
     }
   }
 
+  // The assignment drawer, when a row was clicked on this page
+  const openId = (await searchParams)?.assignment;
+  let opened: AssignmentView | null = null;
+  try {
+    opened = await loadAssignmentView(typeof openId === 'string' ? openId : undefined);
+  } catch (error) {
+    console.error('Failed to load the assignment for the drawer.', error);
+  }
+
+  // Rows link back to this page, so the drawer opens over the organization view
+  const assignments = posts.map((post) => ({
+    ...toDeskAssignment(post),
+    href: `/dashboard/organization?assignment=${post.id}`,
+  }));
+
   const name = organizationName(organizationId);
+  const total = counts.open + counts.invited + counts.assigned;
 
   return (
     <main className={styles.main}>
@@ -77,32 +102,59 @@ export default async function OrganizationPage() {
             </li>
           </ul>
 
-          <section aria-labelledby="org-team">
-            <div className={styles.sectionHead}>
-              <h2 id="org-team">Team</h2>
-              <p>Editors whose profile sits under {name}.</p>
-            </div>
+          <div className={styles.columns}>
+            <section aria-labelledby="org-assignments">
+              <div className={styles.sectionHead}>
+                <h2 id="org-assignments">Assignments</h2>
+                <p>
+                  {total === 1 ? '1 post' : `${total} posts`} across every status.{' '}
+                  <a href="/dashboard">Work them from the desk</a>.
+                </p>
+              </div>
 
-            {team.length === 0 ? (
-              <p className={styles.empty}>Nobody else is listed under this organization yet.</p>
-            ) : (
-              <ul className={styles.team}>
-                {team.map((member) => (
-                  <li key={member.id} className={styles.person}>
-                    <Avatar name={member.name} size={40} />
-                    <div>
-                      <p className={styles.personName}>{member.name}</p>
-                      <p className={styles.personMeta}>
-                        {[member.jobTitle, member.location].filter(Boolean).join(' · ')}
-                      </p>
-                      {member.desks.length > 0 && <p className={styles.desks}>{member.desks.join(', ')}</p>}
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+              {assignments.length === 0 ? (
+                <p className={styles.empty}>This organization has not posted an assignment yet.</p>
+              ) : (
+                <AssignmentsTable assignments={assignments} />
+              )}
+            </section>
+
+            <section aria-labelledby="org-team">
+              <div className={styles.sectionHead}>
+                <h2 id="org-team">Team</h2>
+                <p>Editors whose profile sits under {name}.</p>
+              </div>
+
+              {team.length === 0 ? (
+                <p className={styles.empty}>Nobody else is listed under this organization yet.</p>
+              ) : (
+                <ul className={styles.team}>
+                  {team.map((member) => (
+                    <li key={member.id} className={styles.person}>
+                      <Avatar name={member.name} size={40} />
+                      <div>
+                        <p className={styles.personName}>{member.name}</p>
+                        <p className={styles.personMeta}>
+                          {[member.jobTitle, member.location].filter(Boolean).join(' · ')}
+                        </p>
+                        {member.desks.length > 0 && <p className={styles.desks}>{member.desks.join(', ')}</p>}
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
         </>
+      )}
+
+      {opened && (
+        <AssignmentDrawer
+          assignment={opened.assignment}
+          canEdit={opened.canEdit}
+          showOrganization
+          closeHref="/dashboard/organization"
+        />
       )}
     </main>
   );

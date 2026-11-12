@@ -15,8 +15,8 @@ const STATUS_LABEL: Record<AssignmentStatus, string> = {
 
 type AssignmentsTableProps = {
   assignments: DeskAssignment[];
-  /** the freelancer each assignment is assigned to, by member id */
-  assignedName: (id?: string) => string | undefined;
+  /** the freelancer each assignment is assigned to, by member id; omit when there is no roster to hand */
+  assignedName?: (id?: string) => string | undefined;
   /** if given, rows offer the same Review candidates popup the cards do */
   onReview?: (assignmentId: string) => void;
 };
@@ -26,7 +26,11 @@ type AssignmentsTableProps = {
  * up. The whole row opens the assignment drawer (the title is a link for keyboard and new-tab
  * use), and an arrow marks that the row is the way in.
  */
-export default function AssignmentsTable({ assignments, assignedName, onReview }: AssignmentsTableProps) {
+export default function AssignmentsTable({
+  assignments,
+  assignedName = () => undefined,
+  onReview,
+}: AssignmentsTableProps) {
   const router = useRouter();
 
   const open = (assignment: DeskAssignment) => {

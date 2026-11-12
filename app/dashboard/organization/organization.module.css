@@ -1,4 +1,4 @@
-/* The organization view: the org's people and what it has on the go */
+/* The organization view: the org's people and every post it has on the go */
 .main {
   max-width: 1180px;
   margin: 0 auto;
@@ -82,6 +82,21 @@
   text-transform: uppercase;
 }
 
+/* ---- Assignments next to the team ---- */
+.columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(260px, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
 .sectionHead {
   margin-bottom: 16px;
 }
@@ -102,6 +117,15 @@
   line-height: 1.5;
 }
 
+.sectionHead a {
+  color: var(--navy);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--c-yellow);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 3px;
+}
+
 .empty {
   margin: 0;
   padding: 18px 20px;
@@ -114,8 +138,8 @@
 
 /* ---- Team ---- */
 .team {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  display: flex;
+  flex-direction: column;
   gap: 10px;
   margin: 0;
   padding: 0;
