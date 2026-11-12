@@ -11,10 +11,12 @@ export type PitchFormProps = {
   errors: PitchFormErrors;
   onChange: (patch: Partial<PitchDraft>) => void;
   onSend: () => void;
+  /** true while the pitch is on its way, so the button cannot be pressed twice */
+  sending?: boolean;
   /** shown in the footer beside the send button, e.g. the send result */
   notice?: ReactNode;
 };
-export function PitchForm({ draft, errors, onChange, onSend, notice }: PitchFormProps) {
+export function PitchForm({ draft, errors, onChange, onSend, sending = false, notice }: PitchFormProps) {
   const field = (
     key: Exclude<keyof PitchDraft, 'compensation' | 'category'>,
     label: string,
@@ -99,7 +101,9 @@ export function PitchForm({ draft, errors, onChange, onSend, notice }: PitchForm
       </div>
       <div className={styles.actions}>
         {notice && <div className={styles.notice}>{notice}</div>}
-        <button type="submit">Send pitch</button>
+        <button type="submit" disabled={sending}>
+          Send pitch
+        </button>
       </div>
     </form>
   );

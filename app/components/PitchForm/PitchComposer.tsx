@@ -13,6 +13,7 @@ function AccountPitchComposer({ userId }: { userId: string }) {
   const [ready, setReady] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     try {
@@ -48,7 +49,10 @@ function AccountPitchComposer({ userId }: { userId: string }) {
     }
   };
 
-  const send = () => {
+  // Sending hands the draft to the API, which re-runs the same validation and resolves the editor
+  const send = async () => {
+    if (sending) return;
+
     const nextErrors = validatePitch(draft);
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) {
@@ -56,9 +60,40 @@ function AccountPitchComposer({ userId }: { userId: string }) {
       setError('Please correct the highlighted fields before sending.');
       return;
     }
-    // TODO: POST to the pitches API once it exists
+
+    setSending(true);
     setError('');
-    setMessage('Your pitch is saved in this browser. Sending to editors is not connected yet.');
+    setMessage('');
+    try {
+      const response = await fetch('/api/pitches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(draft),
+      });
+
+      if (response.status === 400) {
+        const body = (await response.json()) as { error?: string; errors?: PitchFormErrors };
+        if (body.errors) setErrors(body.errors);
+        setError(body.error ?? 'Please correct the highlighted fields before sending.');
+        return;
+      }
+
+      if (response.status === 409) {
+        setError('You have already sent this pitch to that editor.');
+        return;
+      }
+
+      if (!response.ok) throw new Error(`The pitch could not be sent (${response.status}).`);
+
+      // Only forget the draft once the desk actually has it
+      localStorage.removeItem(key);
+      setMessage('Pitch sent. The editor will see it in their inbox.');
+    } catch (cause) {
+      console.error('Failed to send a pitch.', cause);
+      setError('Your pitch could not be sent. Check your connection and try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   if (!ready) return <p role="status">Loading draft…</p>;
@@ -68,7 +103,8 @@ function AccountPitchComposer({ userId }: { userId: string }) {
         draft={draft}
         errors={errors}
         onChange={update}
-        onSend={send}
+        onSend={() => void send()}
+        sending={sending}
         notice={
           <>
             {error && (
