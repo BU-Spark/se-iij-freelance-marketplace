@@ -30,9 +30,7 @@ export async function GET(request: Request) {
 
     const wantsSent = new URL(request.url).searchParams.get('scope') === 'sent';
     const sent = wantsSent || !viewer.roles.includes('editor');
-    const items = sent
-      ? await listPitchesForFreelancer(viewer.userId)
-      : await listPitchesForEditor(viewer.userId);
+    const items = sent ? await listPitchesForFreelancer(viewer.userId) : await listPitchesForEditor(viewer.userId);
 
     return NextResponse.json({ items });
   } catch (error) {
@@ -108,10 +106,7 @@ export async function POST(request: Request) {
     });
 
     if (!pitch) {
-      return NextResponse.json(
-        { error: 'You have already sent this pitch to that editor.' },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: 'You have already sent this pitch to that editor.' }, { status: 409 });
     }
 
     return NextResponse.json({ pitch }, { status: 201 });
