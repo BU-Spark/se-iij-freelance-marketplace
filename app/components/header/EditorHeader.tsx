@@ -66,6 +66,7 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
           </Link>
         ) : (
           <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
+            <span aria-hidden="true">+</span>
             Make a Pitch
           </Link>
         )}

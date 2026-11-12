@@ -16,15 +16,17 @@ export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: Pi
     key: Exclude<keyof PitchDraft, 'compensation' | 'category'>,
     label: string,
     multiline = false,
-    type = 'text'
+    type = 'text',
+    placeholder?: string
   ) => (
     <label>
-      {label}
+      <span className={styles.label}>{label}</span>
       {multiline ? (
         <textarea
           aria-label={label}
           rows={key === 'description' ? 6 : 3}
           value={draft[key]}
+          placeholder={placeholder}
           aria-invalid={Boolean(errors[key])}
           aria-describedby={errors[key] ? `${key}-error` : undefined}
           onChange={(event) => onChange({ [key]: event.target.value })}
@@ -34,6 +36,7 @@ export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: Pi
           aria-label={label}
           type={type}
           value={draft[key]}
+          placeholder={placeholder}
           aria-invalid={Boolean(errors[key])}
           aria-describedby={errors[key] ? `${key}-error` : undefined}
           onChange={(event) => onChange({ [key]: event.target.value })}
@@ -55,16 +58,15 @@ export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: Pi
         onReview();
       }}
     >
-      {field('title', 'Pitch title')}
+      {field('title', 'Pitch title', false, 'text', 'e.g. Inside the city budget shortfall')}
       <label>
-        Generated slug
-        <input readOnly value={pitchSlug(draft.title)} />
-        <small>Generated from the title. The server will confirm uniqueness when submission is connected.</small>
+        <span className={styles.label}>Generated slug</span>
+        <input readOnly className={styles.slug} value={pitchSlug(draft.title)} placeholder="Fills in from the title" />
       </label>
       <div className={styles.row}>
-        {field('editorEmail', 'Recipient editor email', false, 'email')}
+        {field('editorEmail', 'Recipient editor email', false, 'email', 'editor@outlet.com')}
         <label>
-          Category
+          <span className={styles.label}>Category</span>
           <select
             aria-label="Category"
             value={draft.category}
@@ -84,20 +86,22 @@ export function PitchForm({ draft, errors, onChange, onReview, onSaveDraft }: Pi
           )}
         </label>
       </div>
-      {field('summary', 'Summary', true)}
-      {field('description', 'Story angle and reporting plan', true)}
+      {field('summary', 'Summary', true, 'text', 'The story in two or three sentences…')}
+      {field('description', 'Story angle and reporting plan', true, 'text', 'Angle, sources, access, timeline…')}
       <div className={styles.row}>
-        {field('location', 'Location')}
-        {field('length', 'Proposed length or duration')}
-        {field('deadline', 'Proposed delivery date', false, 'date')}
+        {field('location', 'Location', false, 'text', 'Remote / address')}
+        {field('length', 'Proposed length or duration', false, 'text', 'Words or hours')}
       </div>
+      {field('deadline', 'Proposed delivery date', false, 'date')}
       <CompensationFields
         value={draft.compensation}
         onChange={(compensation) => onChange({ compensation })}
         error={errors.compensation}
       />
-      {field('inviteEmails', 'Collaborator emails (optional)', true)}
-      <p>Separate collaborator emails with commas. Saving a draft does not send invitations.</p>
+      <div>
+        {field('inviteEmails', 'Collaborator emails (optional)', true, 'text', 'name@example.com, other@example.com')}
+        <p className={styles.hint}>Separate emails with commas. Saving a draft does not send invitations.</p>
+      </div>
       <div className={styles.actions}>
         <button type="button" onClick={onSaveDraft}>
           Save draft

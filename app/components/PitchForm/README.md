@@ -5,7 +5,7 @@ The Next.js route remains a default export.
 
 - `PitchComposer`: account-scoped local draft container, validation and review state.
 - `PitchForm` / `PitchFormProps`: controlled form; accepts `draft`, `errors`, `onChange`, `onReview`, `onSaveDraft`.
-- `CompensationFields` / `CompensationFieldsProps`: controlled amount, currency and rate basis fields.
+- `CompensationFields` / `CompensationFieldsProps`: controlled USD amount field.
 - `PitchPreview` / `PitchPreviewProps`: read-only review with edit and draft-save callbacks.
 - `PitchDraft`, `PitchCompensation`, `PitchFormErrors`: exported shared types from `app/types/pitchForm.types.ts`.
 
