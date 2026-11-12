@@ -4,6 +4,28 @@ import Link from 'next/link';
 import { useEffect, useId, useRef, type ReactNode } from 'react';
 import styles from './SidePanel.module.css';
 
+/**
+ * Panels can stack (a role opened from My profile is a sibling, not a child), and React tears
+ * siblings down in mount order, so each panel restoring the overflow it found is unreliable:
+ * the avatar's panel can put back "" while the role's panel then puts back "hidden". Count
+ * the open panels instead and hand the body its own overflow back only when none are left.
+ */
+let openPanels = 0;
+let overflowBeforePanels = '';
+
+function lockBodyScroll(): () => void {
+  if (openPanels === 0) {
+    overflowBeforePanels = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+  }
+  openPanels += 1;
+
+  return () => {
+    openPanels = Math.max(0, openPanels - 1);
+    if (openPanels === 0) document.body.style.overflow = overflowBeforePanels;
+  };
+}
+
 type SidePanelProps = {
   title: string;
   /** which edge it slides in from */
@@ -49,16 +71,14 @@ export default function SidePanel({
     };
     document.addEventListener('keydown', onKey);
 
-    // put back whatever was there, so closing a stacked panel keeps the page under the other one locked
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = previousOverflow;
       opener?.focus();
     };
   }, [onClose]);
+
+  // the page behind must not scroll while a panel is open, however the panels come and go
+  useEffect(() => lockBodyScroll(), []);
 
   return (
     <div className={styles.overlay}>

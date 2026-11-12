@@ -68,4 +68,22 @@ describe('stacked SidePanels', () => {
     );
     expect(document.body.style.overflow).toBe('hidden');
   });
+
+  it('lets the page scroll again when the whole stack goes away together', () => {
+    const { unmount } = render(
+      <>
+        <SidePanel title="My profile" onClose={jest.fn()}>
+          <p>Profile</p>
+        </SidePanel>
+        <SidePanel title="Editor details" onClose={jest.fn()}>
+          <p>Role</p>
+        </SidePanel>
+      </>
+    );
+    expect(document.body.style.overflow).toBe('hidden');
+
+    // e.g. "Edit availability in settings" navigates and unmounts both panels at once
+    unmount();
+    expect(document.body.style.overflow).toBe('');
+  });
 });

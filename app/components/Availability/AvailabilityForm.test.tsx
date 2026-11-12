@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import AvailabilityForm from './AvailabilityForm';
+import { dateKeyIn } from '../../utils/availability.utils';
 
 const originalFetch = global.fetch;
 const fetchMock = jest.fn();
@@ -18,14 +19,15 @@ const SAVED = {
 
 const EMPTY = { availableNow: false, timezone: 'UTC', days: WEEKDAYS, startsAt: '09:00', endsAt: '17:00' };
 
-/** Today, keyed the way the calendar keys it, so the day buttons can be found */
+/**
+ * Today, keyed the way the calendar keys it, so the day buttons can be found. The form defaults
+ * to UTC in these tests, so today is UTC's today: keying it from the machine's local date made
+ * this fail every evening in negative UTC offsets, when UTC has already rolled over.
+ */
 const TODAY = (() => {
-  const now = new Date();
-  const date = [
-    now.getFullYear(),
-    String(now.getMonth() + 1).padStart(2, '0'),
-    String(now.getDate()).padStart(2, '0'),
-  ].join('-');
+  const date = dateKeyIn(new Date(), 'UTC');
+  const noon = new Date(`${date}T12:00:00Z`);
+  const weekday = noon.getUTCDay();
 
   return {
     date,
@@ -34,8 +36,8 @@ const TODAY = (() => {
       month: 'short',
       day: 'numeric',
       timeZone: 'UTC',
-    }).format(new Date(`${date}T12:00:00Z`)),
-    weekday: now.getDay() >= 1 && now.getDay() <= 5,
+    }).format(noon),
+    weekday: weekday >= 1 && weekday <= 5,
   };
 })();
 
