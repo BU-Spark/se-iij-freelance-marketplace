@@ -1,4 +1,4 @@
-import { ROSTER } from '../dashboard/constants';
+import { SAMPLE_ROSTER as ROSTER } from '../../test/fixtures/roster';
 import { SAMPLE_ASSIGNMENTS } from '../../test/fixtures/assignments';
 import {
   countByStatus,

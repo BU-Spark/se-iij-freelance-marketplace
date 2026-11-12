@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import Dashboard from './page';
 import type { Assignment } from '../types/assignments.types';
-import { ROSTER } from './constants';
+import { SAMPLE_ROSTER as ROSTER } from '../../test/fixtures/roster';
 import { getAssignment, listOpenAssignments } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 
