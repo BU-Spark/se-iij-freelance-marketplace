@@ -66,26 +66,6 @@
   box-shadow: 0 0 0 4px rgba(229, 57, 91, 0.1);
 }
 
-/* read-only slug, dashed grey box */
-.form .slug {
-  min-height: 46px;
-  border: 1px dashed #dce1ea;
-  background: #f7f8fa;
-  color: #172033;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 14px;
-}
-.form .slug:hover {
-  border-color: #dce1ea;
-}
-.form .slug:focus {
-  border-color: #dce1ea;
-  box-shadow: none;
-}
-.form .slug::placeholder {
-  color: #8a93a6;
-}
-
 .hint {
   margin: 8px 0 0;
   font-size: 13px;

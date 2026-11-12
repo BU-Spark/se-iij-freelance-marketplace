@@ -77,7 +77,7 @@ describe('AssignmentDetail', () => {
     const title = screen.getByDisplayValue('Election night');
     expect(screen.getByDisplayValue('800')).toBeInTheDocument();
     expect(screen.getByDisplayValue('4')).toBeInTheDocument();
-    expect(screen.getByText('election-night-abc123')).toBeInTheDocument();
+    expect(screen.queryByText('election-night-abc123')).not.toBeInTheDocument();
 
     await user.clear(title);
     await user.type(title, 'Election night recount');

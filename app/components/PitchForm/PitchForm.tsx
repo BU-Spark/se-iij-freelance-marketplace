@@ -3,7 +3,6 @@ import type { PitchDraft, PitchFormErrors } from '../../types/pitchForm.types';
 import { TOPICS } from '../../onboarding/constants';
 import ChipGroup from '../ChipGroup/ChipGroup';
 import { CompensationFields } from './CompensationFields';
-import { pitchSlug } from './pitchForm.utils';
 import styles from './PitchForm.module.css';
 
 export type PitchFormProps = {
@@ -78,10 +77,6 @@ export function PitchForm({ draft, errors, onChange, onSend, sending = false, no
         )}
       </fieldset>
       {field('title', 'Pitch title', false, 'text', 'e.g. Inside the city budget shortfall')}
-      <label>
-        <span className={styles.label}>Generated slug</span>
-        <input readOnly className={styles.slug} value={pitchSlug(draft.title)} placeholder="Fills in from the title" />
-      </label>
       {field('editorEmail', 'Recipient editor email', false, 'email', 'editor@outlet.com')}
       {field('summary', 'Summary', true, 'text', 'The story in two or three sentences…')}
       {field('description', 'Story angle and reporting plan', true, 'text', 'Angle, sources, access, timeline…')}
