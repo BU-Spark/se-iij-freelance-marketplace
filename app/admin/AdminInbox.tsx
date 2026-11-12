@@ -2,20 +2,27 @@
 
 import { useState } from 'react';
 import clsx from 'clsx';
-import SegmentedControl from '../dashboard/components/SegmentedControl';
 import { useToast } from '../components/Toast/ToastProvider';
 import { timeAgo } from '../utils/dashboard.utils';
+import type { Appeal } from '../../lib/appeals';
 import type { FlagReport, FlagStatus, FlagTarget } from '../types/admin.types';
 import styles from './admin.module.css';
 
-/** One tab per kind of flagged thing, so the team reviews like with like */
-const TABS: { value: FlagTarget; label: string; noun: string }[] = [
-  { value: 'pitch', label: 'Pitches', noun: 'pitches' },
-  { value: 'account', label: 'Accounts', noun: 'accounts' },
-  { value: 'assignment', label: 'Assignments', noun: 'assignments' },
+type Kind = 'appeal' | FlagTarget;
+type Filter = 'all' | Kind;
+type View = 'todo' | 'done';
+
+/** One thing in the inbox: a suspended person's appeal, or a flag someone raised */
+type Entry = { kind: 'appeal'; appeal: Appeal } | { kind: FlagTarget; flag: FlagReport };
+
+const KINDS: { value: Kind; label: string; single: string }[] = [
+  { value: 'appeal', label: 'Appeals', single: 'Appeal' },
+  { value: 'pitch', label: 'Pitches', single: 'Flagged pitch' },
+  { value: 'account', label: 'Accounts', single: 'Flagged account' },
+  { value: 'assignment', label: 'Assignments', single: 'Flagged assignment' },
 ];
 
-type View = 'queue' | 'closed';
+const kindOf = (value: Kind) => KINDS.find((k) => k.value === value)!;
 
 const STATUS_LABELS: Record<FlagStatus, string> = {
   open: 'New',
@@ -27,106 +34,226 @@ const STATUS_LABELS: Record<FlagStatus, string> = {
 /** What the team sees after changing a flag */
 const MESSAGES: Record<FlagStatus, string> = {
   open: 'Flag reopened.',
-  reviewing: 'Flag moved to review.',
-  resolved: 'Flag resolved. You can still change it under Closed.',
-  dismissed: 'Flag dismissed. You can still change it under Closed.',
+  reviewing: 'Flag marked as in review.',
+  resolved: 'Flag resolved. You can still change it under Done.',
+  dismissed: 'Flag dismissed. You can still change it under Done.',
 };
 
 const isClosed = (status: FlagStatus) => status === 'resolved' || status === 'dismissed';
+const createdAt = (e: Entry) => (e.kind === 'appeal' ? e.appeal.createdAt : e.flag.createdAt);
+const idOf = (e: Entry) => (e.kind === 'appeal' ? e.appeal.id : e.flag.id);
 
 /**
- * The queue of flags raised from across the marketplace, split by what was flagged.
- * Decisions are never final: closed flags stay under "Closed", where they can be reopened or changed.
+ * Everything waiting on the Story Match team, in one list: appeals from suspended people and flags
+ * raised across the marketplace. Each card says what it is, why it is here, and carries its own
+ * buttons, so nothing has to be opened first. Flag decisions are never final: they move to "Done",
+ * where they can be changed or reopened.
  */
-export default function AdminInbox({ reports }: { reports: FlagReport[] }) {
-  const [tab, setTab] = useState<FlagTarget>('pitch');
-  const [view, setView] = useState<View>('queue');
+export default function AdminInbox({ appeals = [], reports }: { appeals?: Appeal[]; reports: FlagReport[] }) {
+  const [view, setView] = useState<View>('todo');
+  const [filter, setFilter] = useState<Filter>('all');
+  const [appealItems, setAppealItems] = useState(appeals);
   // To Do: send status changes to the backend once the flags API exists
-  const [items, setItems] = useState(reports);
+  const [flags, setFlags] = useState(reports);
+  const [busy, setBusy] = useState<string | null>(null);
   const { showToast } = useToast();
 
-  const inView = (v: View) => items.filter((r) => isClosed(r.status) === (v === 'closed'));
-  const visible = inView(view);
-  const countFor = (type: FlagTarget) => visible.filter((r) => r.targetType === type).length;
-  const shown = visible.filter((r) => r.targetType === tab);
-  const current = TABS.find((t) => t.value === tab)!;
+  const entriesIn = (v: View): Entry[] => {
+    const flagEntries: Entry[] = flags
+      .filter((f) => isClosed(f.status) === (v === 'done'))
+      .map((flag) => ({ kind: flag.targetType, flag }));
+    // reactivating closes an appeal, so open appeals are always to do
+    const appealEntries: Entry[] = v === 'todo' ? appealItems.map((appeal) => ({ kind: 'appeal', appeal })) : [];
+    return [...appealEntries, ...flagEntries].sort((a, b) => createdAt(b).localeCompare(createdAt(a)));
+  };
+
+  const todo = entriesIn('todo');
+  const done = entriesIn('done');
+  const inView = view === 'todo' ? todo : done;
+  const shown = filter === 'all' ? inView : inView.filter((e) => e.kind === filter);
+  const countFor = (f: Filter) => (f === 'all' ? inView.length : inView.filter((e) => e.kind === f).length);
 
   const setStatus = (id: string, status: FlagStatus) => {
-    setItems((list) => list.map((r) => (r.id === id ? { ...r, status } : r)));
+    setFlags((list) => list.map((f) => (f.id === id ? { ...f, status } : f)));
     showToast(MESSAGES[status], status === 'reviewing' ? 'info' : 'success');
   };
 
-  const button = (report: FlagReport, status: FlagStatus, label: string, primary = false) => (
+  const reactivate = async (appeal: Appeal) => {
+    setBusy(appeal.id);
+
+    try {
+      const response = await fetch(`/api/admin/accounts/${appeal.userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'active' }),
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        showToast(body?.error ?? 'Unable to reactivate this account right now.', 'error');
+        return;
+      }
+
+      setAppealItems((list) => list.filter((item) => item.id !== appeal.id));
+      showToast(`${appeal.name} is active again.`, 'success');
+    } catch (error) {
+      console.error('Could not reactivate the account from its appeal.', error);
+      showToast('Unable to reactivate this account right now.', 'error');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const button = (flag: FlagReport, status: FlagStatus, label: string, primary = false) => (
     <button
       type="button"
       className={clsx(styles.action, primary && styles.primaryAction)}
-      onClick={() => setStatus(report.id, status)}
+      onClick={() => setStatus(flag.id, status)}
     >
       {label}
     </button>
   );
 
-  return (
-    <section>
-      <div className={styles.toolbar}>
-        <div role="group" aria-label="Flag type" className={styles.filters}>
-          {TABS.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              aria-pressed={t.value === tab}
-              className={styles.filter}
-              onClick={() => setTab(t.value)}
-            >
-              {t.label}
-              <span className={styles.count}>{countFor(t.value)}</span>
-            </button>
-          ))}
+  const appealCard = (appeal: Appeal) => (
+    <>
+      <div className={styles.cardTop}>
+        <span className={styles.kind}>
+          <span className={clsx(styles.kindDot, styles.kind_appeal)} aria-hidden="true" />
+          Appeal
+        </span>
+        <time className={styles.meta} dateTime={appeal.createdAt}>
+          {timeAgo(new Date(appeal.createdAt))}
+        </time>
+      </div>
+
+      <div>
+        <h3 className={styles.cardTitle}>{appeal.name}</h3>
+        <p className={styles.meta}>{appeal.email} · suspended and asking to be let back in</p>
+      </div>
+
+      <div className={styles.reasons}>
+        <p className={styles.reason}>
+          <span className={styles.reasonLabel}>What they said</span>
+          {appeal.message}
+        </p>
+        {appeal.suspensionReason && (
+          <p className={styles.reason}>
+            <span className={styles.reasonLabel}>Why they were suspended</span>
+            {appeal.suspensionReason}
+          </p>
+        )}
+      </div>
+
+      <div className={styles.cardFooter}>
+        <p className={styles.hint}>Reactivating lets them sign in again and closes this appeal.</p>
+        <div className={styles.actions} role="group" aria-label={`Appeal from ${appeal.name}`}>
+          <button
+            type="button"
+            className={clsx(styles.action, styles.primaryAction)}
+            disabled={busy === appeal.id}
+            onClick={() => void reactivate(appeal)}
+          >
+            {busy === appeal.id ? 'Reactivating…' : 'Reactivate account'}
+          </button>
         </div>
-        <SegmentedControl<View>
-          label="Flag status"
-          options={[
-            { value: 'queue', label: `Needs review (${inView('queue').length})` },
-            { value: 'closed', label: `Closed (${inView('closed').length})` },
-          ]}
-          value={view}
-          onChange={setView}
-        />
+      </div>
+    </>
+  );
+
+  const flagCard = (flag: FlagReport) => (
+    <>
+      <div className={styles.cardTop}>
+        <span className={styles.kind}>
+          <span className={clsx(styles.kindDot, styles[`kind_${flag.targetType}`])} aria-hidden="true" />
+          {kindOf(flag.targetType).single}
+          {flag.status !== 'open' && (
+            <span className={clsx(styles.status, styles[flag.status])}>{STATUS_LABELS[flag.status]}</span>
+          )}
+        </span>
+        <time className={styles.meta} dateTime={flag.createdAt}>
+          {timeAgo(new Date(flag.createdAt))}
+        </time>
+      </div>
+
+      <div>
+        <h3 className={styles.cardTitle}>{flag.targetLabel}</h3>
+        <p className={styles.meta}>
+          Reported by <strong>{flag.reporterName}</strong>
+        </p>
+      </div>
+
+      <p className={styles.reason}>
+        <span className={styles.reasonLabel}>Why it was flagged</span>
+        {flag.reason}
+      </p>
+
+      <div className={styles.cardFooter}>
+        <p className={styles.hint}>
+          {isClosed(flag.status)
+            ? 'Changed your mind? You can switch the decision or reopen it.'
+            : 'Dismiss if nothing is wrong. Resolve once you have dealt with it.'}
+        </p>
+        <div className={styles.actions} role="group" aria-label={`Actions for ${flag.targetLabel}`}>
+          {flag.status === 'open' && button(flag, 'reviewing', 'Mark in review')}
+          {!isClosed(flag.status) && button(flag, 'dismissed', 'Dismiss')}
+          {!isClosed(flag.status) && button(flag, 'resolved', 'Resolve', true)}
+          {flag.status === 'resolved' && button(flag, 'dismissed', 'Change to dismissed')}
+          {flag.status === 'dismissed' && button(flag, 'resolved', 'Change to resolved')}
+          {isClosed(flag.status) && button(flag, 'reviewing', 'Reopen', true)}
+        </div>
+      </div>
+    </>
+  );
+
+  return (
+    <section className={styles.inbox} aria-label="Inbox">
+      <div className={styles.views} role="group" aria-label="Show">
+        {(
+          [
+            ['todo', 'To do', todo.length],
+            ['done', 'Done', done.length],
+          ] as const
+        ).map(([value, label, count]) => (
+          <button
+            key={value}
+            type="button"
+            className={styles.viewTab}
+            aria-pressed={view === value}
+            onClick={() => setView(value)}
+          >
+            {label}
+            <span className={styles.viewCount}>{count}</span>
+          </button>
+        ))}
+      </div>
+
+      <div role="group" aria-label="Type" className={styles.filters}>
+        {[{ value: 'all' as Filter, label: 'All' }, ...KINDS].map((k) => (
+          <button
+            key={k.value}
+            type="button"
+            aria-pressed={filter === k.value}
+            className={styles.filter}
+            onClick={() => setFilter(k.value)}
+          >
+            {k.label}
+            <span className={styles.count}>{countFor(k.value)}</span>
+          </button>
+        ))}
       </div>
 
       {shown.length === 0 ? (
         <p className={styles.emptyCard}>
-          <strong>{view === 'queue' ? 'All clear' : 'Nothing closed yet'}</strong>
-          {view === 'queue'
-            ? `No flagged ${current.noun} need review.`
-            : `Resolved and dismissed ${current.noun} will show here.`}
+          <strong>{view === 'todo' ? 'All caught up' : 'Nothing done yet'}</strong>
+          {view === 'todo'
+            ? 'Nothing is waiting on the team right now.'
+            : 'Flags you resolve or dismiss will show here.'}
         </p>
       ) : (
-        <ul className={styles.list}>
-          {shown.map((report) => (
-            <li key={report.id} className={clsx(styles.row, styles[report.status])}>
-              <div className={styles.rowTop}>
-                <h2 className={styles.rowTitle}>{report.targetLabel}</h2>
-                <span className={clsx(styles.status, styles[report.status])}>{STATUS_LABELS[report.status]}</span>
-              </div>
-              <p className={styles.reason}>
-                <span className={styles.reasonLabel}>Reason</span>
-                {report.reason}
-              </p>
-              <div className={styles.rowFooter}>
-                <p className={styles.meta}>
-                  Reported by <strong>{report.reporterName}</strong> ·{' '}
-                  <time dateTime={report.createdAt}>{timeAgo(new Date(report.createdAt))}</time>
-                </p>
-                <div className={styles.actions} role="group" aria-label={`Actions for ${report.targetLabel}`}>
-                  {report.status === 'open' && button(report, 'reviewing', 'Start review')}
-                  {!isClosed(report.status) && button(report, 'dismissed', 'Dismiss')}
-                  {!isClosed(report.status) && button(report, 'resolved', 'Resolve', true)}
-                  {report.status === 'resolved' && button(report, 'dismissed', 'Change to dismissed')}
-                  {report.status === 'dismissed' && button(report, 'resolved', 'Change to resolved')}
-                  {isClosed(report.status) && button(report, 'reviewing', 'Reopen', true)}
-                </div>
-              </div>
+        <ul className={styles.cards}>
+          {shown.map((entry) => (
+            <li key={idOf(entry)} className={clsx(styles.card, styles[`edge_${entry.kind}`])}>
+              {entry.kind === 'appeal' ? appealCard(entry.appeal) : flagCard(entry.flag)}
             </li>
           ))}
         </ul>
