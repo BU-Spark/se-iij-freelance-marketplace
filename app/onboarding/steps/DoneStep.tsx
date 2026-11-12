@@ -57,8 +57,7 @@ export default function DoneStep({ roles, data, org, onEdit }: DoneStepProps) {
         <button className={shared.secondaryBtn} onClick={onEdit}>
           Edit profile
         </button>
-        {/* TODO: send freelancers to their own page once it exists */}
-        <Link href={isEditor ? '/dashboard' : '/dashboard/assignments'} className={shared.primaryBtn}>
+        <Link href={isEditor ? '/dashboard' : '/dashboard/freelancer'} className={shared.primaryBtn}>
           {isEditor ? 'Post first assignment →' : 'Browse assignments →'}
         </Link>
       </div>
