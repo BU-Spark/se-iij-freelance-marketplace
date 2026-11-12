@@ -207,6 +207,17 @@ export function canViewAssignment(viewer: AssignmentViewer | null | undefined, a
 }
 
 /**
+ * Deletes an assignment. Callers check `canEditAssignment` first; false here just means the row
+ * was already gone (or the id was not a UUID).
+ */
+export async function deleteAssignment(assignmentId: string): Promise<boolean> {
+  if (!UUID_PATTERN.test(assignmentId)) return false;
+
+  const result = await db.query('DELETE FROM assignments WHERE id = $1', [assignmentId]);
+  return (result.rowCount ?? 0) > 0;
+}
+
+/**
  * Puts a freelancer on an assignment: the post moves to "assigned" and remembers who took it,
  * so a refresh (or the next editor) sees the same answer the desk showed.
  */

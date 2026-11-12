@@ -8,6 +8,7 @@ import { organizationName } from '../../../utils/organization.utils';
 import cardStyles from '../../../components/AssignmentCard/AssignmentCard.module.css';
 import styles from './assignmentDetail.module.css';
 import AssignmentEditForm from './AssignmentEditForm';
+import DeleteAssignmentButton from './DeleteAssignmentButton';
 
 type AssignmentDetailProps = {
   assignment: Assignment;
@@ -15,6 +16,8 @@ type AssignmentDetailProps = {
   canEdit?: boolean;
   /** shows which organization posted it; the editor desk asks for it, the freelance browser does not yet */
   showOrganization?: boolean;
+  /** called after the assignment was deleted, e.g. to close the drawer it was shown in */
+  onDeleted?: () => void;
 };
 
 const STATUS_LABEL: Record<Assignment['status'], string> = {
@@ -43,6 +46,7 @@ export default function AssignmentDetail({
   assignment: a,
   canEdit = false,
   showOrganization = false,
+  onDeleted,
 }: AssignmentDetailProps) {
   const [editing, setEditing] = useState(false);
   const organization = showOrganization ? organizationName(a.organizationId) : null;
@@ -60,9 +64,12 @@ export default function AssignmentDetail({
         </span>
         <span className={`${cardStyles.pill} ${cardStyles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
         {canEdit && (
-          <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
-            Edit
-          </button>
+          <span className={styles.cardActions}>
+            <DeleteAssignmentButton assignmentId={a.id} onDeleted={onDeleted} />
+            <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
+              Edit
+            </button>
+          </span>
         )}
       </div>
 
