@@ -1,5 +1,5 @@
 import { ORGANIZATIONS } from './constants';
-import OrganizationCard from './OrganizationCard';
+import OrganizationGrid from './OrganizationGrid';
 import pageStyles from '../freelancer.module.css';
 import styles from './organizations.module.css';
 
@@ -12,13 +12,7 @@ export default function OrganizationsPage() {
         <p>Newsrooms on the desk, what they cover and what they pay.</p>
       </div>
 
-      <ul className={styles.grid}>
-        {ORGANIZATIONS.map((org) => (
-          <li key={org.id} className={styles.card}>
-            <OrganizationCard org={org} />
-          </li>
-        ))}
-      </ul>
+      <OrganizationGrid orgs={ORGANIZATIONS} />
     </main>
   );
 }
