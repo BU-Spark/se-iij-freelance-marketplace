@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useClerk } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import IIJLogo from '../components/IIJLogo/IIJLogo';
 import menu from '../components/NavMenu/NavMenu.module.css';
@@ -52,6 +53,17 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </ul>
     </nav>
+  );
+}
+
+/** Ends the admin's session and returns them to the home page */
+export function AdminSignOut() {
+  const { signOut } = useClerk();
+
+  return (
+    <button type="button" className={styles.signOut} onClick={() => signOut({ redirectUrl: '/' })}>
+      Sign out
+    </button>
   );
 }
 

@@ -6,6 +6,8 @@ import AdminLayout from './layout';
 
 jest.mock('next/navigation', () => ({ usePathname: () => '/admin/verification' }));
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn(), currentUser: jest.fn() }));
+const signOutMock = jest.fn();
+jest.mock('@clerk/nextjs', () => ({ useClerk: () => ({ signOut: signOutMock }) }));
 jest.mock('../../lib/profile', () => ({ ensureBasicUser: jest.fn() }));
 
 const authMock = auth as unknown as jest.Mock;
@@ -49,6 +51,16 @@ describe('AdminLayout', () => {
     const [, panel] = screen.getAllByRole('navigation', { name: 'Admin sections' });
     expect(within(panel).getByRole('link', { name: 'Accounts' })).toHaveAttribute('href', '/admin/accounts');
     expect(within(panel).getByRole('link', { name: 'Verification' })).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('signs the admin out from the sidebar and from the phone menu', async () => {
+    await renderLayout();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+    expect(signOutMock).toHaveBeenCalledWith({ redirectUrl: '/' });
+
+    await userEvent.click(screen.getByRole('button', { name: 'Open admin menu' }));
+    expect(screen.getAllByRole('button', { name: 'Sign out' })).toHaveLength(2);
   });
 
   it('stores the basics from Clerk instead of sending admins to onboarding', async () => {

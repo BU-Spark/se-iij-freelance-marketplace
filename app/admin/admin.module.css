@@ -84,6 +84,29 @@
   text-decoration: none;
 }
 
+/* sits at the foot of the sidebar; in the phone panel it follows the sections */
+.signOut {
+  margin-top: auto;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #9b2c1f;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.signOut:hover {
+  background: #fdf3f1;
+}
+
+.signOut:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
 .brandTag {
   margin-left: 4px;
   padding: 2px 8px;
