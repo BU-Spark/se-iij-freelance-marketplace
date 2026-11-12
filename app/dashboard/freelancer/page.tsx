@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
-import { toDeskAssignment } from '../../utils/dashboard.utils';
+import { formatDeskDate, toDeskAssignment } from '../../utils/dashboard.utils';
 import FreelancerDashboard from './FreelancerDashboard';
 import RosterInvites from './RosterInvites';
 import styles from './freelancer.module.css';
@@ -41,8 +41,9 @@ export default async function FreelancerPage() {
         <Link href="/dashboard/freelancer/pitches">View my pitches</Link>
       </p>
       {/* declined invitations are left out: the editor sees the answer on their roster */}
-      <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
-      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} />
+      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} dateLabel={formatDeskDate(new Date())}>
+        <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
+      </FreelancerDashboard>
     </main>
   );
 }

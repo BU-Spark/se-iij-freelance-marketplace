@@ -136,6 +136,13 @@
   border-radius: 50%;
   background: var(--dot);
 }
+.counts a {
+  color: inherit;
+  text-decoration: none;
+}
+.counts a:hover {
+  text-decoration: underline;
+}
 
 /* ---- Two columns: availability left, assignments right ---- */
 .columns {
