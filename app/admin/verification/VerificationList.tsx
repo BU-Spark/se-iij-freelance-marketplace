@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import clsx from 'clsx';
+import Avatar from '../../components/Avatar/Avatar';
 import { useToast } from '../../components/Toast/ToastProvider';
 import { timeAgo } from '../../utils/dashboard.utils';
 import type { VerificationRequest } from '../../types/admin.types';
@@ -9,10 +10,25 @@ import styles from '../admin.module.css';
 
 type Status = VerificationRequest['status'];
 
-const FILTERS: { value: Status; label: string; empty: string }[] = [
-  { value: 'pending', label: 'Pending', empty: 'Nobody is waiting on verification.' },
-  { value: 'verified', label: 'Verified', empty: 'Nobody has been verified yet.' },
-  { value: 'rejected', label: 'Rejected', empty: 'No requests have been rejected.' },
+const FILTERS: { value: Status; label: string; empty: string; hint: string }[] = [
+  {
+    value: 'pending',
+    label: 'Pending',
+    empty: 'Nobody is waiting on verification.',
+    hint: 'Check the proof each person sent, then approve or reject them.',
+  },
+  {
+    value: 'verified',
+    label: 'Verified',
+    empty: 'Nobody has been verified yet.',
+    hint: 'These people show as verified. You can still take it away.',
+  },
+  {
+    value: 'rejected',
+    label: 'Rejected',
+    empty: 'No requests have been rejected.',
+    hint: 'Rejected requests stay here in case you change your mind.',
+  },
 ];
 
 /** The buttons each status offers; every decision can be changed later */
@@ -54,22 +70,20 @@ export default function VerificationList({ requests }: { requests: VerificationR
   };
 
   return (
-    <section>
-      <div className={styles.toolbar}>
-        <div role="group" aria-label="Verification status" className={styles.filters}>
-          {FILTERS.map((f) => (
-            <button
-              key={f.value}
-              type="button"
-              aria-pressed={f.value === filter}
-              className={styles.filter}
-              onClick={() => setFilter(f.value)}
-            >
-              {f.label}
-              <span className={styles.count}>{items.filter((r) => r.status === f.value).length}</span>
-            </button>
-          ))}
-        </div>
+    <section className={styles.inbox}>
+      <div role="group" aria-label="Verification status" className={styles.views}>
+        {FILTERS.map((f) => (
+          <button
+            key={f.value}
+            type="button"
+            aria-pressed={f.value === filter}
+            className={styles.viewTab}
+            onClick={() => setFilter(f.value)}
+          >
+            {f.label}
+            <span className={styles.viewCount}>{items.filter((r) => r.status === f.value).length}</span>
+          </button>
+        ))}
       </div>
 
       {shown.length === 0 ? (
@@ -78,26 +92,22 @@ export default function VerificationList({ requests }: { requests: VerificationR
           {current.empty}
         </p>
       ) : (
-        <ul className={styles.list}>
-          {shown.map((request) => (
-            <li key={request.id} className={clsx(styles.row, styles[request.status])}>
-              <div className={styles.rowTop}>
-                <div>
-                  <h2 className={styles.rowTitle}>{request.name}</h2>
+        <>
+          {/* said once for the whole tab, instead of on every person */}
+          <p className={styles.hint}>{current.hint}</p>
+
+          <ul className={styles.people}>
+            {shown.map((request) => (
+              <li key={request.id} className={styles.person}>
+                <Avatar name={request.name} size={40} />
+                <div className={styles.personBody}>
+                  <h2 className={styles.personName}>{request.name}</h2>
                   <p className={styles.meta}>
-                    {ROLE_LABELS[request.role]} · {request.location}
+                    {ROLE_LABELS[request.role]} · {request.location} ·{' '}
+                    <time dateTime={request.requestedAt}>{timeAgo(new Date(request.requestedAt))}</time>
                   </p>
+                  <p className={styles.proof}>{request.evidence}</p>
                 </div>
-                <span className={clsx(styles.status, styles[request.status])}>{current.label}</span>
-              </div>
-              <p className={styles.reason}>
-                <span className={styles.reasonLabel}>Proof submitted</span>
-                {request.evidence}
-              </p>
-              <div className={styles.rowFooter}>
-                <p className={styles.meta}>
-                  Requested <time dateTime={request.requestedAt}>{timeAgo(new Date(request.requestedAt))}</time>
-                </p>
                 <div className={styles.actions} role="group" aria-label={`Actions for ${request.name}`}>
                   {ACTIONS[request.status].map((a) => (
                     <button
@@ -110,10 +120,10 @@ export default function VerificationList({ requests }: { requests: VerificationR
                     </button>
                   ))}
                 </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </section>
   );
