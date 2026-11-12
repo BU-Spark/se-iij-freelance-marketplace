@@ -17,7 +17,6 @@ export default function MakePitchPage() {
             <h1 id="make-pitch-title" className={styles.title}>
               Make a pitch
             </h1>
-            <p className={styles.subtitle}>Share your story idea with an editor</p>
           </div>
           <Link href="/dashboard/freelancer/pitches" className={styles.close} aria-label="Close">
             <svg

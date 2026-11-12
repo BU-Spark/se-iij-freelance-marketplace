@@ -16,7 +16,7 @@ export function PitchPreview({ draft, onEdit, onSaveDraft }: PitchPreviewProps) 
           ['Location', draft.location],
           ['Length', draft.length],
           ['Delivery date', draft.deadline],
-          ['Compensation', `${draft.compensation.currency} ${draft.compensation.amount} / ${draft.compensation.unit}`],
+          ['Compensation', `$${draft.compensation.amount}`],
           ['Collaborators', pitchInviteEmails(draft.inviteEmails).join(', ') || 'None'],
         ].map(([label, value]) => (
           <div key={label}>
@@ -25,6 +25,9 @@ export function PitchPreview({ draft, onEdit, onSaveDraft }: PitchPreviewProps) 
           </div>
         ))}
       </dl>
+      <p className={styles.hint}>
+        Submission is not connected yet. Your draft can be saved in this browser; it has not been sent to an editor.
+      </p>
       <div className={styles.actions}>
         <button type="button" onClick={onEdit}>
           Back to editing
@@ -36,9 +39,6 @@ export function PitchPreview({ draft, onEdit, onSaveDraft }: PitchPreviewProps) 
           Submit pitch
         </button>
       </div>
-      <p>
-        Submission is not connected yet. Your draft can be saved in this browser; it has not been sent to an editor.
-      </p>
     </section>
   );
 }

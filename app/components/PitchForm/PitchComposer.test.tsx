@@ -44,13 +44,12 @@ it('validates, reviews a pitch, preserves edits, and saves without sending', () 
   change('Location', 'Remote');
   change('Proposed length or duration', '1200 words');
   change('Proposed delivery date', '2099-12-01');
-  change('Amount', '0.75');
-  change('Rate basis', 'word');
+  change('Proposed compensation', '0.75');
   change('Collaborator emails (optional)', 'partner@example.com');
   expect(screen.getByLabelText(/Generated slug/)).toHaveValue('city-budget-investigation');
   fireEvent.click(screen.getByRole('button', { name: 'Review pitch' }));
   expect(screen.getByRole('region', { name: 'Pitch preview' })).toBeInTheDocument();
-  expect(screen.getByText('USD 0.75 / word')).toBeInTheDocument();
+  expect(screen.getByText('$0.75')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Submit pitch' })).toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Back to editing' }));
   expect(screen.getByLabelText('Pitch title')).toHaveValue('City budget investigation');
