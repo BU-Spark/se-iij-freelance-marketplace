@@ -180,6 +180,37 @@
   gap: 10px;
 }
 
+/* the explicit end of the list, so nothing loads behind the editor's back */
+.loadMoreRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.loadMore {
+  padding: 9px 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--navy-deep);
+  font-weight: 600;
+}
+
+.loadMore:hover:not(:disabled) {
+  background: #eef2f8;
+}
+
+.loadMore:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.loadMoreCount {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .list {
   display: flex;
   flex-direction: column;

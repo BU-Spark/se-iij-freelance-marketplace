@@ -29,17 +29,24 @@ const VIEWS: SegmentOption<DeskView>[] = [
 type AssignmentsColumnProps = {
   assignments: DeskAssignment[];
   roster: RosterMember[];
+  /** where the next page starts; null/absent means everything is already here */
+  nextCursor?: string | null;
+  /** every assignment the editor can see, so "Showing 20 of 57" stays honest */
+  total?: number;
 };
 
 /** Right column of the dashboard: assignment cards, status tabs and the Review candidates popup */
-export default function AssignmentsColumn({ assignments, roster }: AssignmentsColumnProps) {
+export default function AssignmentsColumn({ assignments, roster, nextCursor = null, total }: AssignmentsColumnProps) {
   const { showToast } = useToast();
   // our own copy, so assigning someone updates the desk without a full reload
   const [items, setItems] = useState(assignments);
-  // a refresh after posting sends a new list, so keep the copy in step
+  const [cursor, setCursor] = useState<string | null>(nextCursor);
+  const [loadingMore, setLoadingMore] = useState(false);
+  // a refresh after posting sends a new list, so keep the copy (and its cursor) in step
   useEffect(() => {
     setItems(assignments);
-  }, [assignments]);
+    setCursor(nextCursor);
+  }, [assignments, nextCursor]);
   const [filter, setFilter] = useState<DeskFilter>('all');
   // remembered between visits, so an editor who prefers rows keeps rows
   const [view, setView] = useLocalStorage<DeskView>('desk-assignment-view', 'comfort');
@@ -73,6 +80,25 @@ export default function AssignmentsColumn({ assignments, roster }: AssignmentsCo
     }
   };
 
+  /** Fetch the next page; a failed request leaves the button to try again */
+  const loadMore = async () => {
+    if (!cursor) return;
+    setLoadingMore(true);
+
+    try {
+      const response = await fetch(`/api/assignments?after=${encodeURIComponent(cursor)}`, { cache: 'no-store' });
+      if (!response.ok) throw new Error('load failed');
+
+      const page = (await response.json()) as { items: DeskAssignment[]; nextCursor: string | null };
+      setItems((list) => [...list, ...page.items]);
+      setCursor(page.nextCursor);
+    } catch {
+      showToast('Could not load more assignments. Please try again.', 'error');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
   return (
     <section aria-labelledby="assignments-heading">
       <div className={styles.sectionHead}>
@@ -101,6 +127,19 @@ export default function AssignmentsColumn({ assignments, roster }: AssignmentsCo
             </li>
           ))}
         </ul>
+      )}
+
+      {cursor && (
+        <div className={styles.loadMoreRow}>
+          <button type="button" className={styles.loadMore} onClick={loadMore} disabled={loadingMore}>
+            {loadingMore ? 'Loading…' : 'Load more'}
+          </button>
+          {total !== undefined && (
+            <span className={styles.loadMoreCount}>
+              Showing {items.length} of {total}
+            </span>
+          )}
+        </div>
       )}
 
       {reviewing && (
