@@ -16,13 +16,14 @@ type AssignmentRow = {
   deadline: Date | null;
   compensation: string;
   status: Assignment['status'];
+  assigned_to_user_id: string | null;
   created_at: Date;
   updated_at: Date;
 };
 
 const ASSIGNMENT_COLUMNS = `
   id, organization_id, created_by_user_id, title, description, category, slug,
-  contact, location, length, deadline, compensation, status, created_at, updated_at
+  contact, location, length, deadline, compensation, status, assigned_to_user_id, created_at, updated_at
 `;
 
 /** Who is looking at assignments, as far as visibility and editing are concerned */
@@ -51,6 +52,7 @@ export function toAssignment(row: AssignmentRow): Assignment {
     deadline: row.deadline ? new Date(row.deadline) : null,
     compensation: row.compensation,
     status: row.status,
+    assignedToUserId: row.assigned_to_user_id,
     createdAt: new Date(row.created_at),
     updatedAt: new Date(row.updated_at),
   };
@@ -128,4 +130,24 @@ export function canEditAssignment(viewer: AssignmentViewer | null | undefined, a
 export function canViewAssignment(viewer: AssignmentViewer | null | undefined, assignment: Assignment): boolean {
   if (isEditor(viewer)) return belongsToViewer(viewer, assignment);
   return assignment.status === 'open';
+}
+
+/**
+ * Puts a freelancer on an assignment: the post moves to "assigned" and remembers who took it,
+ * so a refresh (or the next editor) sees the same answer the desk showed.
+ */
+export async function assignFreelancer(assignmentId: string, freelancerUserId: string): Promise<Assignment | null> {
+  if (!UUID_PATTERN.test(assignmentId) || !UUID_PATTERN.test(freelancerUserId)) return null;
+
+  const { rows } = await db.query<AssignmentRow>(
+    `UPDATE assignments
+        SET status = 'assigned',
+            assigned_to_user_id = $2,
+            updated_at = NOW()
+      WHERE id = $1
+      RETURNING ${ASSIGNMENT_COLUMNS}`,
+    [assignmentId, freelancerUserId]
+  );
+
+  return rows[0] ? toAssignment(rows[0]) : null;
 }
