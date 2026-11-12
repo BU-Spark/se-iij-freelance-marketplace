@@ -29,6 +29,12 @@
 .statusLead p {
   margin: 0;
 }
+
+/* the desk search filters both columns, so it stretches across the status bar */
+.deskSearch {
+  width: 100%;
+  max-width: 460px;
+}
 .pageSearch {
   position: relative;
   display: flex;

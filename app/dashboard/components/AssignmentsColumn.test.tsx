@@ -1,5 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import AssignmentsColumn from './AssignmentsColumn';
+import DeskSearch from './DeskSearch';
+import { DeskQueryProvider } from './deskQuery';
 import { ToastProvider } from '../../components/Toast/ToastProvider';
 import { SAMPLE_ASSIGNMENTS } from '../../../test/fixtures/assignments';
 import { SAMPLE_ROSTER as ROSTER } from '../../../test/fixtures/roster';
@@ -154,5 +156,26 @@ describe('AssignmentsColumn', () => {
       expect.objectContaining({ cache: 'no-store' })
     );
     expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
+  });
+
+  it('filters the list with the desk search', () => {
+    render(
+      <DeskQueryProvider>
+        <DeskSearch />
+        <AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />
+      </DeskQueryProvider>
+    );
+
+    fireEvent.change(screen.getByRole('searchbox', { name: /search assignments and roster/i }), {
+      target: { value: 'transit' },
+    });
+
+    expect(screen.getAllByRole('article')).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 3, name: /transit ridership/i })).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole('searchbox', { name: /search assignments and roster/i }), {
+      target: { value: 'nothing matches this' },
+    });
+    expect(screen.getByText(/no assignments match/i)).toBeInTheDocument();
   });
 });

@@ -6,9 +6,10 @@ import AssignmentCard from '../../components/AssignmentCard/AssignmentCard';
 import ReviewCandidates from '../../components/ReviewCandidates/ReviewCandidates';
 import AssignmentsTable from './AssignmentsTable';
 import useLocalStorage from '../../hooks/useLocalStorage';
+import { useDeskQuery } from './deskQuery';
 import { useToast } from '../../components/Toast/ToastProvider';
 import type { DeskAssignment, DeskFilter, RosterMember } from '../../types/dashboard.types';
-import { filterAssignments } from '../../utils/dashboard.utils';
+import { assignmentMatches, filterAssignments } from '../../utils/dashboard.utils';
 import styles from '../dashboard.module.css';
 
 const FILTERS: SegmentOption<DeskFilter>[] = [
@@ -38,6 +39,7 @@ type AssignmentsColumnProps = {
 /** Right column of the dashboard: assignment cards, status tabs and the Review candidates popup */
 export default function AssignmentsColumn({ assignments, roster, nextCursor = null, total }: AssignmentsColumnProps) {
   const { showToast } = useToast();
+  const { query } = useDeskQuery();
   // our own copy, so assigning someone updates the desk without a full reload
   const [items, setItems] = useState(assignments);
   const [cursor, setCursor] = useState<string | null>(nextCursor);
@@ -53,7 +55,8 @@ export default function AssignmentsColumn({ assignments, roster, nextCursor = nu
   // which assignment's "Review candidates" popup is open (none = undefined)
   const [reviewingId, setReviewingId] = useState<string | undefined>();
 
-  const visible = filterAssignments(items, filter);
+  const visible = filterAssignments(items, filter).filter((a) => assignmentMatches(a, query));
+  const searching = query.trim().length > 0;
   const filterLabel = FILTERS.find((f) => f.value === filter)?.label.toLowerCase();
   const reviewing = items.find((a) => a.id === reviewingId);
   const nameOf = (id?: string) => roster.find((m) => m.id === id)?.name;
@@ -112,7 +115,9 @@ export default function AssignmentsColumn({ assignments, roster, nextCursor = nu
       </div>
 
       {visible.length === 0 ? (
-        <p className={styles.sectionSub}>No {filterLabel} assignments.</p>
+        <p className={styles.sectionSub}>
+          {searching ? `No assignments match “${query.trim()}”.` : `No ${filterLabel} assignments.`}
+        </p>
       ) : view === 'table' ? (
         <AssignmentsTable assignments={visible} assignedName={nameOf} onReview={setReviewingId} />
       ) : (
