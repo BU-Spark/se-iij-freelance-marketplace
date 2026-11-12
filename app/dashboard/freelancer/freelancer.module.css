@@ -27,11 +27,12 @@
   font-weight: 600;
   color: var(--ink);
 }
+/* matches the editor desk's AssignmentCard so both sides of the dashboard read the same */
 .card {
-  padding: 24px 28px;
+  padding: 20px 22px;
   background: var(--white);
-  border: 1px solid #dfe4ec;
-  border-radius: 2px;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
 }
 .eyebrow {
   color: var(--c-blue);
@@ -131,7 +132,8 @@
 .grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 18px;
+  gap: 16px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -139,10 +141,12 @@
   height: 100%;
   box-sizing: border-box;
   overflow-wrap: anywhere;
-  box-shadow: none;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 8px 24px -16px rgba(15, 23, 42, 0.18);
 }
 .card h3 {
-  margin: 16px 0 8px;
+  margin: 14px 0 0;
   color: var(--navy-deep);
   font-family: var(--font-serif);
   font-size: 22px;
@@ -153,6 +157,10 @@
 .details dt {
   color: var(--muted);
 }
+.card > p {
+  margin: 2px 0 0;
+  font-size: 14px;
+}
 .tags {
   display: flex;
   flex-wrap: wrap;
@@ -160,37 +168,58 @@
   gap: 8px;
   font-size: 12px;
 }
+/* the status pill (first in the markup) follows Urgent, as on the editor card */
+.tags > span:first-child {
+  order: 1;
+}
+/* the category (last span in the markup) leads the row, as on the editor card */
+.tags > span:last-child {
+  order: -1;
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5468;
+}
 .open,
 .invited,
 .in-progress,
 .urgent {
-  padding: 5px 9px;
-  border-radius: 16px;
-  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 600;
 }
+/* same pill colours as the editor's AssignmentCard */
 .open {
-  background: #e7f0ff;
-  color: #174ea6;
+  background: #eef2fd;
+  color: #1e3a9e;
 }
 .invited {
-  background: #fff3d6;
-  color: #805400;
+  background: #fff4e5;
+  color: #8a4b00;
 }
 .in-progress {
-  background: #def5e6;
-  color: #17623a;
+  background: #e8f6ee;
+  color: #17663a;
 }
 .urgent {
-  background: #ffe7e7;
-  color: #9b2424;
+  background: #fdecec;
+  color: #a8231a;
 }
+/* grey box with Location / Compensation / Deadline / Type, like the editor cards */
 .details {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  background: #f7f8fa;
+  border-radius: 12px;
+}
+.details dt {
+  font-size: 12px;
 }
 .details dd {
-  margin: 5px 0 0;
+  margin: 0;
+  font-weight: 500;
 }
 .controls {
   display: flex;
