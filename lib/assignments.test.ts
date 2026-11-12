@@ -5,12 +5,15 @@ import { db } from './db';
 import {
   canEditAssignment,
   canViewAssignment,
+  countAssignmentsByStatus,
   getAssignment,
+  listDeskAssignments,
   listOpenAssignments,
   loadAssignmentViewer,
   toAssignment,
   type AssignmentViewer,
 } from './assignments';
+import type { Assignment } from '../app/types/assignments.types';
 
 jest.mock('./db', () => ({ db: { query: jest.fn() } }));
 
@@ -105,6 +108,67 @@ describe('listOpenAssignments scoping', () => {
     const [sql, params] = queryMock.mock.calls[0];
     expect(sql).not.toContain('organization_id =');
     expect(params).toBeUndefined();
+  });
+});
+
+describe('listDeskAssignments scoping', () => {
+  const editor: AssignmentViewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    queryMock.mockResolvedValue({ rows: [] });
+  });
+
+  it('keeps the desk to the posts the editor wrote, not the whole organization', async () => {
+    await listDeskAssignments(editor);
+
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).toContain('created_by_user_id = $1');
+    expect(sql).not.toContain('organization_id =');
+    // creator id, then the page size + 1 that tells us whether there is another page
+    expect(params).toEqual(['user-1', 21]);
+  });
+
+  it('widens to every post the organization made when asked', async () => {
+    await listDeskAssignments(editor, { scope: 'organization' });
+
+    const [sql, params] = queryMock.mock.calls[0];
+    expect(sql).toContain('organization_id = $1');
+    expect(params).toEqual(['org-1', 21]);
+  });
+
+  it('falls back to the editor\u2019s own posts when they have no organization', async () => {
+    await listDeskAssignments(
+      { userId: 'user-1', roles: ['editor'], organizationId: null },
+      {
+        scope: 'organization',
+      }
+    );
+
+    expect(String(queryMock.mock.calls[0][0])).toContain('created_by_user_id = $1');
+  });
+
+  it('counts by the same scope as the list', async () => {
+    await countAssignmentsByStatus(editor, 'organization');
+    expect(String(queryMock.mock.calls[0][0])).toContain('organization_id = $1');
+
+    jest.clearAllMocks();
+    queryMock.mockResolvedValue({ rows: [] });
+    await countAssignmentsByStatus(editor);
+    expect(String(queryMock.mock.calls[0][0])).toContain('created_by_user_id = $1');
+  });
+});
+
+describe('creator name', () => {
+  // the fixture omits the assignment columns added later, so fill them in for a complete row
+  const complete = { ...row, status: row.status as Assignment['status'], assigned_to_user_id: null };
+
+  it('carries the name the query resolved', () => {
+    expect(toAssignment({ ...complete, created_by_name: 'Joey Lam' }).createdByName).toBe('Joey Lam');
+  });
+
+  it('leaves it undefined when the join found nobody', () => {
+    expect(toAssignment({ ...complete, created_by_name: null }).createdByName).toBeUndefined();
   });
 });
 

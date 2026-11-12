@@ -41,8 +41,8 @@ export default async function OrganizationPage({ searchParams }: OrganizationPag
   if (organizationId) {
     try {
       const [page, statusCounts, members] = await Promise.all([
-        listDeskAssignments(viewer),
-        countAssignmentsByStatus(viewer),
+        listDeskAssignments(viewer, { scope: 'organization' }),
+        countAssignmentsByStatus(viewer, 'organization'),
         listOrganizationTeam(organizationId),
       ]);
       posts = page.items;
@@ -107,15 +107,15 @@ export default async function OrganizationPage({ searchParams }: OrganizationPag
               <div className={styles.sectionHead}>
                 <h2 id="org-assignments">Assignments</h2>
                 <p>
-                  {total === 1 ? '1 post' : `${total} posts`} across every status.{' '}
-                  <a href="/dashboard">Work them from the desk</a>.
+                  {total === 1 ? '1 post' : `${total} posts`} across every status. Only the ones you posted show on{' '}
+                  <a href="/dashboard">your desk</a>.
                 </p>
               </div>
 
               {assignments.length === 0 ? (
                 <p className={styles.empty}>This organization has not posted an assignment yet.</p>
               ) : (
-                <AssignmentsTable assignments={assignments} />
+                <AssignmentsTable assignments={assignments} showCreator />
               )}
             </section>
 

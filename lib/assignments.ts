@@ -18,13 +18,18 @@ type AssignmentRow = {
   compensation: string;
   status: Assignment['status'];
   assigned_to_user_id: string | null;
+  /** the editor who posted it, resolved from `users` so the organization view can name them */
+  created_by_name: string | null;
   created_at: Date;
   updated_at: Date;
 };
 
 const ASSIGNMENT_COLUMNS = `
   id, organization_id, created_by_user_id, title, description, category, slug,
-  contact, location, length, deadline, compensation, status, assigned_to_user_id, created_at, updated_at
+  contact, location, length, deadline, compensation, status, assigned_to_user_id, created_at, updated_at,
+  (SELECT TRIM(u.first_name || ' ' || u.last_name)
+     FROM users u
+    WHERE u.id = assignments.created_by_user_id) AS created_by_name
 `;
 
 /** Who is looking at assignments, as far as visibility and editing are concerned */
@@ -43,6 +48,7 @@ export function toAssignment(row: AssignmentRow): Assignment {
     id: row.id,
     organizationId: row.organization_id,
     createdByUserId: row.created_by_user_id,
+    createdByName: row.created_by_name ?? undefined,
     title: row.title,
     description: row.description,
     category: row.category,
@@ -114,23 +120,39 @@ export type AssignmentPage = {
 /** How many assignments the desk loads at a time */
 export const DESK_PAGE_SIZE = 20;
 
-/** The WHERE clause that decides which assignments a viewer may see */
-function viewerScope(viewer: AssignmentViewer | null | undefined): { clause: string; params: unknown[] } {
+/** Which slice of the desk a query reads: your own posts, or everything the organization posted */
+export type AssignmentScope = 'desk' | 'organization';
+
+/**
+ * The WHERE clause that decides which assignments a viewer may see. The desk is personal: an
+ * editor only sees posts they wrote, and their colleagues' posts are on the organization page.
+ */
+function viewerScope(
+  viewer: AssignmentViewer | null | undefined,
+  scope: AssignmentScope
+): { clause: string; params: unknown[] } {
   if (!isEditor(viewer)) return { clause: `status = 'open'`, params: [] };
-  if (viewer.organizationId) return { clause: 'organization_id = $1', params: [viewer.organizationId] };
-  return { clause: 'organization_id IS NULL AND created_by_user_id = $1', params: [viewer.userId] };
+  if (scope === 'organization' && viewer.organizationId) {
+    return { clause: 'organization_id = $1', params: [viewer.organizationId] };
+  }
+  return { clause: 'created_by_user_id = $1', params: [viewer.userId] };
 }
 
 /**
  * The desk's assignments, a page at a time, newest first. The cursor is the last id on the page:
  * `(created_at, id)` makes the sort stable even when two posts share a timestamp.
+ * `scope: 'organization'` widens this to every post the viewer's organization made.
  */
 export async function listDeskAssignments(
   viewer: AssignmentViewer | null | undefined,
-  { limit = DESK_PAGE_SIZE, after = null }: { limit?: number; after?: string | null } = {}
+  {
+    limit = DESK_PAGE_SIZE,
+    after = null,
+    scope = 'desk',
+  }: { limit?: number; after?: string | null; scope?: AssignmentScope } = {}
 ): Promise<AssignmentPage> {
-  const scope = viewerScope(viewer);
-  const params = [...scope.params];
+  const filter = viewerScope(viewer, scope);
+  const params = [...filter.params];
   let cursorClause = '';
 
   if (after) {
@@ -144,7 +166,7 @@ export async function listDeskAssignments(
 
   const { rows } = await db.query<AssignmentRow>(
     `SELECT ${ASSIGNMENT_COLUMNS} FROM assignments
-      WHERE ${scope.clause} ${cursorClause}
+      WHERE ${filter.clause} ${cursorClause}
       ORDER BY created_at DESC, id DESC
       LIMIT $${params.length}`,
     params
@@ -161,15 +183,16 @@ export async function listDeskAssignments(
 
 /** Every assignment the viewer can see, counted by status — the status bar must not depend on a page */
 export async function countAssignmentsByStatus(
-  viewer: AssignmentViewer | null | undefined
+  viewer: AssignmentViewer | null | undefined,
+  scope: AssignmentScope = 'desk'
 ): Promise<Record<AssignmentStatus, number>> {
-  const scope = viewerScope(viewer);
+  const filter = viewerScope(viewer, scope);
   const { rows } = await db.query<{ status: AssignmentStatus; total: string }>(
     `SELECT status, COUNT(*)::text AS total
        FROM assignments
-      WHERE ${scope.clause}
+      WHERE ${filter.clause}
       GROUP BY status`,
-    scope.params
+    filter.params
   );
 
   const counts: Record<AssignmentStatus, number> = { open: 0, invited: 0, assigned: 0 };

@@ -91,6 +91,7 @@ export function toDeskAssignment(a: Assignment): DeskAssignment {
     length: a.length,
     compensation: a.compensation,
     organizationId: a.organizationId,
+    createdByName: a.createdByName,
     interestedIds: [],
     assignedToId: a.assignedToUserId ?? undefined,
     href: assignmentDrawerHref('/dashboard', a.id),
