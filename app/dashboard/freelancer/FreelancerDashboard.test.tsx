@@ -38,13 +38,13 @@ it('lists every matching task without paging, and narrows by search and status',
   expect(feed().getAllByRole('article')).toHaveLength(8);
   expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Search tasks'), { target: { value: '  OPPORTUNITY  ' } });
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search' }), { target: { value: '  OPPORTUNITY  ' } });
   expect(feed().getAllByRole('article')).toHaveLength(6);
   expect(screen.getByRole('status')).toHaveTextContent('Showing 6 of 8 assignments');
   fireEvent.click(statusButton('In progress'));
   expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
-  fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-  expect(screen.getByLabelText('Search tasks')).toHaveValue('');
+  fireEvent.click(screen.getByRole('button', { name: /^Clear filters/ }));
+  expect(screen.getByRole('searchbox', { name: 'Search' })).toHaveValue('');
   expect(feed().getAllByRole('article')).toHaveLength(8);
 });
 
@@ -60,15 +60,16 @@ it('combines category, location, search, and status without hiding ongoing work'
   fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Reporting/Writing' } });
   fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Central City Hall' } });
   fireEvent.click(statusButton('Open'));
-  fireEvent.change(screen.getByLabelText('Search tasks'), { target: { value: 'Opportunity 0' } });
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search' }), { target: { value: 'Opportunity 0' } });
   expect(feed().getAllByRole('article')).toHaveLength(1);
   expect(feed().getByText('Opportunity 0')).toBeInTheDocument();
   expect(within(screen.getByRole('region', { name: 'In progress' })).getByText('My ongoing work')).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Remote' } });
   expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
-  fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Clear filters/ }));
   expect(screen.getByLabelText('Category')).toHaveValue('');
   expect(screen.getByLabelText('Location')).toHaveValue('');
   expect(statusButton('All')).toHaveAttribute('aria-pressed', 'true');
-  expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDisabled();
+  // with nothing filtered the Clear link goes away, as on Find talent
+  expect(screen.queryByRole('button', { name: /^Clear filters/ })).not.toBeInTheDocument();
 });
