@@ -1,4 +1,12 @@
-import type { Pitch } from '../../types/dashboard.types';
+import type { Pitch, PitchStatus } from '../../types/dashboard.types';
+
+export const PITCH_STATUS_LABEL: Record<PitchStatus, string> = {
+  new: 'New',
+  reviewed: 'Reviewed',
+  negotiating: 'Negotiating',
+  accepted: 'Accepted',
+  declined: 'Declined',
+};
 
 /* ------------------------------------------------------------------ */
 /*  Temporary static pitches for the inbox                             */
