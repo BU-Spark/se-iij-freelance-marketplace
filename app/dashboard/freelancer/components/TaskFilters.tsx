@@ -1,4 +1,4 @@
-import { FILTERS, type FeedFilter } from '../freelancer.utils';
+import type { FeedFilter } from '../freelancer.utils';
 import styles from '../freelancer.module.css';
 export type TaskFiltersProps = {
   query: string;
@@ -8,7 +8,6 @@ export type TaskFiltersProps = {
   categories: string[];
   locations: string[];
   onQueryChange: (value: string) => void;
-  onFilterChange: (value: FeedFilter) => void;
   onCategoryChange: (value: string) => void;
   onLocationChange: (value: string) => void;
   onClear: () => void;
@@ -21,7 +20,6 @@ export function TaskFilters({
   categories,
   locations,
   onQueryChange,
-  onFilterChange,
   onCategoryChange,
   onLocationChange,
   onClear,
@@ -38,21 +36,6 @@ export function TaskFilters({
             onQueryChange(event.target.value);
           }}
         />
-      </label>
-      <label>
-        Status
-        <select
-          value={filter}
-          onChange={(event) => {
-            onFilterChange(event.target.value as FeedFilter);
-          }}
-        >
-          {FILTERS.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
       </label>
       <label>
         Category
