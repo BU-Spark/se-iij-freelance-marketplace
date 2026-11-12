@@ -6,6 +6,7 @@ import { requireWorkspace } from '../../../../lib/workspace';
 import { PITCH_STATUS_LABEL } from '../../pitches/constants';
 import { categoryColor } from '../../../utils/category.utils';
 import { timeAgo } from '../../../utils/dashboard.utils';
+import { pitchHeading } from '../../../utils/pitch.utils';
 import styles from './myPitches.module.css';
 
 // A review changes the statuses shown here, so the list is never served from a cache
@@ -51,7 +52,7 @@ export default async function MyPitchesPage() {
                     </span>
                     <span className={`${styles.pill} ${styles[pitch.status]}`}>{PITCH_STATUS_LABEL[pitch.status]}</span>
                   </span>
-                  <span className={styles.slug}>{pitch.slug}</span>
+                  <span className={styles.pitchTitle}>{pitchHeading(pitch.slug)}</span>
                   <span className={styles.summary}>{pitch.summary}</span>
                   <span className={styles.footer}>
                     <span className={styles.meta}>Submitted {timeAgo(pitch.submittedAt)}</span>

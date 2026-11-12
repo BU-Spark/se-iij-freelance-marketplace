@@ -19,9 +19,10 @@ const pitch: Pitch = {
 };
 
 describe('PitchListItem', () => {
-  it('shows the slug, category, status, freelancer and time', () => {
+  it('shows a readable heading (not the slug), category, status, freelancer and time', () => {
     render(<PitchListItem pitch={pitch} selected={false} onSelect={jest.fn()} />);
-    expect(screen.getByText('shadow-budget-city-hall')).toBeInTheDocument();
+    expect(screen.getByText('Shadow budget city hall')).toBeInTheDocument();
+    expect(screen.queryByText('shadow-budget-city-hall')).not.toBeInTheDocument();
     expect(screen.getByText('Reporting/Writing')).toBeInTheDocument();
     expect(screen.getByText('New')).toBeInTheDocument();
     expect(screen.getByText('Marcus Thorne · 3h ago')).toBeInTheDocument();

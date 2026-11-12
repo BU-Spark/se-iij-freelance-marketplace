@@ -65,3 +65,9 @@ export const STATUS_FOR_DECISION: Record<PitchFeedback['decision'], PitchStatus>
 };
 
 export const statusForDecision = (decision: PitchFeedback['decision']): PitchStatus => STATUS_FOR_DECISION[decision];
+
+/** Readable heading from a pitch slug, so the slug itself is never shown: "shadow-budget-city-hall" → "Shadow budget city hall" */
+export function pitchHeading(slug: string): string {
+  const words = slug.replace(/-+/g, ' ').trim();
+  return words.charAt(0).toUpperCase() + words.slice(1);
+}

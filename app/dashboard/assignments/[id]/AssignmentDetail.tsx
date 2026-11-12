@@ -113,8 +113,6 @@ export default function AssignmentDetail({
       <p className={styles.meta}>
         Posted {formatDate(a.createdAt)}
         {new Date(a.updatedAt).getTime() !== new Date(a.createdAt).getTime() && ` · Updated ${formatDate(a.updatedAt)}`}
-        {' · '}
-        <span className={styles.slug}>{a.slug}</span>
       </p>
     </article>
   );

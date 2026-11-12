@@ -1,9 +1,10 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import PitchInbox from './PitchInbox';
 import { PITCHES } from '../../../test/fixtures/pitches';
+import { pitchHeading } from '../../utils/pitch.utils';
 
 const newCount = PITCHES.filter((p) => p.status === 'new').length;
-const cardFor = (slug: string) => screen.queryByRole('button', { name: new RegExp(slug) });
+const cardFor = (slug: string) => screen.queryByRole('button', { name: new RegExp(pitchHeading(slug)) });
 const tab = (name: string) =>
   within(screen.getByRole('group', { name: /filter pitches/i })).getByRole('button', { name });
 const action = (name: RegExp) =>
@@ -55,7 +56,7 @@ describe('PitchInbox', () => {
   it('opens the first pitch by default', () => {
     expect(cardFor(PITCHES[0].slug)).toHaveAttribute('aria-pressed', 'true');
     const detail = screen.getByRole('region', { name: /pitch details/i });
-    expect(within(detail).getByText(PITCHES[0].slug)).toBeInTheDocument();
+    expect(within(detail).getByText(pitchHeading(PITCHES[0].slug))).toBeInTheDocument();
   });
 
   it('marks an opened pitch reviewed when no action is taken', async () => {
@@ -68,6 +69,8 @@ describe('PitchInbox', () => {
     const second = PITCHES[1];
     fireEvent.click(cardFor(second.slug)!);
     expect(cardFor(second.slug)).toHaveAttribute('aria-pressed', 'true');
+    const detail = screen.getByRole('region', { name: /pitch details/i });
+    expect(within(detail).getByText(pitchHeading(second.slug))).toBeInTheDocument();
     await waitFor(() => expect(lastBodyFor(second.id)).toEqual({ status: 'reviewed' }));
     await waitFor(() => expect(within(cardFor(second.slug)!).getByText('Reviewed')).toBeInTheDocument());
   });

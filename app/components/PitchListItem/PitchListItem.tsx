@@ -2,6 +2,7 @@ import Avatar from '../Avatar/Avatar';
 import type { Pitch } from '../../types/dashboard.types';
 import { PITCH_STATUS_LABEL } from '../../dashboard/pitches/constants';
 import { categoryColor } from '../../utils/category.utils';
+import { pitchHeading } from '../../utils/pitch.utils';
 import { timeAgo } from '../../utils/dashboard.utils';
 import styles from './PitchListItem.module.css';
 
@@ -30,7 +31,7 @@ export default function PitchListItem({ pitch, selected, onSelect }: PitchListIt
           </span>
           <span className={`${styles.pill} ${styles[pitch.status]}`}>{PITCH_STATUS_LABEL[pitch.status]}</span>
         </span>
-        <span className={styles.slug}>{pitch.slug}</span>
+        <span className={styles.title}>{pitchHeading(pitch.slug)}</span>
         <span className={styles.meta}>
           {pitch.freelancer.name} · {timeAgo(pitch.submittedAt)}
         </span>
