@@ -29,7 +29,7 @@ describe('NavMenu', () => {
     setup({ activeRole: 'freelancer' });
     expect(screen.getByRole('link', { name: /available assignments/i })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /my pitches/i })).toHaveAttribute('href', '/dashboard/freelancer/pitches');
-    expect(screen.getByRole('link', { name: /make a pitch/i })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /make a pitch/i })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /roster/i })).not.toBeInTheDocument();
   });
 

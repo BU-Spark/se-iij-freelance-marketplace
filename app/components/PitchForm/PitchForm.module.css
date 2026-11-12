@@ -1,8 +1,8 @@
 .form,
 .preview {
   display: grid;
-  gap: 20px;
-  max-width: 960px;
+  gap: 22px;
+  width: 100%;
 }
 .form label {
   display: flex;
@@ -14,17 +14,27 @@
 .form input,
 .form select,
 .form textarea {
-  min-height: 44px;
-  padding: 10px 12px;
+  width: 100%;
+  min-height: 48px;
   box-sizing: border-box;
-  border: 1px solid #a5b0bf;
-  border-radius: 8px;
-  background: var(--white);
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
   color: var(--ink);
   font: inherit;
 }
 .form textarea {
+  height: auto;
+  padding: 12px 14px;
   resize: vertical;
+}
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  outline: none;
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 4px rgba(47, 85, 212, 0.12);
 }
 .form small {
   font-weight: 400;
@@ -37,9 +47,9 @@
 }
 .fieldset {
   min-width: 0;
-  border: 1px solid #a5b0bf;
-  border-radius: 8px;
-  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px;
 }
 .error {
   color: #a32020;
@@ -52,12 +62,19 @@
 }
 .actions button {
   min-height: 44px;
-  padding: 10px 20px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
   background: var(--c-blue);
   color: var(--white);
-  border-radius: 8px;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+}
+.actions button[type='button'] {
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
 }
 .actions button:disabled {
   opacity: 0.5;
