@@ -35,7 +35,7 @@ export default function MakePitchPage() {
         </header>
         <div className={styles.body}>
           <p className={styles.note}>
-            Drafts are saved only in this browser. Sending pitches and collaborator invitations is not connected yet.
+            Drafts are saved in this browser until you send them. Collaborator invitations are not connected yet.
           </p>
           <PitchComposer />
         </div>
