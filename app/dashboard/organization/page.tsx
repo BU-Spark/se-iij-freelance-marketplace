@@ -1,5 +1,4 @@
 import { auth } from '@clerk/nextjs/server';
-import Avatar from '../../components/Avatar/Avatar';
 import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
 import { countAssignmentsByStatus, listDeskAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import { listOrganizationTeam, type OrganizationMember } from '../../../lib/organization';
@@ -9,6 +8,7 @@ import { toDeskAssignment } from '../../utils/dashboard.utils';
 import { organizationName } from '../../utils/organization.utils';
 import { loadAssignmentView, type AssignmentView } from '../assignments/loadAssignmentView';
 import AssignmentsTable from '../components/AssignmentsTable';
+import OrganizationTeam from './OrganizationTeam';
 import styles from './organization.module.css';
 
 /*
@@ -128,20 +128,7 @@ export default async function OrganizationPage({ searchParams }: OrganizationPag
               {team.length === 0 ? (
                 <p className={styles.empty}>Nobody else is listed under this organization yet.</p>
               ) : (
-                <ul className={styles.team}>
-                  {team.map((member) => (
-                    <li key={member.id} className={styles.person}>
-                      <Avatar name={member.name} size={40} />
-                      <div>
-                        <p className={styles.personName}>{member.name}</p>
-                        <p className={styles.personMeta}>
-                          {[member.jobTitle, member.location].filter(Boolean).join(' · ')}
-                        </p>
-                        {member.desks.length > 0 && <p className={styles.desks}>{member.desks.join(', ')}</p>}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <OrganizationTeam members={team} />
               )}
             </section>
           </div>

@@ -95,6 +95,17 @@
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
   }
+
+  /* stacked, so the panel scrolls with the page again */
+  .teamPanel {
+    position: static;
+    max-height: none;
+  }
+
+  .teamScroll {
+    overflow: visible;
+    padding-right: 0;
+  }
 }
 
 .sectionHead {
@@ -137,6 +148,43 @@
 }
 
 /* ---- Team ---- */
+/* sticks beside the assignments and scrolls inside itself, so a big newsroom
+   cannot stretch the page */
+.teamPanel {
+  position: sticky;
+  top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  /* a fixed cap, so the team never fills the screen; it still shrinks on short windows */
+  max-height: min(520px, calc(100vh - 140px));
+}
+
+.teamTools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.teamTools > :first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.teamCount {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.teamScroll {
+  /* flex children need this for their own scroll area to take the leftover height */
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
 .team {
   display: flex;
   flex-direction: column;
