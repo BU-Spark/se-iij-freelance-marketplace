@@ -2,9 +2,10 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DeskAssignment } from '../../types/dashboard.types';
-import { taskStatus, type FeedFilter } from './freelancer.utils';
+import { taskStatus, FILTERS, type FeedFilter } from './freelancer.utils';
 import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters } from './components';
 import PageSearch from '../components/PageSearch';
+import SegmentedControl from '../components/SegmentedControl';
 import { formatDeskDate } from '../../utils/dashboard.utils';
 import styles from './freelancer.module.css';
 import dashboardStyles from '../dashboard.module.css';
@@ -63,7 +64,8 @@ export default function FreelancerDashboard({
 
   return (
     <>
-      <div className={styles.statusBar}>
+      {/* laid out like the editor desk: status bar, then your work on the left and the feed on the right */}
+      <div className={dashboardStyles.statusBar}>
         <div className={dashboardStyles.statusLead}>
           <p>
             <strong>{dateLabel}</strong>
@@ -77,50 +79,59 @@ export default function FreelancerDashboard({
           onSelect={showStatus}
         />
       </div>
-      {children}
-      <ActiveAssignments active={active} freelancerId={freelancerId} />
-      <section id="task-feed" tabIndex={-1} aria-label="Task feed" className={styles.section}>
-        <div className={styles.sectionHeading}>
-          <div>
-            <h2 id="feed-heading">Available assignments</h2>
-          </div>
+      <div className={dashboardStyles.columns}>
+        <div className={styles.side}>
+          {children}
+          <ActiveAssignments active={active} freelancerId={freelancerId} />
         </div>
-        <TaskFilters
-          query={query}
-          filter={filter}
-          category={category}
-          location={location}
-          categories={categories}
-          locations={locations}
-          onQueryChange={(value) => {
-            setQuery(value);
-          }}
-          onFilterChange={(value) => {
-            setFilter(value);
-          }}
-          onCategoryChange={(value) => {
-            setCategory(value);
-          }}
-          onLocationChange={(value) => {
-            setLocation(value);
-          }}
-          onClear={() => showStatus('all')}
-        />
-        <p role="status">
-          {matching.length
-            ? `Showing ${matching.length} of ${relevant.length} assignments`
-            : relevant.length === 0
-              ? 'No open assignments yet. New work shows up here as editors post it.'
-              : 'No matching tasks. Try changing or clearing your filters.'}
-        </p>
-        <ul className={styles.grid}>
-          {matching.map((task) => (
-            <li key={task.id}>
-              <TaskCard task={task} freelancerId={freelancerId} />
-            </li>
-          ))}
-        </ul>
-      </section>
+        <section id="task-feed" tabIndex={-1} aria-label="Task feed" className={styles.feed}>
+          <div className={dashboardStyles.sectionHead}>
+            <h2 id="feed-heading" className={dashboardStyles.sectionTitle}>
+              Available assignments
+            </h2>
+            <SegmentedControl
+              label="Filter assignments"
+              options={FILTERS}
+              value={filter}
+              onChange={(value) => {
+                setFilter(value);
+              }}
+            />
+          </div>
+          <TaskFilters
+            query={query}
+            filter={filter}
+            category={category}
+            location={location}
+            categories={categories}
+            locations={locations}
+            onQueryChange={(value) => {
+              setQuery(value);
+            }}
+            onCategoryChange={(value) => {
+              setCategory(value);
+            }}
+            onLocationChange={(value) => {
+              setLocation(value);
+            }}
+            onClear={() => showStatus('all')}
+          />
+          <p role="status" className={styles.feedStatus}>
+            {matching.length
+              ? `Showing ${matching.length} of ${relevant.length} assignments`
+              : relevant.length === 0
+                ? 'No open assignments yet. New work shows up here as editors post it.'
+                : 'No matching tasks. Try changing or clearing your filters.'}
+          </p>
+          <ul className={styles.grid}>
+            {matching.map((task) => (
+              <li key={task.id}>
+                <TaskCard task={task} freelancerId={freelancerId} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
     </>
   );
 }
