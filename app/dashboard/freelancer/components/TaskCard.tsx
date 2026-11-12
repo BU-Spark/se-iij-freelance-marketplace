@@ -1,5 +1,6 @@
+import Link from 'next/link';
 import type { DeskAssignment } from '../../../types/dashboard.types';
-import { formatDeadline, formatRate } from '../../../utils/dashboard.utils';
+import { assignmentDrawerHref, formatDeadline, formatRate } from '../../../utils/dashboard.utils';
 import { formatCompensation } from '../../../utils/assignment.utils';
 import { taskStatus, FILTERS } from '../freelancer.utils';
 import styles from '../freelancer.module.css';
@@ -15,7 +16,16 @@ export function TaskCard({ task, freelancerId }: TaskCardProps) {
         {task.urgent && <span className={styles.urgent}>Urgent</span>}
         <span>{task.category}</span>
       </div>
-      <h3>{task.title}</h3>
+      <h3>
+        {/* only open work can be read in full; invitations and assigned work stay summary-only for now */}
+        {task.status === 'open' ? (
+          <Link href={assignmentDrawerHref('/dashboard/assignments', task.id)} scroll={false}>
+            {task.title}
+          </Link>
+        ) : (
+          task.title
+        )}
+      </h3>
       <p>
         {task.contact.name} · {task.contact.desk}
       </p>
