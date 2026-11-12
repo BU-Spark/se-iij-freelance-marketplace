@@ -411,7 +411,7 @@ describe('Onboarding page', () => {
       expect(screen.getByText(/your freelancer profile is live/i)).toBeInTheDocument();
       expect(screen.getByRole('link', { name: /browse assignments/i })).toHaveAttribute(
         'href',
-        '/dashboard/assignments'
+        '/dashboard/freelancer'
       );
     });
   });
