@@ -235,8 +235,7 @@
 }
 .controls input,
 .controls select,
-.controls button,
-.pagination button {
+.controls button {
   min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--muted);
@@ -249,27 +248,16 @@
 .controls input {
   width: 100%;
 }
-.controls button,
-.pagination button {
+.controls button {
   cursor: pointer;
 }
-.controls button:disabled,
-.pagination button:disabled {
+.controls button:disabled {
   opacity: 0.5;
   cursor: default;
 }
-.controls :focus-visible,
-.pagination :focus-visible {
+.controls :focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;
-}
-.pagination {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 16px;
-  margin-top: 24px;
 }
 @media (max-width: 720px) {
   .details {

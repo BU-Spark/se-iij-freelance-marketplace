@@ -29,32 +29,27 @@ it('shows only personal in-progress tasks and excludes other private tasks', () 
   expect(feed().getByText('My invitation')).toBeInTheDocument();
 });
 
-it('paginates and resets to the first page when search or status changes', () => {
+it('lists every matching task without paging, and narrows by search and status', () => {
   render(<FreelancerDashboard assignments={tasks} freelancerId="me" />);
-  expect(feed().getAllByRole('article')).toHaveLength(4);
-  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
+  // 6 open, my invitation and my ongoing work: all on one page
+  expect(feed().getAllByRole('article')).toHaveLength(8);
+  expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Search tasks'), { target: { value: '  OPPORTUNITY  ' } });
-  expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(feed().getAllByRole('article')).toHaveLength(2);
+  expect(feed().getAllByRole('article')).toHaveLength(6);
+  expect(screen.getByRole('status')).toHaveTextContent('Showing 6 of 8 assignments');
   fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'in-progress' } });
-  expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
   expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
   fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
   expect(screen.getByLabelText('Search tasks')).toHaveValue('');
-  expect(feed().getAllByRole('article')).toHaveLength(4);
+  expect(feed().getAllByRole('article')).toHaveLength(8);
 });
 
-it('handles an empty feed with disabled pagination', () => {
+it('handles an empty feed', () => {
   render(<FreelancerDashboard assignments={[]} freelancerId="me" />);
   expect(screen.getByText('No assignments in progress.')).toBeInTheDocument();
   // an empty feed is not the same as filters hiding everything
   expect(screen.getByRole('status')).toHaveTextContent('No open assignments yet');
-  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
 });
 
 it('combines category, location, search, and status without hiding ongoing work', () => {
