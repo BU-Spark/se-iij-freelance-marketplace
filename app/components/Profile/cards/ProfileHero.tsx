@@ -12,11 +12,7 @@ export default function ProfileHero({ basic }: ProfileHeroProps) {
   return (
     <div className={styles.hero}>
       <span className={styles.heroPhoto}>
-        {basic.photoUrl ? (
-          <img src={basic.photoUrl} alt="" className={styles.photo} />
-        ) : (
-          <Avatar name={name} size={84} available={basic.availableNow} />
-        )}
+        <Avatar name={name} size={84} src={basic.photoUrl} available={basic.availableNow} />
       </span>
       <p className={styles.heroName}>{name || 'Your name'}</p>
     </div>

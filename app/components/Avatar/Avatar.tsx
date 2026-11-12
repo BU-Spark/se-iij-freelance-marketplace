@@ -1,3 +1,6 @@
+'use client';
+
+import { useState } from 'react';
 import styles from './Avatar.module.css';
 import { initials } from '../../utils/dashboard.utils';
 
@@ -20,15 +23,30 @@ function colorFor(name: string) {
 type AvatarProps = {
   name: string;
   size?: number;
+  /** the person's uploaded photo; the initials stand in when it is missing or will not load */
+  src?: string;
   /** draws the green "free right now" dot on the bottom-right corner */
   available?: boolean;
 };
 
-export default function Avatar({ name, size = 44, available = false }: AvatarProps) {
+/**
+ * The person's photo when they have one, otherwise their initials on a soft tile. Photo URLs are
+ * signed and short-lived, so a URL that expires while a page is open falls back to the initials
+ * instead of leaving a broken image.
+ */
+export default function Avatar({ name, size = 44, src, available = false }: AvatarProps) {
   const { bg, fg } = colorFor(name);
+  const [failed, setFailed] = useState(false);
+  const showPhoto = Boolean(src) && !failed;
+
   return (
     <span className={styles.avatar} style={{ width: size, height: size, background: bg, color: fg }} aria-hidden="true">
-      {initials(name)}
+      {showPhoto ? (
+        // eslint-disable-next-line @next/next/no-img-element -- signed S3 URLs expire, so the optimizer must not cache them
+        <img src={src} alt="" className={styles.photo} onError={() => setFailed(true)} />
+      ) : (
+        initials(name)
+      )}
       {available && <span className={styles.availableDot} data-testid="available-dot" />}
     </span>
   );
