@@ -77,6 +77,8 @@ export type DeskAssignment = {
   compensation?: string;
   /** the organization that posted it; absent on the sample desk data */
   organizationId?: string | null;
+  /** the editor who posted it; only the organization view shows it, since the desk is your own posts */
+  createdByName?: string;
   interestedIds: string[];
   invitedIds?: string[];
   /** expanded view of the assignment; only assignments saved in the database have one */

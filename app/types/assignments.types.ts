@@ -6,6 +6,8 @@ export type Assignment = {
   /** Null until assignments are tied to a real organizations row */
   organizationId: string | null;
   createdByUserId: string;
+  /** The editor who posted it; resolved from users so the organization view can name them */
+  createdByName?: string;
   title: string;
   description: string;
   category: string;

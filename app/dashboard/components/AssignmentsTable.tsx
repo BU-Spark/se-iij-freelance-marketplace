@@ -19,6 +19,8 @@ type AssignmentsTableProps = {
   assignedName?: (id?: string) => string | undefined;
   /** if given, rows offer the same Review candidates popup the cards do */
   onReview?: (assignmentId: string) => void;
+  /** show who posted each assignment; the desk is only your own posts, the organization page is not */
+  showCreator?: boolean;
 };
 
 /**
@@ -30,6 +32,7 @@ export default function AssignmentsTable({
   assignments,
   assignedName = () => undefined,
   onReview,
+  showCreator = false,
 }: AssignmentsTableProps) {
   const router = useRouter();
 
@@ -46,6 +49,7 @@ export default function AssignmentsTable({
           <tr>
             <th scope="col">Assignment</th>
             <th scope="col">Category</th>
+            {showCreator && <th scope="col">Created by</th>}
             <th scope="col">Status</th>
             <th scope="col">Deadline</th>
             <th scope="col">Candidates</th>
@@ -74,6 +78,7 @@ export default function AssignmentsTable({
                   {organization && <span className={styles.tableSub}>{organization}</span>}
                 </th>
                 <td data-label="Category">{a.category || '—'}</td>
+                {showCreator && <td data-label="Created by">{a.createdByName ?? '—'}</td>}
                 <td data-label="Status">{STATUS_LABEL[a.status]}</td>
                 <td data-label="Deadline">{a.deadline ? formatDeadline(a.deadline) : '—'}</td>
                 <td data-label="Candidates">

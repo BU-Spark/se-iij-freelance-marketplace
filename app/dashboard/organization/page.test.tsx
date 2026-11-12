@@ -25,6 +25,7 @@ const post: Assignment = {
   id: '11111111-1111-4111-8111-111111111111',
   organizationId: 'meridian',
   createdByUserId: 'user-1',
+  createdByName: 'Joey Lam',
   title: 'City hall budget',
   description: '',
   category: 'Reporting/Writing',
@@ -84,6 +85,19 @@ describe('Organization page', () => {
     const table = within(assignments).getByRole('table', { name: 'Assignments' });
     expect(within(table).getByText('City hall budget')).toBeInTheDocument();
     expect(within(table).getByText('Assigned')).toBeInTheDocument();
+  });
+
+  it('reads the whole organization and names who created each post', async () => {
+    await renderPage();
+
+    // the desk is personal now, so this page is the only place colleagues' posts appear
+    expect(listMock).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1' }), { scope: 'organization' });
+    expect(countsMock).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1' }), 'organization');
+
+    const assignments = screen.getByRole('region', { name: /assignments/i });
+    const table = within(assignments).getByRole('table', { name: 'Assignments' });
+    expect(within(table).getByRole('columnheader', { name: 'Created by' })).toBeInTheDocument();
+    expect(within(table).getByText('Joey Lam')).toBeInTheDocument();
   });
 
   it('offers the desk when you have no organization yet', async () => {
