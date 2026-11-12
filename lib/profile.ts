@@ -44,9 +44,19 @@ const PROFILE_SQL = `
   WHERE u.clerk_id = $1
 `;
 
-/** True once onboarding has written the signed-in user's row */
+/**
+ * True once onboarding has written the signed-in user's row *with a role*. A bare row — the one
+ * `ensureBasicUser` writes for admins — holds no roles, so it must not count as finished
+ * onboarding, or an account that lost its admin flag would land on a desk it never set up.
+ */
 export async function hasProfile(clerkId: string): Promise<boolean> {
-  const result = await db.query('SELECT 1 FROM users WHERE clerk_id = $1', [clerkId]);
+  const result = await db.query(
+    `SELECT 1
+       FROM users
+      WHERE clerk_id = $1
+        AND cardinality(roles) > 0`,
+    [clerkId]
+  );
   return Boolean(result.rowCount);
 }
 

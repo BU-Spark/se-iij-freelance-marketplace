@@ -6,6 +6,7 @@ import { redirect } from 'next/navigation';
 import { isSignedInUserAdmin } from '../../lib/auth';
 import { hasProfile, loadProfileRoles } from '../../lib/profile';
 import { EditorHeader } from '../components/header/EditorHeader';
+import ProfileUnavailable from './ProfileUnavailable';
 import DashboardLayout from './layout';
 
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn() }));
@@ -72,12 +73,14 @@ describe('DashboardLayout', () => {
     expect(redirectMock).toHaveBeenCalledWith('/onboarding');
   });
 
-  it('lets the page render when the check itself fails', async () => {
-    // a database blip must not look like an unfinished profile
+  it('does not open the dashboard when the profile check itself fails', async () => {
+    // failing open here is how people slipped past onboarding when the database was unreachable
     hasProfileMock.mockRejectedValue(new Error('ECONNREFUSED'));
 
-    expect(pageIn(await render())).toBe('dashboard');
+    const tree = await render();
+
     expect(redirectMock).not.toHaveBeenCalled();
+    expect(tree.type).toBe(ProfileUnavailable);
     expect(consoleMock).toHaveBeenCalled();
   });
 
