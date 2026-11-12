@@ -34,6 +34,26 @@
   color: var(--c-blue);
 }
 
+/* the status tabs and the way out to the archive */
+.barActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.archiveLink {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.archiveLink:hover {
+  color: var(--c-blue);
+}
+
 /* list on the left, details on the right */
 .layout {
   display: grid;
@@ -76,6 +96,21 @@
 .empty {
   margin: 0;
   color: var(--muted);
+}
+
+/* shown on a pitch that has just been declined and moved to the archive */
+.archivedNote {
+  margin: 20px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #f7f8fa;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.archivedNote a {
+  color: var(--c-blue);
+  font-weight: 600;
 }
 
 /* phones and small tablets: one column */

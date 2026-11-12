@@ -3,6 +3,9 @@ import PitchInbox from './PitchInbox';
 import { PITCHES } from '../../../test/fixtures/pitches';
 
 const newCount = PITCHES.filter((p) => p.status === 'new').length;
+/** Declined pitches belong to the archive, so they never reach the inbox */
+const onDesk = PITCHES.filter((p) => p.status !== 'declined');
+const onDeskCount = onDesk.length;
 const cardFor = (slug: string) => screen.queryByRole('button', { name: new RegExp(slug) });
 const tab = (name: string) =>
   within(screen.getByRole('group', { name: /filter pitches/i })).getByRole('button', { name });
@@ -44,12 +47,19 @@ describe('PitchInbox', () => {
     await waitFor(() => expect(within(cardFor(PITCHES[0].slug)!).getByText('Reviewed')).toBeInTheDocument());
   });
 
-  it('lists every pitch and counts down the unread ones as they are opened', async () => {
+  it('lists every pitch on the desk and counts down the unread ones as they are opened', async () => {
     expect(screen.getByRole('heading', { name: 'Inbox' })).toBeInTheDocument();
-    expect(screen.getByText(`${PITCHES.length} pitches`)).toBeInTheDocument();
-    PITCHES.forEach((p) => expect(cardFor(p.slug)).toBeInTheDocument());
+    expect(screen.getByText(`${onDeskCount} pitches`)).toBeInTheDocument();
+    onDesk.forEach((p) => expect(cardFor(p.slug)).toBeInTheDocument());
     // the pitch on screen has been read, so one fewer is new
     expect(await screen.findByText(`${newCount - 1} new`)).toBeInTheDocument();
+  });
+
+  it('leaves declined pitches out of the inbox and points at the archive', () => {
+    PITCHES.filter((p) => p.status === 'declined').forEach((p) => expect(cardFor(p.slug)).not.toBeInTheDocument());
+    expect(screen.getByRole('link', { name: /archive/i })).toHaveAttribute('href', '/dashboard/pitches/archive');
+    expect(tab('Accepted')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Declined' })).not.toBeInTheDocument();
   });
 
   it('opens the first pitch by default', () => {
@@ -85,15 +95,18 @@ describe('PitchInbox', () => {
     expect(screen.getByRole('region', { name: 'Latest pitch feedback' })).toHaveTextContent('Strong proposal.');
   });
 
-  it('declines a pitch through the two-step review', async () => {
+  it('declines a pitch through the two-step review and moves it to the archive', async () => {
     fireEvent.click(action(/^Decline/));
     fireEvent.change(screen.getByLabelText('Comments'), { target: { value: 'Not for this desk.' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit feedback' }));
 
-    await waitFor(() => expect(within(cardFor(PITCHES[0].slug)!).getByText('Declined')).toBeInTheDocument());
+    await waitFor(() => expect(cardFor(PITCHES[0].slug)).not.toBeInTheDocument());
     expect(lastBodyFor(PITCHES[0].id)).toEqual({
       feedback: { decision: 'rejected', comments: 'Not for this desk.', strengths: '', improvements: '' },
     });
+    expect(screen.getByText(`${onDeskCount - 1} pitches`)).toBeInTheDocument();
+    // the pitch stays open so the desk can see where it went
+    expect(screen.getByText(/This pitch is in the/)).toHaveTextContent('archive');
   });
 
   it('leaves the pitch untouched and says so when the save fails', async () => {
@@ -110,12 +123,17 @@ describe('PitchInbox', () => {
   });
 
   it('shows only the pitches for the chosen tab', () => {
-    fireEvent.click(tab('Declined'));
-    expect(tab('Declined')).toHaveAttribute('aria-pressed', 'true');
-    PITCHES.forEach((p) => {
-      if (p.status === 'declined') expect(cardFor(p.slug)).toBeInTheDocument();
+    fireEvent.click(tab('Accepted'));
+    expect(tab('Accepted')).toHaveAttribute('aria-pressed', 'true');
+    onDesk.forEach((p) => {
+      if (p.status === 'accepted') expect(cardFor(p.slug)).toBeInTheDocument();
       else expect(cardFor(p.slug)).not.toBeInTheDocument();
     });
+  });
+
+  it('says so when a tab has no pitches', () => {
+    fireEvent.click(tab('Negotiating'));
+    expect(screen.getByText('No negotiating pitches.')).toBeInTheDocument();
   });
 
   it('says so when a tab has no pitches', () => {

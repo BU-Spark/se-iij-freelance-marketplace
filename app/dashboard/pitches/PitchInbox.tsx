@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import SegmentedControl, { type SegmentOption } from '../components/SegmentedControl';
 import PitchListItem from '../../components/PitchListItem/PitchListItem';
 import PitchDetail from '../../components/PitchDetail/PitchDetail';
@@ -14,11 +15,13 @@ const FILTERS: SegmentOption<PitchFilter>[] = [
   { value: 'reviewed', label: 'Reviewed' },
   { value: 'negotiating', label: 'Negotiating' },
   { value: 'accepted', label: 'Accepted' },
-  { value: 'declined', label: 'Declined' },
 ];
 
-/** true if the pitch should show under this tab */
-const matches = (p: Pitch, filter: PitchFilter) => filter === 'all' || p.status === filter;
+/**
+ * true if the pitch shows under this tab. Declined pitches are never in the inbox — they live in
+ * the archive — so "All" means everything still on the desk.
+ */
+const matches = (p: Pitch, filter: PitchFilter) => (filter === 'all' ? p.status !== 'declined' : p.status === filter);
 
 type PitchInboxProps = {
   pitches: Pitch[];
@@ -38,7 +41,9 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
   const visible = items.filter((p) => matches(p, filter));
   // look in all items, so the open pitch stays open even if its new status hides it from this tab
   const selected = items.find((p) => p.id === selectedId);
-  const newCount = items.filter((p) => p.status === 'new').length;
+  // declined pitches have left for the archive, so they don't count towards the desk
+  const onDesk = items.filter((p) => p.status !== 'declined');
+  const newCount = onDesk.filter((p) => p.status === 'new').length;
   const filterLabel = FILTERS.find((f) => f.value === filter)?.label.toLowerCase();
 
   // switch tab and open the first pitch in it
@@ -82,9 +87,14 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
       {/* summary + status tabs */}
       <div className={styles.bar}>
         <p className={styles.summary}>
-          <strong>{items.length} pitches</strong> on the desk · <span className={styles.newCount}>{newCount} new</span>
+          <strong>{onDesk.length} pitches</strong> on the desk · <span className={styles.newCount}>{newCount} new</span>
         </p>
-        <SegmentedControl label="Filter pitches" options={FILTERS} value={filter} onChange={changeFilter} />
+        <div className={styles.barActions}>
+          <SegmentedControl label="Filter pitches" options={FILTERS} value={filter} onChange={changeFilter} />
+          <Link href="/dashboard/pitches/archive" className={styles.archiveLink}>
+            Archive →
+          </Link>
+        </div>
       </div>
 
       {error && (
@@ -116,6 +126,12 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
           {selected ? (
             <>
               <PitchDetail pitch={selected} />
+              {selected.status === 'declined' && (
+                <p className={styles.archivedNote}>
+                  This pitch is in the <Link href="/dashboard/pitches/archive">archive</Link>. Choosing another action
+                  moves it back to the inbox.
+                </p>
+              )}
               <PitchActions
                 key={selected.id}
                 status={selected.status}
