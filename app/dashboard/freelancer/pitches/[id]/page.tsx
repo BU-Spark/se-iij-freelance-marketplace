@@ -1,17 +1,31 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { auth } from '@clerk/nextjs/server';
+import type { PitchFeedback } from '../../../../types/dashboard.types';
 import PitchDetail from '../../../../components/PitchDetail/PitchDetail';
-import { PITCHES, PITCH_STATUS_LABEL } from '../../../pitches/constants';
-import { DEMO_FREELANCER_ID } from '../constants';
+import { canViewPitch, getPitch, loadPitchViewer, toPitch } from '../../../../../lib/pitches';
+import { requireWorkspace } from '../../../../../lib/workspace';
+import { PITCH_STATUS_LABEL } from '../../../pitches/constants';
 import styles from '../myPitches.module.css';
 
 type PitchDetailPageProps = { params: Promise<{ id: string }> };
 
-export default async function FreelancerPitchDetailPage({ params }: PitchDetailPageProps) {
-  const { id } = await params;
-  const pitch = PITCHES.find((item) => item.id === id && item.freelancer.id === DEMO_FREELANCER_ID);
+const DECISION_LABEL: Record<PitchFeedback['decision'], string> = {
+  accepted: 'Accepted',
+  rejected: 'Rejected',
+  revision_requested: 'Revision requested',
+};
 
-  if (!pitch) notFound();
+export default async function FreelancerPitchDetailPage({ params }: PitchDetailPageProps) {
+  await requireWorkspace('freelancer');
+
+  const { id } = await params;
+  const { userId } = await auth();
+  const viewer = userId ? await loadPitchViewer(userId) : null;
+  const pitch = await getPitch(id);
+
+  // 404 for someone else's pitch, so ids don't leak between workspaces
+  if (!pitch || !canViewPitch(viewer, pitch)) notFound();
 
   return (
     <div className={styles.shell}>
@@ -26,13 +40,22 @@ export default async function FreelancerPitchDetailPage({ params }: PitchDetailP
             <span className={`${styles.pill} ${styles[pitch.status]}`}>{PITCH_STATUS_LABEL[pitch.status]}</span>
           </div>
 
-          <PitchDetail pitch={pitch} />
+          <PitchDetail pitch={toPitch(pitch)} />
 
           <section className={styles.feedback} aria-labelledby="pitch-feedback-heading">
             <h2 id="pitch-feedback-heading" className={styles.feedbackTitle}>
               Editor feedback
             </h2>
-            <p className={styles.feedbackEmpty}>No feedback has been shared on this pitch yet.</p>
+            {pitch.feedback ? (
+              <>
+                <p>{DECISION_LABEL[pitch.feedback.decision]}</p>
+                <p>{pitch.feedback.comments}</p>
+                {pitch.feedback.strengths && <p>Strengths: {pitch.feedback.strengths}</p>}
+                {pitch.feedback.improvements && <p>Improvements: {pitch.feedback.improvements}</p>}
+              </>
+            ) : (
+              <p className={styles.feedbackEmpty}>No feedback has been shared on this pitch yet.</p>
+            )}
           </section>
         </section>
       </main>

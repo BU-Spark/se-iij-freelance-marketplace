@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import PitchInbox from './PitchInbox';
-import { PITCHES } from './constants';
+import { PITCHES } from '../../../test/fixtures/pitches';
 
 const newCount = PITCHES.filter((p) => p.status === 'new').length;
 const cardFor = (slug: string) => screen.queryByRole('button', { name: new RegExp(slug) });
