@@ -2,20 +2,21 @@
 
 import { useState } from 'react';
 import clsx from 'clsx';
-import SegmentedControl from '../dashboard/components/SegmentedControl';
 import { useToast } from '../components/Toast/ToastProvider';
 import { timeAgo } from '../utils/dashboard.utils';
 import type { FlagReport, FlagStatus, FlagTarget } from '../types/admin.types';
 import styles from './admin.module.css';
 
-/** One tab per kind of flagged thing, so the team reviews like with like */
-const TABS: { value: FlagTarget; label: string; noun: string; single: string }[] = [
-  { value: 'pitch', label: 'Pitches', noun: 'pitches', single: 'Flagged pitch' },
-  { value: 'account', label: 'Accounts', noun: 'accounts', single: 'Flagged account' },
-  { value: 'assignment', label: 'Assignments', noun: 'assignments', single: 'Flagged assignment' },
+type Filter = 'all' | FlagTarget;
+type View = 'todo' | 'done';
+
+const KINDS: { value: FlagTarget; label: string; single: string }[] = [
+  { value: 'pitch', label: 'Pitches', single: 'Flagged pitch' },
+  { value: 'account', label: 'Accounts', single: 'Flagged account' },
+  { value: 'assignment', label: 'Assignments', single: 'Flagged assignment' },
 ];
 
-type View = 'queue' | 'closed';
+const kindOf = (value: FlagTarget) => KINDS.find((k) => k.value === value)!;
 
 const STATUS_LABELS: Record<FlagStatus, string> = {
   open: 'New',
@@ -28,124 +29,140 @@ const STATUS_LABELS: Record<FlagStatus, string> = {
 const MESSAGES: Record<FlagStatus, string> = {
   open: 'Flag reopened.',
   reviewing: 'Flag marked as in review.',
-  resolved: 'Flag resolved. You can still change it under Closed.',
-  dismissed: 'Flag dismissed. You can still change it under Closed.',
+  resolved: 'Flag resolved. You can still change it under Done.',
+  dismissed: 'Flag dismissed. You can still change it under Done.',
 };
 
 const isClosed = (status: FlagStatus) => status === 'resolved' || status === 'dismissed';
 
 /**
- * The queue of flags raised from across the marketplace, split by what was flagged. Each card says
- * what it is, why it is here, and carries its own buttons. Decisions are never final: closed flags
- * stay under "Closed", where they can be reopened or changed.
+ * The flags raised across the marketplace, in one list: "To do" or "Done", narrowed by type if
+ * needed. Each card says what it is, why it is here, and carries its own buttons. Decisions are
+ * never final: they move to "Done", where they can be changed or reopened.
  */
 export default function AdminInbox({ reports }: { reports: FlagReport[] }) {
-  const [tab, setTab] = useState<FlagTarget>('pitch');
-  const [view, setView] = useState<View>('queue');
+  const [view, setView] = useState<View>('todo');
+  const [filter, setFilter] = useState<Filter>('all');
   // To Do: send status changes to the backend once the flags API exists
-  const [items, setItems] = useState(reports);
+  const [flags, setFlags] = useState(reports);
   const { showToast } = useToast();
 
-  const inView = (v: View) => items.filter((r) => isClosed(r.status) === (v === 'closed'));
-  const visible = inView(view);
-  const countFor = (type: FlagTarget) => visible.filter((r) => r.targetType === type).length;
-  const shown = visible.filter((r) => r.targetType === tab);
-  const current = TABS.find((t) => t.value === tab)!;
+  const flagsIn = (v: View) =>
+    flags.filter((f) => isClosed(f.status) === (v === 'done')).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  const todo = flagsIn('todo');
+  const done = flagsIn('done');
+  const inView = view === 'todo' ? todo : done;
+  const shown = filter === 'all' ? inView : inView.filter((f) => f.targetType === filter);
+  const countFor = (f: Filter) => (f === 'all' ? inView.length : inView.filter((r) => r.targetType === f).length);
 
   const setStatus = (id: string, status: FlagStatus) => {
-    setItems((list) => list.map((r) => (r.id === id ? { ...r, status } : r)));
+    setFlags((list) => list.map((f) => (f.id === id ? { ...f, status } : f)));
     showToast(MESSAGES[status], status === 'reviewing' ? 'info' : 'success');
   };
 
-  const button = (report: FlagReport, status: FlagStatus, label: string, primary = false) => (
+  const button = (flag: FlagReport, status: FlagStatus, label: string, primary = false) => (
     <button
       type="button"
       className={clsx(styles.action, primary && styles.primaryAction)}
-      onClick={() => setStatus(report.id, status)}
+      onClick={() => setStatus(flag.id, status)}
     >
       {label}
     </button>
   );
 
-  return (
-    <section>
-      <div className={styles.toolbar}>
-        <div role="group" aria-label="Flag type" className={styles.filters}>
-          {TABS.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              aria-pressed={t.value === tab}
-              className={styles.filter}
-              onClick={() => setTab(t.value)}
-            >
-              {t.label}
-              <span className={styles.count}>{countFor(t.value)}</span>
-            </button>
-          ))}
+  const flagCard = (flag: FlagReport) => (
+    <>
+      <div className={styles.cardTop}>
+        <span className={styles.kind}>
+          <span className={clsx(styles.kindDot, styles[`kind_${flag.targetType}`])} aria-hidden="true" />
+          {kindOf(flag.targetType).single}
+          {flag.status !== 'open' && (
+            <span className={clsx(styles.status, styles[flag.status])}>{STATUS_LABELS[flag.status]}</span>
+          )}
+        </span>
+        <time className={styles.meta} dateTime={flag.createdAt}>
+          {timeAgo(new Date(flag.createdAt))}
+        </time>
+      </div>
+
+      <div>
+        <h3 className={styles.cardTitle}>{flag.targetLabel}</h3>
+        <p className={styles.meta}>
+          Reported by <strong>{flag.reporterName}</strong>
+        </p>
+      </div>
+
+      <p className={styles.reason}>
+        <span className={styles.reasonLabel}>Why it was flagged</span>
+        {flag.reason}
+      </p>
+
+      <div className={styles.cardFooter}>
+        <p className={styles.hint}>
+          {isClosed(flag.status)
+            ? 'Changed your mind? You can switch the decision or reopen it.'
+            : 'Dismiss if nothing is wrong. Resolve once you have dealt with it.'}
+        </p>
+        <div className={styles.actions} role="group" aria-label={`Actions for ${flag.targetLabel}`}>
+          {flag.status === 'open' && button(flag, 'reviewing', 'Mark in review')}
+          {!isClosed(flag.status) && button(flag, 'dismissed', 'Dismiss')}
+          {!isClosed(flag.status) && button(flag, 'resolved', 'Resolve', true)}
+          {flag.status === 'resolved' && button(flag, 'dismissed', 'Change to dismissed')}
+          {flag.status === 'dismissed' && button(flag, 'resolved', 'Change to resolved')}
+          {isClosed(flag.status) && button(flag, 'reviewing', 'Reopen', true)}
         </div>
-        <SegmentedControl<View>
-          label="Flag status"
-          options={[
-            { value: 'queue', label: `Needs review (${inView('queue').length})` },
-            { value: 'closed', label: `Closed (${inView('closed').length})` },
-          ]}
-          value={view}
-          onChange={setView}
-        />
+      </div>
+    </>
+  );
+
+  return (
+    <section className={styles.inbox} aria-label="Inbox">
+      <div className={styles.views} role="group" aria-label="Show">
+        {(
+          [
+            ['todo', 'To do', todo.length],
+            ['done', 'Done', done.length],
+          ] as const
+        ).map(([value, label, count]) => (
+          <button
+            key={value}
+            type="button"
+            className={styles.viewTab}
+            aria-pressed={view === value}
+            onClick={() => setView(value)}
+          >
+            {label}
+            <span className={styles.viewCount}>{count}</span>
+          </button>
+        ))}
+      </div>
+
+      <div role="group" aria-label="Type" className={styles.filters}>
+        {[{ value: 'all' as Filter, label: 'All' }, ...KINDS].map((k) => (
+          <button
+            key={k.value}
+            type="button"
+            aria-pressed={filter === k.value}
+            className={styles.filter}
+            onClick={() => setFilter(k.value)}
+          >
+            {k.label}
+            <span className={styles.count}>{countFor(k.value)}</span>
+          </button>
+        ))}
       </div>
 
       {shown.length === 0 ? (
         <p className={styles.emptyCard}>
-          <strong>{view === 'queue' ? 'All clear' : 'Nothing closed yet'}</strong>
-          {view === 'queue'
-            ? `No flagged ${current.noun} need review.`
-            : `Resolved and dismissed ${current.noun} will show here.`}
+          <strong>{view === 'todo' ? 'All caught up' : 'Nothing done yet'}</strong>
+          {view === 'todo' ? 'No flags need review right now.' : 'Flags you resolve or dismiss will show here.'}
         </p>
       ) : (
         <ul className={styles.cards}>
-          {shown.map((report) => (
-            <li key={report.id} className={clsx(styles.card, styles[`edge_${report.targetType}`])}>
-              <div className={styles.cardTop}>
-                <span className={styles.kind}>
-                  <span className={clsx(styles.kindDot, styles[`kind_${report.targetType}`])} aria-hidden="true" />
-                  {current.single}
-                  {report.status !== 'open' && (
-                    <span className={clsx(styles.status, styles[report.status])}>{STATUS_LABELS[report.status]}</span>
-                  )}
-                </span>
-                <time className={styles.meta} dateTime={report.createdAt}>
-                  {timeAgo(new Date(report.createdAt))}
-                </time>
-              </div>
-
-              <div>
-                <h3 className={styles.cardTitle}>{report.targetLabel}</h3>
-                <p className={styles.meta}>
-                  Reported by <strong>{report.reporterName}</strong>
-                </p>
-              </div>
-
-              <p className={styles.reason}>
-                <span className={styles.reasonLabel}>Why it was flagged</span>
-                {report.reason}
-              </p>
-
-              <div className={styles.cardFooter}>
-                <p className={styles.hint}>
-                  {isClosed(report.status)
-                    ? 'Changed your mind? You can switch the decision or reopen it.'
-                    : 'Dismiss if nothing is wrong. Resolve once you have dealt with it.'}
-                </p>
-                <div className={styles.actions} role="group" aria-label={`Actions for ${report.targetLabel}`}>
-                  {report.status === 'open' && button(report, 'reviewing', 'Mark in review')}
-                  {!isClosed(report.status) && button(report, 'dismissed', 'Dismiss')}
-                  {!isClosed(report.status) && button(report, 'resolved', 'Resolve', true)}
-                  {report.status === 'resolved' && button(report, 'dismissed', 'Change to dismissed')}
-                  {report.status === 'dismissed' && button(report, 'resolved', 'Change to resolved')}
-                  {isClosed(report.status) && button(report, 'reviewing', 'Reopen', true)}
-                </div>
-              </div>
+          {shown.map((flag) => (
+            <li key={flag.id} className={clsx(styles.card, styles[`edge_${flag.targetType}`])}>
+              {flagCard(flag)}
             </li>
           ))}
         </ul>

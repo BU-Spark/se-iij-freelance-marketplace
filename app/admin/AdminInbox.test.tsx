@@ -21,10 +21,14 @@ const reports: FlagReport[] = [
   { ...report, id: 'f3', targetType: 'account', targetLabel: 'Sam Rivera' },
 ];
 
-const tab = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
-const actionsFor = (label: string) => screen.getByRole('group', { name: `Actions for ${label}` });
+const button = (group: string, name: string) =>
+  within(screen.getByRole('group', { name: group })).getByRole('button', { name: new RegExp(`^${name}`) });
+const view = (name: string) => button('Show', name);
+const filter = (name: string) => button('Type', name);
 const click = (label: string, action: string) =>
-  userEvent.click(within(actionsFor(label)).getByRole('button', { name: action }));
+  userEvent.click(
+    within(screen.getByRole('group', { name: `Actions for ${label}` })).getByRole('button', { name: action })
+  );
 
 const renderInbox = () =>
   render(
@@ -34,34 +38,32 @@ const renderInbox = () =>
   );
 
 describe('AdminInbox', () => {
-  it('opens on flagged pitches that need review, with counts', () => {
+  it('lists every flag under To do, newest first, with counts', () => {
     renderInbox();
 
-    expect(tab('Pitches')).toHaveAttribute('aria-pressed', 'true');
-    expect(tab('Needs review')).toHaveAttribute('aria-pressed', 'true');
-    expect(within(tab('Accounts')).getByText('2')).toBeInTheDocument();
-    expect(within(tab('Assignments')).getByText('0')).toBeInTheDocument();
-    expect(tab('Needs review')).toHaveTextContent('Needs review (3)');
-    expect(tab('Closed')).toHaveTextContent('Closed (0)');
+    expect(view('To do')).toHaveAttribute('aria-pressed', 'true');
+    expect(view('To do')).toHaveTextContent('To do3');
+    expect(view('Done')).toHaveTextContent('Done0');
+    expect(filter('All')).toHaveTextContent('All3');
+    expect(filter('Accounts')).toHaveTextContent('Accounts2');
+    expect(filter('Assignments')).toHaveTextContent('Assignments0');
 
-    const [row] = screen.getAllByRole('listitem');
-    expect(row).toHaveTextContent('City council budget leak');
-    expect(row).toHaveTextContent('Looks like spam');
-    expect(row).toHaveTextContent('Reported by Ada Editor');
-    expect(row).toHaveTextContent('Flagged pitch');
-    // every card carries its own buttons
-    expect(within(actionsFor('City council budget leak')).getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
+    const cards = screen.getAllByRole('listitem');
+    expect(cards).toHaveLength(3);
+    expect(cards[0]).toHaveTextContent('Flagged pitch');
+    expect(cards[0]).toHaveTextContent('Reported by Ada Editor');
+    expect(cards[0]).toHaveTextContent('Looks like spam');
   });
 
-  it('switches type, and shows an empty state when there is none', async () => {
+  it('filters by type, and shows an empty state when there is none', async () => {
     renderInbox();
 
-    await userEvent.click(tab('Accounts'));
+    await userEvent.click(filter('Accounts'));
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByText('In review')).toBeInTheDocument();
+    expect(within(screen.getAllByRole('listitem')[0]).getByText('In review')).toBeInTheDocument();
 
-    await userEvent.click(tab('Assignments'));
-    expect(screen.getByText('All clear')).toBeInTheDocument();
+    await userEvent.click(filter('Assignments'));
+    expect(screen.getByText('All caught up')).toBeInTheDocument();
   });
 
   it('marks a new flag as in review', async () => {
@@ -70,41 +72,46 @@ describe('AdminInbox', () => {
     await click('City council budget leak', 'Mark in review');
 
     expect(screen.getByText('Flag marked as in review.')).toBeInTheDocument();
-    expect(within(screen.getByRole('listitem')).getByText('In review')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Mark in review' })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Actions for City council budget leak' })).queryByRole('button', {
+        name: 'Mark in review',
+      })
+    ).not.toBeInTheDocument();
   });
 
   it.each([
-    ['Resolve', 'Resolved', 'Flag resolved. You can still change it under Closed.'],
-    ['Dismiss', 'Dismissed', 'Flag dismissed. You can still change it under Closed.'],
-  ])('%s moves the flag to Closed instead of deleting it', async (action, status, message) => {
+    ['Resolve', 'Resolved', 'Flag resolved. You can still change it under Done.'],
+    ['Dismiss', 'Dismissed', 'Flag dismissed. You can still change it under Done.'],
+  ])('%s moves the flag to Done instead of deleting it', async (action, status, message) => {
     renderInbox();
 
     await click('City council budget leak', action);
 
     expect(screen.getByText(message)).toBeInTheDocument();
-    // gone from the queue...
-    expect(screen.getByText('All clear')).toBeInTheDocument();
-    expect(tab('Closed')).toHaveTextContent('Closed (1)');
+    expect(screen.queryByText('City council budget leak')).not.toBeInTheDocument();
+    expect(view('Done')).toHaveTextContent('Done1');
 
-    // ...but still there under Closed, ready to be reopened
-    await userEvent.click(tab('Closed'));
+    await userEvent.click(view('Done'));
     expect(within(screen.getByRole('listitem')).getByText(status)).toBeInTheDocument();
-    expect(within(actionsFor('City council budget leak')).getByRole('button', { name: 'Reopen' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Actions for City council budget leak' })).getByRole('button', {
+        name: 'Reopen',
+      })
+    ).toBeInTheDocument();
   });
 
-  it('lets a closed decision be changed or reopened', async () => {
+  it('lets a done decision be changed or reopened', async () => {
     renderInbox();
     await click('City council budget leak', 'Resolve');
-    await userEvent.click(tab('Closed'));
+    await userEvent.click(view('Done'));
 
     await click('City council budget leak', 'Change to dismissed');
     expect(within(screen.getByRole('listitem')).getByText('Dismissed')).toBeInTheDocument();
 
     await click('City council budget leak', 'Reopen');
-    expect(tab('Closed')).toHaveTextContent('Closed (0)');
+    expect(view('Done')).toHaveTextContent('Done0');
 
-    await userEvent.click(tab('Needs review'));
-    expect(within(screen.getByRole('listitem')).getByText('In review')).toBeInTheDocument();
+    await userEvent.click(view('To do'));
+    expect(screen.getByText('City council budget leak')).toBeInTheDocument();
   });
 });
