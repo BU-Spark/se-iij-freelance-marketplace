@@ -102,6 +102,12 @@ describe('Dashboard', () => {
     expect(screen.getByText('Showing 1 of 3')).toBeInTheDocument();
   });
 
+  it('offers one search box that filters both columns', async () => {
+    await renderDashboard();
+
+    expect(screen.getByRole('searchbox', { name: /search assignments and roster/i })).toBeInTheDocument();
+  });
+
   it('says nothing is open rather than showing sample work nobody posted', async () => {
     await renderDashboard();
     const column = screen.getByRole('region', { name: /assignments/i });

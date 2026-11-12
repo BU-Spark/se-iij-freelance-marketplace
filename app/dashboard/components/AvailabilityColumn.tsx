@@ -4,8 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import SegmentedControl, { type SegmentOption } from './SegmentedControl';
 import RosterCard from '../../components/RosterCard/RosterCard';
+import { useDeskQuery } from './deskQuery';
 import type { RosterMember, RosterView } from '../../types/dashboard.types';
-import { countOnRoster } from '../../utils/dashboard.utils';
+import { countOnRoster, memberMatches } from '../../utils/dashboard.utils';
 import styles from '../dashboard.module.css';
 
 const VIEWS: SegmentOption<RosterView>[] = [
@@ -23,6 +24,8 @@ type AvailabilityColumnProps = {
 /** Left column of the dashboard: roster cards with a day / week / month toggle */
 export default function AvailabilityColumn({ roster, loadFailed = false }: AvailabilityColumnProps) {
   const [view, setView] = useState<RosterView>('day');
+  const { query } = useDeskQuery();
+  const shown = roster.filter((m) => memberMatches(m, query));
 
   return (
     <section aria-labelledby="availability-heading">
@@ -32,7 +35,7 @@ export default function AvailabilityColumn({ roster, loadFailed = false }: Avail
             Availability
           </h2>
           <p className={styles.sectionSub}>
-            {countOnRoster(roster)} of {roster.length} on roster
+            {query.trim() ? `${shown.length} matching` : `${countOnRoster(roster)} of ${roster.length} on roster`}
           </p>
         </div>
         <SegmentedControl label="Availability range" options={VIEWS} value={view} onChange={setView} />
@@ -52,8 +55,13 @@ export default function AvailabilityColumn({ roster, loadFailed = false }: Avail
               <Link href="/dashboard/roster">Build your roster</Link>
             </span>
           </li>
+        ) : shown.length === 0 ? (
+          <li className={styles.emptyRoster}>
+            <strong>No one matches “{query.trim()}”</strong>
+            <span>Try a name, beat or city.</span>
+          </li>
         ) : (
-          roster.map((m) => (
+          shown.map((m) => (
             <li key={m.id}>
               <RosterCard member={m} view={view} />
             </li>

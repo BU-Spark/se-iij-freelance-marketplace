@@ -2,7 +2,8 @@ import { Suspense } from 'react';
 import { auth } from '@clerk/nextjs/server';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
-import PageSearch from './components/PageSearch';
+import DeskSearch from './components/DeskSearch';
+import { DeskQueryProvider } from './components/deskQuery';
 import styles from './dashboard.module.css';
 import { NewAssignmentFromUrl } from '../components';
 import type { AssignmentStatus, RosterMember } from '../types/dashboard.types';
@@ -71,49 +72,51 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
   const assignments = posted.map(toDeskAssignment);
 
   return (
-    <div className={styles.shell}>
-      {/* ---- Status bar ---- */}
-      <div className={styles.statusBar}>
-        <div className={styles.statusLead}>
-          <p>
-            <strong>{formatDeskDate(new Date())}</strong>
-          </p>
-          {/* Generic for now: highlights matches in the columns, does not filter yet */}
-          <PageSearch targetId="dashboard-columns" />
+    <DeskQueryProvider>
+      <div className={styles.shell}>
+        {/* ---- Status bar ---- */}
+        <div className={styles.statusBar}>
+          <div className={styles.statusLead}>
+            <p>
+              <strong>{formatDeskDate(new Date())}</strong>
+            </p>
+            {/* filters both columns as the editor types */}
+            <DeskSearch />
+          </div>
+          <ul aria-label="Assignment counts" className={styles.counts}>
+            <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>
+            <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>{counts.invited} pending</li>
+            <li style={{ ['--dot' as string]: 'var(--c-green)' }}>{counts.assigned} assigned</li>
+          </ul>
         </div>
-        <ul aria-label="Assignment counts" className={styles.counts}>
-          <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>
-          <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>{counts.invited} pending</li>
-          <li style={{ ['--dot' as string]: 'var(--c-green)' }}>{counts.assigned} assigned</li>
-        </ul>
+
+        <main id="dashboard-columns" className={styles.columns}>
+          {/* ---- Left column: who is available ---- */}
+          <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
+
+          {/* ---- Right column: assignments ---- */}
+          <AssignmentsColumn
+            assignments={assignments}
+            roster={roster}
+            nextCursor={nextCursor}
+            total={counts.open + counts.invited + counts.assigned}
+          />
+        </main>
+
+        {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
+        <Suspense fallback={null}>
+          <NewAssignmentFromUrl closeHref="/dashboard" roster={roster} />
+        </Suspense>
+
+        {opened && (
+          <AssignmentDrawer
+            assignment={opened.assignment}
+            canEdit={opened.canEdit}
+            showOrganization
+            closeHref="/dashboard"
+          />
+        )}
       </div>
-
-      <main id="dashboard-columns" className={styles.columns}>
-        {/* ---- Left column: who is available ---- */}
-        <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
-
-        {/* ---- Right column: assignments ---- */}
-        <AssignmentsColumn
-          assignments={assignments}
-          roster={roster}
-          nextCursor={nextCursor}
-          total={counts.open + counts.invited + counts.assigned}
-        />
-      </main>
-
-      {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
-      <Suspense fallback={null}>
-        <NewAssignmentFromUrl closeHref="/dashboard" roster={roster} />
-      </Suspense>
-
-      {opened && (
-        <AssignmentDrawer
-          assignment={opened.assignment}
-          canEdit={opened.canEdit}
-          showOrganization
-          closeHref="/dashboard"
-        />
-      )}
-    </div>
+    </DeskQueryProvider>
   );
 }
