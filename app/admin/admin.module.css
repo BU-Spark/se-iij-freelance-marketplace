@@ -355,31 +355,10 @@
   cursor: not-allowed;
 }
 
-/* the appeals queue sits above the flags inbox */
-.appealsSection {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 28px clamp(16px, 4vw, 64px) 0;
+.action:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
-
-.appealsHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
-}
-
-.appealsTitle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin: 0;
-  color: var(--navy-deep);
-  font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
-}
-
 
 /* ------------------------------------------------------------------ */
 /*  Inbox: one list of everything waiting on the team                  */
@@ -447,6 +426,12 @@
   list-style: none;
 }
 
+/* each kind gets a colour: the card edge and the dot next to its label */
+.kind_appeal,
+.edge_appeal {
+  --kind: var(--c-red);
+}
+
 .kind_pitch,
 .edge_pitch {
   --kind: var(--c-amber);
@@ -507,6 +492,12 @@
   font-weight: 600;
   line-height: 1.25;
   overflow-wrap: anywhere;
+}
+
+.reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
 }
 
 .card .reason {
