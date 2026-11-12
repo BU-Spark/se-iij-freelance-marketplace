@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SegmentedControl, { type SegmentOption } from '../components/SegmentedControl';
 import PitchListItem from '../../components/PitchListItem/PitchListItem';
 import PitchDetail from '../../components/PitchDetail/PitchDetail';
@@ -47,9 +47,10 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
     setSelectedId(items.find((p) => matches(p, next))?.id);
   };
 
-  // Save on the desk, then move the pitch on screen to the status the API reports
-  const save = async (id: string, update: PitchUpdate) => {
-    setError('');
+  // Save on the desk, then move the pitch on screen to the status the API reports.
+  // Background changes (opening a pitch) stay quiet so a lagging request never shouts on screen.
+  const save = async (id: string, update: PitchUpdate, { quiet = false } = {}) => {
+    if (!quiet) setError('');
     try {
       const response = await fetch(`/api/pitches/${id}`, {
         method: 'PATCH',
@@ -63,9 +64,18 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
       if ('feedback' in update) setFeedbackByPitch((saved) => ({ ...saved, [id]: update.feedback }));
     } catch (cause) {
       console.error('Failed to save a pitch review.', cause);
-      setError('Your review could not be saved. Check your connection and try again.');
+      if (!quiet) setError('Your review could not be saved. Check your connection and try again.');
     }
   };
+
+  // Opening a pitch the editor has not seen yet is what "reviewed" means: read, nothing decided.
+  // A decision (negotiate / accept / decline) moves it on from there.
+  useEffect(() => {
+    if (selected && selected.status === 'new') {
+      void save(selected.id, { status: 'reviewed' }, { quiet: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only re-run when the open pitch changes
+  }, [selected?.id, selected?.status]);
 
   return (
     <main className={styles.page}>
