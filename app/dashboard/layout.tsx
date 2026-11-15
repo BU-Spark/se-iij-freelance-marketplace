@@ -5,12 +5,14 @@ import { isSignedInUserAdmin } from '../../lib/auth';
 import { hasProfile, loadProfileRoles } from '../../lib/profile';
 import { EditorHeader } from '../components/header/EditorHeader';
 import type { ProfileRole } from '../types/profile.types';
+import ProfileUnavailable from './ProfileUnavailable';
 import styles from './layout.module.css';
 
 /**
  * Nobody sees the dashboard before onboarding has created their profile, so the profile panel
- * can never open on a user with nothing to show. A database blip fails open: showing the
- * dashboard is better than bouncing someone into onboarding for a transient error.
+ * can never open on a user with nothing to show. The check fails *closed*: if the profile cannot
+ * be read, the desk is not rendered at all. Failing open is how people slipped past onboarding
+ * whenever the database was unreachable after a deploy.
  * Admins belong in the admin area, so they are sent there instead.
  *
  * Every dashboard page shares one header, mounted here so no page can leave it out or set it up
@@ -32,12 +34,18 @@ export default async function DashboardLayout({ children }: { children: ReactNod
   if (admin) redirect('/admin');
 
   let startedOnboarding = true;
+  let profileReadFailed = false;
 
   try {
     startedOnboarding = await hasProfile(userId);
   } catch (error) {
     console.error('Could not check the profile before rendering the dashboard.', error);
+    profileReadFailed = true;
   }
+
+  // Without proof that onboarding ran, the desk stays shut. Sending them to onboarding instead
+  // would be a lie when they have already finished it, so say what happened and offer a retry.
+  if (profileReadFailed) return <ProfileUnavailable />;
 
   if (!startedOnboarding) redirect('/onboarding');
 

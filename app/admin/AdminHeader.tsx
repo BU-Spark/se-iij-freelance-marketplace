@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import SidePanel from '../components/SidePanel/SidePanel';
 import menu from '../components/NavMenu/NavMenu.module.css';
-import { AdminBrand, AdminNavLinks } from './AdminNav';
+import { AdminBrand, AdminNavLinks, AdminSignOut } from './AdminNav';
 import styles from './admin.module.css';
 
 /** Phone-only top bar: the sidebar is hidden there, so ☰ opens the same sections in a panel */
@@ -28,6 +28,7 @@ export default function AdminHeader() {
       {open && (
         <SidePanel title="Admin" side="left" onClose={() => setOpen(false)}>
           <AdminNavLinks onNavigate={() => setOpen(false)} />
+          <AdminSignOut />
         </SidePanel>
       )}
     </header>

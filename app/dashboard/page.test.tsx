@@ -1,8 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import Dashboard from './page';
 import type { Assignment } from '../types/assignments.types';
-import { ROSTER } from './constants';
-import { getAssignment, listOpenAssignments } from '../../lib/assignments';
+import { SAMPLE_ROSTER as ROSTER } from '../../test/fixtures/roster';
+import { countAssignmentsByStatus, getAssignment, listDeskAssignments } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 
 // No real browser URL in tests; pretend there's no "?new=assignment"
@@ -16,7 +16,8 @@ jest.mock('../../lib/workspace', () => ({ requireWorkspace: jest.fn() }));
 jest.mock('../../lib/db', () => ({ db: { query: jest.fn() } }));
 jest.mock('../../lib/assignments', () => ({
   ...jest.requireActual('../../lib/assignments'),
-  listOpenAssignments: jest.fn(),
+  listDeskAssignments: jest.fn(),
+  countAssignmentsByStatus: jest.fn(),
   getAssignment: jest.fn(async () => null),
   loadAssignmentViewer: jest.fn(async () => viewer),
 }));
@@ -24,7 +25,8 @@ jest.mock('../../lib/roster', () => ({ loadEditorRoster: jest.fn() }));
 
 const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 
-const listOpenAssignmentsMock = listOpenAssignments as jest.Mock;
+const listDeskAssignmentsMock = listDeskAssignments as jest.Mock;
+const countsMock = countAssignmentsByStatus as jest.Mock;
 const loadEditorRosterMock = loadEditorRoster as jest.Mock;
 
 const getAssignmentMock = getAssignment as jest.Mock;
@@ -61,7 +63,8 @@ const post = (overrides: Partial<Assignment>): Assignment => ({
 describe('Dashboard', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    listOpenAssignmentsMock.mockResolvedValue([]);
+    listDeskAssignmentsMock.mockResolvedValue({ items: [], nextCursor: null });
+    countsMock.mockResolvedValue({ open: 0, invited: 0, assigned: 0 });
     getAssignmentMock.mockResolvedValue(null);
     loadEditorRosterMock.mockResolvedValue({
       members: ROSTER.slice(0, 2),
@@ -71,11 +74,15 @@ describe('Dashboard', () => {
   });
 
   it('counts what the database returned', async () => {
-    listOpenAssignmentsMock.mockResolvedValue([
-      postedAssignment,
-      post({ id: 'posted-2', status: 'invited', title: 'Waiting on someone' }),
-      post({ id: 'posted-3', status: 'assigned', title: 'Already taken' }),
-    ]);
+    listDeskAssignmentsMock.mockResolvedValue({
+      items: [
+        postedAssignment,
+        post({ id: 'posted-2', status: 'invited' }),
+        post({ id: 'posted-3', status: 'assigned' }),
+      ],
+      nextCursor: null,
+    });
+    countsMock.mockResolvedValue({ open: 1, invited: 1, assigned: 1 });
 
     await renderDashboard();
 
@@ -83,6 +90,22 @@ describe('Dashboard', () => {
     expect(within(counts).getByText('1 open')).toBeInTheDocument();
     expect(within(counts).getByText('1 pending')).toBeInTheDocument();
     expect(within(counts).getByText('1 assigned')).toBeInTheDocument();
+  });
+
+  it('offers Load more when the server has another page', async () => {
+    listDeskAssignmentsMock.mockResolvedValue({ items: [postedAssignment], nextCursor: 'cursor-1' });
+    countsMock.mockResolvedValue({ open: 3, invited: 0, assigned: 0 });
+
+    await renderDashboard();
+
+    expect(screen.getByRole('button', { name: 'Load more' })).toBeInTheDocument();
+    expect(screen.getByText('Showing 1 of 3')).toBeInTheDocument();
+  });
+
+  it('offers one search box that filters both columns', async () => {
+    await renderDashboard();
+
+    expect(screen.getByRole('searchbox', { name: /search assignments and roster/i })).toBeInTheDocument();
   });
 
   it('says nothing is open rather than showing sample work nobody posted', async () => {
@@ -168,7 +191,10 @@ describe('Dashboard', () => {
   });
 
   it('lists the posted assignments with their details and a link that opens each one in the drawer', async () => {
-    listOpenAssignmentsMock.mockResolvedValue([postedAssignment, post({ id: 'posted-9', title: 'Second post' })]);
+    listDeskAssignmentsMock.mockResolvedValue({
+      items: [postedAssignment, post({ id: 'posted-9', title: 'Second post' })],
+      nextCursor: null,
+    });
 
     await renderDashboard();
 

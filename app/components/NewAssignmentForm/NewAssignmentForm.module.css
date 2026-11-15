@@ -57,31 +57,12 @@ textarea.input {
   font-size: 13px;
   color: var(--muted);
 }
-/* read-only slug preview */
-.slug {
-  display: flex;
-  align-items: center;
-  min-height: 46px;
-  padding: 0 14px;
-  border: 1px dashed #dce1ea;
-  border-radius: 10px;
-  background: #f7f8fa;
-  color: #172033;
-  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
-  font-size: 14px;
-  overflow-wrap: anywhere;
-}
-
-.slugEmpty {
-  color: #8a93a6;
-}
 /* $ … USD money box; reuses .input, adds room for the $ and USD */
 .money {
   position: relative;
   display: flex;
   align-items: center;
 }
-
 /* .money .moneyInput is more specific than .input, so this padding wins */
 .money .moneyInput {
   width: 100%;

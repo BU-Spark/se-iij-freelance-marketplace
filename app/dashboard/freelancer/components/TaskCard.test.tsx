@@ -37,3 +37,17 @@ it('shows a dash instead of a date when the deadline is missing', () => {
   render(<TaskCard task={databaseTask} freelancerId="priya" />);
   expect(screen.getByText('—')).toBeInTheDocument();
 });
+
+it('links an open task to its full details in the assignment drawer', () => {
+  render(<TaskCard task={databaseTask} freelancerId="priya" />);
+  expect(screen.getByRole('link', { name: 'City hall budget vote' })).toHaveAttribute(
+    'href',
+    '/dashboard/assignments?assignment=db-task'
+  );
+});
+
+it('keeps the title as plain text when the task is not open', () => {
+  render(<TaskCard task={{ ...databaseTask, status: 'assigned' }} freelancerId="priya" />);
+  expect(screen.queryByRole('link')).not.toBeInTheDocument();
+  expect(screen.getByText('City hall budget vote')).toBeInTheDocument();
+});

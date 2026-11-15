@@ -2,7 +2,7 @@ import ChipGroup from '../ChipGroup/ChipGroup';
 import Field from '../Field/Field';
 import type { NewAssignment } from '../../types/assignments.types';
 import { PROJECT_TYPES } from '../NewAssignmentDrawer/constants';
-import { cleanAmount, cleanWholeNumber, slugify, type AssignmentErrors } from '../../utils/assignment.utils';
+import { cleanAmount, cleanWholeNumber, type AssignmentErrors } from '../../utils/assignment.utils';
 import styles from './NewAssignmentForm.module.css';
 
 type NewAssignmentFormProps = {
@@ -10,14 +10,9 @@ type NewAssignmentFormProps = {
   /** called with just the field(s) that changed, e.g. { title: 'City council' } */
   onChange: (patch: Partial<NewAssignment>) => void;
   errors?: AssignmentErrors;
-  /** The saved slug when editing; it is fixed, so it is shown as-is instead of a preview */
-  savedSlug?: string;
 };
 
-export default function NewAssignmentForm({ draft, onChange, errors, savedSlug }: NewAssignmentFormProps) {
-  // preview only; the random code is added when the editor posts
-  const slugBase = slugify(draft.title);
-
+export default function NewAssignmentForm({ draft, onChange, errors }: NewAssignmentFormProps) {
   return (
     <div className={styles.form}>
       <fieldset className={styles.fieldset}>
@@ -42,17 +37,6 @@ export default function NewAssignmentForm({ draft, onChange, errors, savedSlug }
           onChange={(e) => onChange({ title: e.target.value })}
           placeholder="e.g. City council overnight vote"
         />
-      </Field>
-
-      {/* slug is generated from the title, not typed; once posted it never changes */}
-      <Field label="Slug" error={errors?.slug}>
-        {savedSlug ? (
-          <output className={styles.slug}>{savedSlug}</output>
-        ) : (
-          <output className={`${styles.slug} ${slugBase ? '' : styles.slugEmpty}`}>
-            {slugBase ? `${slugBase}-······` : 'Fills in from the title'}
-          </output>
-        )}
       </Field>
 
       <div className={styles.row}>

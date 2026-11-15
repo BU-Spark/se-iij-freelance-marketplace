@@ -12,6 +12,8 @@ import styles from './NavMenu.module.css';
 
 type NavMenuProps = {
   name: string;
+  /** the person's own photo, shown on their row at the bottom */
+  photoUrl?: string;
   /** Roles this person has. The switch only shows if there are 2+. */
   roles: ProfileRole[];
   activeRole: ProfileRole;
@@ -26,6 +28,7 @@ type NavMenuProps = {
 
 export default function NavMenu({
   name,
+  photoUrl,
   roles,
   activeRole,
   onRoleChange,
@@ -41,7 +44,7 @@ export default function NavMenu({
     <div className={styles.footer}>
       {/* clicking yourself leads to settings; the side panel has no Settings item of its own */}
       <Link href={settingsHref} className={styles.footerLink} onClick={onClose} aria-label="My settings">
-        <Avatar name={name} size={32} />
+        <Avatar name={name} size={32} src={photoUrl} />
         <span className={styles.who}>
           <span className={styles.whoName}>{name || 'My settings'}</span>
           <span className={styles.whoHint}>Profile and availability</span>

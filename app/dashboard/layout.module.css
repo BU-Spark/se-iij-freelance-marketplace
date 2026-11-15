@@ -16,3 +16,41 @@
   /* a plain block, so pages that centre themselves with margin: 0 auto keep their full width */
   flex: 1;
 }
+
+/* Shown instead of the desk when the profile itself could not be read */
+.unavailable {
+  max-width: 520px;
+  margin: 12vh auto 0;
+  padding: 32px;
+  background: #fff;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px -16px rgba(15, 23, 42, 0.18);
+  text-align: center;
+}
+
+.unavailable h1 {
+  margin: 0 0 10px;
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--navy-deep);
+}
+
+.unavailable p {
+  margin: 0 0 20px;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.retry {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 12px;
+  background: var(--navy-deep);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}

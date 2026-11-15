@@ -84,6 +84,29 @@
   text-decoration: none;
 }
 
+/* sits at the foot of the sidebar; in the phone panel it follows the sections */
+.signOut {
+  margin-top: auto;
+  padding: 10px 14px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #9b2c1f;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+}
+
+.signOut:hover {
+  background: #fdf3f1;
+}
+
+.signOut:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
 .brandTag {
   margin-left: 4px;
   padding: 2px 8px;
@@ -355,27 +378,248 @@
   cursor: not-allowed;
 }
 
-/* the appeals queue sits above the flags inbox */
-.appealsSection {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 28px clamp(16px, 4vw, 64px) 0;
+.action:disabled {
+  opacity: 0.6;
+  cursor: progress;
 }
 
-.appealsHeader {
+/* ------------------------------------------------------------------ */
+/*  Inbox: one list of everything waiting on the team                  */
+/* ------------------------------------------------------------------ */
+
+.inbox {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 16px;
 }
 
-.appealsTitle {
+/* To do / Done: underlined tabs, the one big choice on the page */
+.views {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--line);
+}
+
+.viewTab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -1px;
+  padding: 10px 2px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--muted);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.viewTab:hover {
+  color: var(--ink);
+}
+
+.viewTab[aria-pressed='true'] {
+  border-bottom-color: var(--navy-deep);
+  color: var(--navy-deep);
+}
+
+.viewCount {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--mist);
+  color: var(--navy-deep);
+  font-size: 12px;
+  text-align: center;
+}
+
+.viewTab[aria-pressed='true'] .viewCount {
+  background: var(--navy-deep);
+  color: var(--white);
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 4px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* each kind gets a colour: the card edge and the dot next to its label */
+.kind_appeal,
+.edge_appeal {
+  --kind: var(--c-red);
+}
+
+.kind_pitch,
+.edge_pitch {
+  --kind: var(--c-amber);
+}
+
+.kind_account,
+.edge_account {
+  --kind: var(--c-blue);
+}
+
+.kind_assignment,
+.edge_assignment {
+  --kind: var(--c-green-d);
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 24px;
+  border: 1px solid #eceef2;
+  border-left: 4px solid var(--kind, var(--line));
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.cardTop {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin: 0;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kind {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: #4a5468;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.kindDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--kind);
+}
+
+.cardTitle {
+  margin: 0 0 2px;
   color: var(--navy-deep);
   font-family: var(--font-serif);
-  font-size: 26px;
-  font-weight: 400;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.reasons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+.card .reason {
+  margin: 0;
+}
+
+.cardFooter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 14px;
+  border-top: 1px solid #eceef2;
+}
+
+/* one line telling the reviewer what the buttons do */
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
+
+  .cardFooter .actions {
+    width: 100%;
+  }
+
+  .cardFooter .action {
+    flex: 1;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/*  Verification: one compact row per person in a single panel         */
+/* ------------------------------------------------------------------ */
+
+.people {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 1px solid #eceef2;
+  border-radius: 14px;
+  background: var(--white);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.person {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 20px;
+}
+
+.person + .person {
+  border-top: 1px solid #eceef2;
+}
+
+.personBody {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.personName {
+  margin: 0;
+  color: var(--navy-deep);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* the proof they sent, in plain text under their details */
+.proof {
+  margin: 6px 0 0;
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.person .actions {
+  justify-content: flex-end;
+}
+
+@media (max-width: 700px) {
+  .person {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .person .actions {
+    grid-column: 1 / -1;
+  }
+
+  .person .action {
+    flex: 1;
+  }
 }

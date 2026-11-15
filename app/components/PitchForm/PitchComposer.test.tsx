@@ -8,6 +8,26 @@ const auth = jest.mocked(useAuth);
 const account = (userId: string) => auth.mockReturnValue({ userId, isLoaded: true } as ReturnType<typeof useAuth>);
 const change = (label: string, value: string) => fireEvent.change(screen.getByLabelText(label), { target: { value } });
 
+/** Fills every field the composer needs before a send can reach the API */
+const fillValidDraft = () => {
+  change('Pitch title', 'City budget investigation');
+  change('Recipient editor email', 'editor@example.com');
+  fireEvent.click(screen.getByRole('button', { name: /Politics/ }));
+  change('Summary', 'Follow the money');
+  change('Story angle and reporting plan', 'Interview residents and examine public records.');
+  change('Location', 'Remote');
+  change('Proposed length or duration', '1200 words');
+  change('Proposed delivery date', '2099-12-01');
+  change('Proposed compensation', '0.75');
+};
+
+/** Stubs the pitches API with a fixed response */
+const respond = (status: number, body: unknown) => {
+  const fetchMock = jest.fn().mockResolvedValue({ ok: status < 400, status, json: async () => body });
+  global.fetch = fetchMock as unknown as typeof fetch;
+  return fetchMock;
+};
+
 beforeEach(() => {
   localStorage.clear();
   account('user-a');
@@ -31,37 +51,54 @@ it('generates stable slugs and validates structured compensation and invites', (
   expect(errors.deadline).toBeTruthy();
 });
 
-it('validates, reviews a pitch, preserves edits, and saves without sending', () => {
+it('validates the pitch, sends it, and forgets the saved draft', async () => {
   render(<PitchComposer />);
-  fireEvent.click(screen.getByRole('button', { name: 'Review pitch' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Send pitch' }));
   expect(screen.getByRole('alert')).toHaveTextContent('correct the highlighted fields');
   // Error text is associated separately, keeping the input names stable.
-  change('Pitch title', 'City budget investigation');
-  change('Recipient editor email', 'editor@example.com');
-  change('Category', 'Politics');
-  change('Summary', 'Follow the money');
-  change('Story angle and reporting plan', 'Interview residents and examine public records.');
-  change('Location', 'Remote');
-  change('Proposed length or duration', '1200 words');
-  change('Proposed delivery date', '2099-12-01');
-  change('Amount', '0.75');
-  change('Rate basis', 'word');
-  change('Collaborator emails (optional)', 'partner@example.com');
-  expect(screen.getByLabelText(/Generated slug/)).toHaveValue('city-budget-investigation');
-  fireEvent.click(screen.getByRole('button', { name: 'Review pitch' }));
-  expect(screen.getByRole('region', { name: 'Pitch preview' })).toBeInTheDocument();
-  expect(screen.getByText('USD 0.75 / word')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Submit pitch' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Back to editing' }));
+  fillValidDraft();
+  expect(screen.queryByLabelText(/slug/i)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /Politics/ })).toHaveAttribute('aria-pressed', 'true');
+
+  const fetchMock = respond(201, { pitch: { id: 'pitch-1' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Send pitch' }));
+
+  expect(await screen.findByRole('status')).toHaveTextContent('Pitch sent');
+  expect(fetchMock).toHaveBeenCalledWith('/api/pitches', expect.objectContaining({ method: 'POST' }));
+  // the draft is only forgotten once the API has it
+  expect(localStorage.getItem('iij:pitch-draft:user-a')).toBeNull();
   expect(screen.getByLabelText('Pitch title')).toHaveValue('City budget investigation');
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
-  expect(screen.getByRole('status')).toHaveTextContent('No pitch or invitations have been sent');
+});
+
+it('shows the field errors the API reports', async () => {
+  render(<PitchComposer />);
+  fillValidDraft();
+  respond(400, {
+    error: 'We could not find an editor with that email.',
+    errors: { editorEmail: 'We could not find an editor with that email.' },
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Send pitch' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(/could not find an editor/i);
+  expect(screen.getByLabelText('Recipient editor email')).toHaveAttribute('aria-invalid', 'true');
+  // the draft survives a failed send
+  expect(localStorage.getItem('iij:pitch-draft:user-a')).not.toBeNull();
+});
+
+it('says when the same pitch was already sent to that editor', async () => {
+  render(<PitchComposer />);
+  fillValidDraft();
+  respond(409, { error: 'You have already sent this pitch to that editor.' });
+
+  fireEvent.click(screen.getByRole('button', { name: 'Send pitch' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent(/already sent/i);
 });
 
 it('restores partial drafts and isolates signed-in accounts', () => {
   const view = render(<PitchComposer />);
   change('Pitch title', 'My unfinished idea');
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
   view.unmount();
   const restored = render(<PitchComposer />);
   expect(screen.getByLabelText('Pitch title')).toHaveValue('My unfinished idea');
@@ -78,7 +115,7 @@ it('handles damaged drafts and blocked storage', () => {
   jest.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
     throw new Error('Blocked');
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Save draft' }));
+  change('Pitch title', 'Retained in form!');
   expect(screen.getByRole('alert')).toHaveTextContent('Unable to save');
-  expect(screen.getByLabelText('Pitch title')).toHaveValue('Retained in form');
+  expect(screen.getByLabelText('Pitch title')).toHaveValue('Retained in form!');
 });

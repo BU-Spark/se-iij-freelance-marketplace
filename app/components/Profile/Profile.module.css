@@ -120,14 +120,6 @@ textarea.input {
   background: var(--navy-deep);
   color: #fff;
 }
-/* the signed-in user's uploaded photo, when there is one */
-.photo {
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 /* loading / error line shown instead of the cards */
 .status {
   margin: 0;
@@ -297,10 +289,6 @@ textarea.input {
   border-width: 3px;
   border-color: var(--navy-deep);
 }
-.heroPhoto .photo {
-  width: 84px;
-  height: 84px;
-}
 
 .heroName {
   margin: 0;
@@ -405,7 +393,6 @@ textarea.input {
 .availabilityAction:hover {
   text-decoration: underline;
 }
-
 
 /* Sign out lives at the bottom of My profile, not in the menu */
 .signOut {

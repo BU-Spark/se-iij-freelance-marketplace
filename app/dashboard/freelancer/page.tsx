@@ -2,7 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
-import { toDeskAssignment } from '../../utils/dashboard.utils';
+import { formatDeskDate, toDeskAssignment } from '../../utils/dashboard.utils';
 import FreelancerDashboard from './FreelancerDashboard';
 import RosterInvites from './RosterInvites';
 import styles from './freelancer.module.css';
@@ -32,13 +32,12 @@ export default async function FreelancerPage() {
   }
 
   return (
+    // Same frame as the editor desk: status bar under the header, then two columns (see FreelancerDashboard)
     <main className={styles.main}>
-      <p className={styles.eyebrow}>Freelancer workspace</p>
-      <h1>Your assignment desk</h1>
-      <p>Discover opportunities and keep your current work in view.</p>
       {/* declined invitations are left out: the editor sees the answer on their roster */}
-      <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
-      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} />
+      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} dateLabel={formatDeskDate(new Date())}>
+        <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
+      </FreelancerDashboard>
     </main>
   );
 }

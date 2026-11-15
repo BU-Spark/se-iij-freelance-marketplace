@@ -90,6 +90,7 @@ export default function AssignmentDrawer({
             assignment={assignment}
             canEdit={canEdit}
             showOrganization={showOrganization}
+            onDeleted={() => router.push(closeHref, { scroll: false })}
           />
         </div>
       </div>

@@ -44,6 +44,14 @@ describe('AssignmentDetail', () => {
     render(<AssignmentDetail assignment={assignment} canEdit={false} />);
 
     expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
+  });
+
+  it('offers Delete next to Edit to the editors who may delete it', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit />);
+
+    expect(screen.getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Delete' })).toBeInTheDocument();
   });
 
   it('says which organization posted it when the desk asks for it', () => {
@@ -69,7 +77,7 @@ describe('AssignmentDetail', () => {
     const title = screen.getByDisplayValue('Election night');
     expect(screen.getByDisplayValue('800')).toBeInTheDocument();
     expect(screen.getByDisplayValue('4')).toBeInTheDocument();
-    expect(screen.getByText('election-night-abc123')).toBeInTheDocument();
+    expect(screen.queryByText('election-night-abc123')).not.toBeInTheDocument();
 
     await user.clear(title);
     await user.type(title, 'Election night recount');

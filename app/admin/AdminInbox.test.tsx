@@ -1,6 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ToastProvider } from '../components/Toast/ToastProvider';
+import type { Appeal } from '../../lib/appeals';
 import type { FlagReport } from '../types/admin.types';
 import AdminInbox from './AdminInbox';
 
@@ -21,87 +22,164 @@ const reports: FlagReport[] = [
   { ...report, id: 'f3', targetType: 'account', targetLabel: 'Sam Rivera' },
 ];
 
-const tab = (name: string) => screen.getByRole('button', { name: new RegExp(`^${name}`) });
-const actionsFor = (label: string) => screen.getByRole('group', { name: `Actions for ${label}` });
-const click = (label: string, action: string) =>
-  userEvent.click(within(actionsFor(label)).getByRole('button', { name: action }));
+const appeal: Appeal = {
+  id: 'appeal-1',
+  userId: 'user-1',
+  name: 'Amara Okafor',
+  email: 'amara@example.com',
+  message: 'My portfolio was misread — those clips are mine.',
+  suspensionReason: 'Copied portfolio',
+  status: 'open',
+  createdAt: '2026-11-10T09:00:00.000Z',
+};
 
-const renderInbox = () =>
+const originalFetch = global.fetch;
+const fetchMock = jest.fn();
+
+beforeEach(() => {
+  fetchMock.mockReset();
+  global.fetch = fetchMock as unknown as typeof fetch;
+});
+
+afterAll(() => {
+  global.fetch = originalFetch;
+});
+
+const button = (group: string, name: string) =>
+  within(screen.getByRole('group', { name: group })).getByRole('button', { name: new RegExp(`^${name}`) });
+const view = (name: string) => button('Show', name);
+const filter = (name: string) => button('Type', name);
+const click = (label: string, action: string) =>
+  userEvent.click(
+    within(screen.getByRole('group', { name: `Actions for ${label}` })).getByRole('button', { name: action })
+  );
+
+const renderInbox = (appeals: Appeal[] = [appeal]) =>
   render(
     <ToastProvider>
-      <AdminInbox reports={reports} />
+      <AdminInbox appeals={appeals} reports={reports} />
     </ToastProvider>
   );
 
 describe('AdminInbox', () => {
-  it('opens on flagged pitches that need review, with counts', () => {
+  it('lists appeals and flags together under To do, newest first, with counts', () => {
     renderInbox();
 
-    expect(tab('Pitches')).toHaveAttribute('aria-pressed', 'true');
-    expect(tab('Needs review')).toHaveAttribute('aria-pressed', 'true');
-    expect(within(tab('Accounts')).getByText('2')).toBeInTheDocument();
-    expect(within(tab('Assignments')).getByText('0')).toBeInTheDocument();
-    expect(tab('Needs review')).toHaveTextContent('Needs review (3)');
-    expect(tab('Closed')).toHaveTextContent('Closed (0)');
+    expect(view('To do')).toHaveAttribute('aria-pressed', 'true');
+    expect(view('To do')).toHaveTextContent('To do4');
+    expect(view('Done')).toHaveTextContent('Done0');
+    expect(filter('All')).toHaveTextContent('All4');
+    expect(filter('Appeals')).toHaveTextContent('Appeals1');
+    expect(filter('Accounts')).toHaveTextContent('Accounts2');
+    expect(filter('Assignments')).toHaveTextContent('Assignments0');
 
-    const [row] = screen.getAllByRole('listitem');
-    expect(row).toHaveTextContent('City council budget leak');
-    expect(row).toHaveTextContent('Looks like spam');
-    expect(row).toHaveTextContent('Reported by Ada Editor');
-    expect(row).toHaveTextContent('New');
+    const cards = screen.getAllByRole('listitem');
+    expect(cards).toHaveLength(4);
+    expect(cards[0]).toHaveTextContent('Amara Okafor');
+    expect(cards[0]).toHaveTextContent('Copied portfolio');
+    expect(cards[1]).toHaveTextContent('Flagged pitch');
+    expect(cards[1]).toHaveTextContent('Reported by Ada Editor');
+    expect(cards[1]).toHaveTextContent('Looks like spam');
   });
 
-  it('switches type, and shows an empty state when there is none', async () => {
+  it('every card has its actions on it, without opening anything', () => {
     renderInbox();
 
-    await userEvent.click(tab('Accounts'));
+    expect(screen.getByRole('group', { name: 'Appeal from Amara Okafor' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Actions for City council budget leak' })).toBeInTheDocument();
+    expect(screen.getByRole('group', { name: 'Actions for Sam Rivera' })).toBeInTheDocument();
+  });
+
+  it('filters by type, and shows an empty state when there is none', async () => {
+    renderInbox();
+
+    await userEvent.click(filter('Accounts'));
     expect(screen.getAllByRole('listitem')).toHaveLength(2);
-    expect(screen.getByText('In review')).toBeInTheDocument();
+    expect(within(screen.getAllByRole('listitem')[0]).getByText('In review')).toBeInTheDocument();
 
-    await userEvent.click(tab('Assignments'));
-    expect(screen.getByText('All clear')).toBeInTheDocument();
+    await userEvent.click(filter('Assignments'));
+    expect(screen.getByText('All caught up')).toBeInTheDocument();
   });
 
-  it('moves a new flag into review', async () => {
+  it('marks a new flag as in review', async () => {
     renderInbox();
 
-    await click('City council budget leak', 'Start review');
+    await click('City council budget leak', 'Mark in review');
 
-    expect(screen.getByText('In review')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Start review' })).not.toBeInTheDocument();
+    expect(screen.getByText('Flag marked as in review.')).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Actions for City council budget leak' })).queryByRole('button', {
+        name: 'Mark in review',
+      })
+    ).not.toBeInTheDocument();
   });
 
   it.each([
-    ['Resolve', 'Resolved', 'Flag resolved. You can still change it under Closed.'],
-    ['Dismiss', 'Dismissed', 'Flag dismissed. You can still change it under Closed.'],
-  ])('%s moves the flag to Closed instead of deleting it', async (action, status, message) => {
-    renderInbox();
+    ['Resolve', 'Resolved', 'Flag resolved. You can still change it under Done.'],
+    ['Dismiss', 'Dismissed', 'Flag dismissed. You can still change it under Done.'],
+  ])('%s moves the flag to Done instead of deleting it', async (action, status, message) => {
+    renderInbox([]);
 
     await click('City council budget leak', action);
 
     expect(screen.getByText(message)).toBeInTheDocument();
-    // gone from the queue...
-    expect(screen.getByText('All clear')).toBeInTheDocument();
-    expect(tab('Closed')).toHaveTextContent('Closed (1)');
+    expect(screen.queryByText('City council budget leak')).not.toBeInTheDocument();
+    expect(view('Done')).toHaveTextContent('Done1');
 
-    // ...but still there under Closed, ready to be reopened
-    await userEvent.click(tab('Closed'));
+    await userEvent.click(view('Done'));
     expect(within(screen.getByRole('listitem')).getByText(status)).toBeInTheDocument();
-    expect(within(actionsFor('City council budget leak')).getByRole('button', { name: 'Reopen' })).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('group', { name: 'Actions for City council budget leak' })).getByRole('button', {
+        name: 'Reopen',
+      })
+    ).toBeInTheDocument();
   });
 
-  it('lets a closed decision be changed or reopened', async () => {
-    renderInbox();
+  it('lets a done decision be changed or reopened', async () => {
+    renderInbox([]);
     await click('City council budget leak', 'Resolve');
-    await userEvent.click(tab('Closed'));
+    await userEvent.click(view('Done'));
 
     await click('City council budget leak', 'Change to dismissed');
     expect(within(screen.getByRole('listitem')).getByText('Dismissed')).toBeInTheDocument();
 
     await click('City council budget leak', 'Reopen');
-    expect(tab('Closed')).toHaveTextContent('Closed (0)');
+    expect(view('Done')).toHaveTextContent('Done0');
 
-    await userEvent.click(tab('Needs review'));
-    expect(within(screen.getByRole('listitem')).getByText('In review')).toBeInTheDocument();
+    await userEvent.click(view('To do'));
+    expect(screen.getByText('City council budget leak')).toBeInTheDocument();
+  });
+
+  it('reactivates the account from an appeal and takes it off the list', async () => {
+    fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
+    renderInbox();
+
+    await userEvent.click(
+      within(screen.getByRole('group', { name: 'Appeal from Amara Okafor' })).getByRole('button', {
+        name: /reactivate account/i,
+      })
+    );
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/admin/accounts/user-1', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'active' }),
+    });
+    expect(await screen.findByText('Amara Okafor is active again.')).toBeInTheDocument();
+    expect(screen.queryByText(/those clips are mine/i)).not.toBeInTheDocument();
+  });
+
+  it('keeps the appeal and shows the error when reactivating fails', async () => {
+    fetchMock.mockResolvedValue({ ok: false, json: async () => ({ error: 'Account not found.' }) });
+    renderInbox();
+
+    await userEvent.click(
+      within(screen.getByRole('group', { name: 'Appeal from Amara Okafor' })).getByRole('button', {
+        name: /reactivate account/i,
+      })
+    );
+
+    expect(await screen.findByText('Account not found.')).toBeInTheDocument();
+    expect(screen.getByText('Amara Okafor')).toBeInTheDocument();
   });
 });

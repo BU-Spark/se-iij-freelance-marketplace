@@ -6,6 +6,8 @@ export type Assignment = {
   /** Null until assignments are tied to a real organizations row */
   organizationId: string | null;
   createdByUserId: string;
+  /** The editor who posted it; resolved from users so the organization view can name them */
+  createdByName?: string;
   title: string;
   description: string;
   category: string;
@@ -16,6 +18,8 @@ export type Assignment = {
   deadline: Date | null;
   compensation: string;
   status: AssignmentStatus;
+  /** the freelancer who took it on, once an editor assigned someone; absent on older fixtures */
+  assignedToUserId?: string | null;
   createdAt: Date;
   updatedAt: Date;
 };

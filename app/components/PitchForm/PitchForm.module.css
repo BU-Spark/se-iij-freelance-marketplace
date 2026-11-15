@@ -1,82 +1,196 @@
+/* Styled to match the New Assignment drawer (NewAssignmentForm + Field) */
 .form,
 .preview {
   display: grid;
-  gap: 20px;
-  max-width: 960px;
+  gap: 22px;
+  width: 100%;
 }
 .form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-width: 0;
-  font-weight: 600;
 }
+
+/* small uppercase label, same as Field */
+.label {
+  padding: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
 .form input,
 .form select,
 .form textarea {
-  min-height: 44px;
-  padding: 10px 12px;
+  width: 100%;
+  min-height: 48px;
   box-sizing: border-box;
-  border: 1px solid #a5b0bf;
-  border-radius: 8px;
-  background: var(--white);
+  padding: 0 16px;
+  border: 1.5px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
   color: var(--ink);
   font: inherit;
+  font-size: 15px;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 .form textarea {
+  height: auto;
+  padding: 14px 16px;
+  line-height: 1.5;
   resize: vertical;
 }
-.form small {
-  font-weight: 400;
+.form input::placeholder,
+.form textarea::placeholder {
+  color: #9aa3b2;
+}
+.form input:hover,
+.form select:hover,
+.form textarea:hover {
+  border-color: #c9d0dc;
+}
+.form input:focus,
+.form select:focus,
+.form textarea:focus {
+  outline: none;
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+.form [aria-invalid='true'] {
+  border-color: var(--c-red);
+  box-shadow: 0 0 0 4px rgba(229, 57, 91, 0.1);
+}
+
+.hint {
+  margin: 8px 0 0;
+  font-size: 13px;
   color: var(--muted);
 }
+
+/* two inputs side by side; one per row on phones */
 .row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
 }
-.fieldset {
-  min-width: 0;
-  border: 1px solid #a5b0bf;
-  border-radius: 8px;
-  padding: 20px;
+@media (max-width: 520px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
+
+/* $ … money box */
+.money {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.form .moneyInput {
+  padding-left: 32px;
+}
+.currencySign {
+  position: absolute;
+  left: 14px;
+  color: #4a5468;
+  font-weight: 600;
+  pointer-events: none;
+}
+
 .error {
-  color: #a32020;
-  font-size: 14px;
+  font-size: 13px;
+  color: var(--c-red);
 }
+
+/* sticky footer, like the drawer's Post assignment bar */
 .actions {
+  position: sticky;
+  bottom: 0;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 12px;
+  margin: 6px calc(-1 * var(--pitch-gutter, 32px)) 0;
+  padding: 16px var(--pitch-gutter, 32px);
+  border-top: 1px solid #eceef2;
+  background: #fff;
+}
+.notice {
+  flex: 1 1 200px;
+  margin-right: auto;
+  font-size: 14px;
+  color: var(--muted);
+}
+.notice p {
+  margin: 0;
+}
+.notice .alert {
+  color: var(--c-red);
+}
+/* "Category" chip group */
+.fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.fieldset > legend {
+  margin-bottom: 10px;
+}
+.fieldset .error {
+  margin: 8px 0 0;
 }
 .actions button {
-  min-height: 44px;
-  padding: 10px 20px;
+  height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 12px;
   background: var(--c-blue);
-  color: var(--white);
-  border-radius: 8px;
+  color: #fff;
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
+}
+.actions button[type='button'] {
+  border: 1.5px solid var(--line);
+  background: #fff;
+  color: var(--ink);
 }
 .actions button:disabled {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
 }
 .form :focus-visible,
 .preview :focus-visible {
   outline: 2px solid var(--c-blue);
   outline-offset: 2px;
 }
+
+.preview h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  color: var(--ink);
+}
 .preview dl {
   display: grid;
   gap: 16px;
+  margin: 0;
 }
 .preview dt {
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
 }
 .preview dd {
   margin: 8px 0 0;
+  color: var(--ink);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }

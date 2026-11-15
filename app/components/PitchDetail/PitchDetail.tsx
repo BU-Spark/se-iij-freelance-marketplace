@@ -1,6 +1,7 @@
 import Avatar from '../Avatar/Avatar';
 import type { Pitch } from '../../types/dashboard.types';
 import { categoryColor } from '../../utils/category.utils';
+import { pitchHeading } from '../../utils/pitch.utils';
 import { timeAgo } from '../../utils/dashboard.utils';
 import styles from './PitchDetail.module.css';
 import { PITCH_FACTS } from './pitchFields';
@@ -25,7 +26,7 @@ export default function PitchDetail({ pitch }: PitchDetailProps) {
           ))}
         </div>
 
-        <h2 className={styles.title}>{pitch.slug}</h2>
+        <h2 className={styles.title}>{pitchHeading(pitch.slug)}</h2>
 
         <div className={styles.by}>
           <Avatar name={pitch.freelancer.name} size={40} />

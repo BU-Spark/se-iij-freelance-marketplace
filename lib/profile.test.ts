@@ -14,9 +14,16 @@ beforeEach(() => {
 });
 
 describe('hasProfile', () => {
-  it('is true once the user row exists', async () => {
+  it('is true once onboarding has written the user row with a role', async () => {
     queryMock.mockResolvedValue({ rowCount: 1, rows: [{ '?column?': 1 }] });
+
     await expect(hasProfile('clerk-1')).resolves.toBe(true);
+
+    const [sql, values] = queryMock.mock.calls[0] as [string, unknown[]];
+    expect(sql).toContain('clerk_id = $1');
+    // the bare row admins get holds no roles, so it must not pass as finished onboarding
+    expect(sql).toContain('cardinality(roles) > 0');
+    expect(values).toEqual(['clerk-1']);
   });
 
   it('is false while the user has not been written yet', async () => {

@@ -78,11 +78,11 @@ describe('NewAssignmentDrawer', () => {
     expect(mockPush).toHaveBeenCalledWith('/dashboard', { scroll: false });
   });
 
-  it('keeps what you type and previews the slug', () => {
+  it('keeps what you type without showing a slug', () => {
     const title = screen.getByLabelText('Title');
     fireEvent.change(title, { target: { value: 'City council' } });
     expect(title).toHaveValue('City council');
-    expect(screen.getByLabelText('Slug')).toHaveTextContent('city-council-······');
+    expect(screen.queryByLabelText('Slug')).not.toBeInTheDocument();
   });
 
   it('starts as an open call with nobody selected', () => {
@@ -157,7 +157,6 @@ describe('NewAssignmentDrawer', () => {
     fireEvent.click(screen.getByRole('button', { name: /post assignment/i }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('That slug is already used by another assignment.');
-    expect(screen.getByText('That slug is already used.')).toBeInTheDocument();
     expect(mockPush).not.toHaveBeenCalled();
   });
 

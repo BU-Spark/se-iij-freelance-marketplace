@@ -17,6 +17,9 @@ const tasks: DeskAssignment[] = [
   { ...SAMPLE_ASSIGNMENTS[3], id: 'other-active', title: 'Other ongoing work', assignedToId: 'other' },
 ];
 const feed = () => within(screen.getByRole('region', { name: 'Task feed' }));
+// the All / Open / Invited / In progress toggle in the feed's heading, like the editor desk's
+const statusButton = (name: string) =>
+  within(screen.getByRole('group', { name: 'Filter assignments' })).getByRole('button', { name });
 
 it('shows only personal in-progress tasks and excludes other private tasks', () => {
   render(<FreelancerDashboard assignments={tasks} freelancerId="me" />);
@@ -24,53 +27,49 @@ it('shows only personal in-progress tasks and excludes other private tasks', () 
   expect(active.getByRole('heading', { name: 'My ongoing work' })).toBeInTheDocument();
   expect(screen.queryByText('Other ongoing work')).not.toBeInTheDocument();
   expect(screen.queryByText('Other invitation')).not.toBeInTheDocument();
-  fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'invited' } });
+  fireEvent.click(statusButton('Invited'));
   expect(feed().getAllByRole('article')).toHaveLength(1);
   expect(feed().getByText('My invitation')).toBeInTheDocument();
 });
 
-it('paginates and resets to the first page when search or status changes', () => {
+it('lists every matching task without paging, and narrows by search and status', () => {
   render(<FreelancerDashboard assignments={tasks} freelancerId="me" />);
-  expect(feed().getAllByRole('article')).toHaveLength(4);
-  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(screen.getByText('Page 2 of 2')).toBeInTheDocument();
-  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-  fireEvent.change(screen.getByLabelText('Search tasks'), { target: { value: '  OPPORTUNITY  ' } });
-  expect(screen.getByText('Page 1 of 2')).toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-  expect(feed().getAllByRole('article')).toHaveLength(2);
-  fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'in-progress' } });
-  expect(screen.getByText('Page 1 of 1')).toBeInTheDocument();
+  // 6 open, my invitation and my ongoing work: all on one page
+  expect(feed().getAllByRole('article')).toHaveLength(8);
+  expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Previous' })).not.toBeInTheDocument();
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search' }), { target: { value: '  OPPORTUNITY  ' } });
+  expect(feed().getAllByRole('article')).toHaveLength(6);
+  expect(screen.getByRole('status')).toHaveTextContent('Showing 6 of 8 assignments');
+  fireEvent.click(statusButton('In progress'));
   expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
-  fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
-  expect(screen.getByLabelText('Search tasks')).toHaveValue('');
-  expect(feed().getAllByRole('article')).toHaveLength(4);
+  fireEvent.click(screen.getByRole('button', { name: /^Clear filters/ }));
+  expect(screen.getByRole('searchbox', { name: 'Search' })).toHaveValue('');
+  expect(feed().getAllByRole('article')).toHaveLength(8);
 });
 
-it('handles an empty feed with disabled pagination', () => {
+it('handles an empty feed', () => {
   render(<FreelancerDashboard assignments={[]} freelancerId="me" />);
   expect(screen.getByText('No assignments in progress.')).toBeInTheDocument();
   // an empty feed is not the same as filters hiding everything
   expect(screen.getByRole('status')).toHaveTextContent('No open assignments yet');
-  expect(screen.getByRole('button', { name: 'Next' })).toBeDisabled();
-  expect(screen.getByRole('button', { name: 'Previous' })).toBeDisabled();
 });
 
 it('combines category, location, search, and status without hiding ongoing work', () => {
   render(<FreelancerDashboard assignments={tasks} freelancerId="me" />);
   fireEvent.change(screen.getByLabelText('Category'), { target: { value: 'Reporting/Writing' } });
   fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Central City Hall' } });
-  fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'open' } });
-  fireEvent.change(screen.getByLabelText('Search tasks'), { target: { value: 'Opportunity 0' } });
+  fireEvent.click(statusButton('Open'));
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search' }), { target: { value: 'Opportunity 0' } });
   expect(feed().getAllByRole('article')).toHaveLength(1);
   expect(feed().getByText('Opportunity 0')).toBeInTheDocument();
   expect(within(screen.getByRole('region', { name: 'In progress' })).getByText('My ongoing work')).toBeInTheDocument();
   fireEvent.change(screen.getByLabelText('Location'), { target: { value: 'Remote' } });
   expect(screen.getByRole('status')).toHaveTextContent('No matching tasks');
-  fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+  fireEvent.click(screen.getByRole('button', { name: /^Clear filters/ }));
   expect(screen.getByLabelText('Category')).toHaveValue('');
   expect(screen.getByLabelText('Location')).toHaveValue('');
-  expect(screen.getByLabelText('Status')).toHaveValue('all');
-  expect(screen.getByRole('button', { name: 'Clear filters' })).toBeDisabled();
+  expect(statusButton('All')).toHaveAttribute('aria-pressed', 'true');
+  // with nothing filtered the Clear link goes away, as on Find talent
+  expect(screen.queryByRole('button', { name: /^Clear filters/ })).not.toBeInTheDocument();
 });

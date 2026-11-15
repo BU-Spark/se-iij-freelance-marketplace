@@ -1,14 +1,21 @@
 import type { DeskAssignment } from '../../../types/dashboard.types';
 import { TaskCard } from './TaskCard';
 import styles from '../freelancer.module.css';
+import dashboardStyles from '../../dashboard.module.css';
 export type ActiveAssignmentsProps = { active: DeskAssignment[]; freelancerId: string };
 export function ActiveAssignments({ active, freelancerId }: ActiveAssignmentsProps) {
   return (
-    <section id="active-assignments" aria-labelledby="active-heading" className={styles.section}>
-      <h2 id="active-heading">In progress</h2>
-      <p>Your assigned work, ordered by deadline. This section stays visible while you filter the task feed.</p>
+    <section id="active-assignments" aria-labelledby="active-heading">
+      <div className={dashboardStyles.sectionHead}>
+        <div>
+          <h2 id="active-heading" className={dashboardStyles.sectionTitle}>
+            In progress
+          </h2>
+          <p className={dashboardStyles.sectionSub}>Your assigned work, ordered by deadline</p>
+        </div>
+      </div>
       {active.length ? (
-        <ul className={styles.grid}>
+        <ul className={dashboardStyles.list}>
           {active.map((task) => (
             <li key={task.id}>
               <TaskCard task={task} freelancerId={freelancerId} />
@@ -16,7 +23,7 @@ export function ActiveAssignments({ active, freelancerId }: ActiveAssignmentsPro
           ))}
         </ul>
       ) : (
-        <p>No assignments in progress.</p>
+        <p className={styles.emptyState}>No assignments in progress.</p>
       )}
     </section>
   );

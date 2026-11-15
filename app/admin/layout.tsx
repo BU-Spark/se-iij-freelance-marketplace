@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { ensureBasicUser } from '../../lib/profile';
 import AdminHeader from './AdminHeader';
-import { AdminBrand, AdminHeading, AdminNavLinks } from './AdminNav';
+import { AdminBrand, AdminHeading, AdminNavLinks, AdminSignOut } from './AdminNav';
 import styles from './admin.module.css';
 
 /**
@@ -41,6 +41,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <aside className={styles.sidebar}>
         <AdminBrand />
         <AdminNavLinks />
+        <AdminSignOut />
       </aside>
       <div>
         <AdminHeader />

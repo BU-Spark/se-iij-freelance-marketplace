@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { FormEvent, useState } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
 import { useSignIn } from '@clerk/nextjs/legacy';
-import { Field, IIJLogo } from '../components';
+import { Field, IIJLogo, PasswordField } from '../components';
 import { isValidEmail } from '../utils/validation.utils';
 import styles from './login.module.css';
 
@@ -220,17 +220,14 @@ function LoginForm() {
                 />
               </Field>
 
-              <Field label="Password" error={errors.password}>
-                <input
-                  type="password"
-                  name="password"
-                  autoComplete="current-password"
-                  placeholder="Your password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  aria-invalid={!!errors.password}
-                />
-              </Field>
+              <PasswordField
+                label="Password"
+                name="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={setPassword}
+                error={errors.password}
+              />
               {errors.form && <p role="alert">{errors.form}</p>}
 
               <div className={styles.formMeta}>

@@ -1,4 +1,4 @@
-import { ROSTER } from '../dashboard/constants';
+import { SAMPLE_ROSTER as ROSTER } from '../../test/fixtures/roster';
 import { SAMPLE_ASSIGNMENTS } from '../../test/fixtures/assignments';
 import {
   countByStatus,
@@ -11,6 +11,9 @@ import {
   initials,
   slotLabel,
   candidatesFor,
+  assignmentMatches,
+  matchesQuery,
+  memberMatches,
   timeAgo,
   toDeskAssignment,
 } from './dashboard.utils';
@@ -150,10 +153,38 @@ describe('dashboard utils', () => {
     });
   });
 });
+
+describe('desk search matching', () => {
+  it('matches every word regardless of order and case', () => {
+    expect(matchesQuery('  marcus LONDON ', 'Marcus Thorne', 'London')).toBe(true);
+    expect(matchesQuery('london marcus', 'Marcus Thorne', 'London')).toBe(true);
+    expect(matchesQuery('marcus berlin', 'Marcus Thorne', 'London')).toBe(false);
+  });
+
+  it('lets an empty query through', () => {
+    expect(matchesQuery('   ', 'anything')).toBe(true);
+    expect(memberMatches(ROSTER[0], '')).toBe(true);
+    expect(assignmentMatches(SAMPLE_ASSIGNMENTS[0], '')).toBe(true);
+  });
+
+  it('finds a roster member by beat and city', () => {
+    expect(memberMatches(ROSTER[0], 'reporting')).toBe(true);
+    expect(memberMatches(ROSTER[0], 'london')).toBe(true);
+    expect(memberMatches(ROSTER[0], 'tokyo')).toBe(false);
+  });
+
+  it('finds an assignment by its contact and organization', () => {
+    const assignment = { ...SAMPLE_ASSIGNMENTS[0], organizationId: 'meridian' };
+
+    expect(assignmentMatches(assignment, 'sarah jenkins')).toBe(true);
+    expect(assignmentMatches(assignment, 'meridian post')).toBe(true);
+    expect(assignmentMatches(assignment, 'election district')).toBe(true);
+    expect(assignmentMatches(assignment, 'port authority')).toBe(false);
+  });
+});
 describe('timeAgo', () => {
   const now = new Date(2026, 9, 26, 12, 0); // Oct 26, 12:00
   const minutesBefore = (m: number) => new Date(now.getTime() - m * 60000);
-
   it('says "just now" for less than a minute', () => {
     expect(timeAgo(minutesBefore(0), now)).toBe('just now');
   });

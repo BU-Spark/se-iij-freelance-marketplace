@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useClerk } from '@clerk/nextjs';
 import { usePathname } from 'next/navigation';
 import IIJLogo from '../components/IIJLogo/IIJLogo';
 import menu from '../components/NavMenu/NavMenu.module.css';
@@ -8,7 +9,7 @@ import styles from './admin.module.css';
 
 /** The admin sections, shared by the sidebar, the phone menu and the page heading */
 export const ADMIN_TABS = [
-  { label: 'Inbox', href: '/admin', description: 'Review what people have flagged across the marketplace.' },
+  { label: 'Inbox', href: '/admin', description: 'Appeals and flags waiting on the team, newest first.' },
   { label: 'Verification', href: '/admin/verification', description: 'Check who people say they are.' },
   { label: 'Accounts', href: '/admin/accounts', description: 'Find people and suspend or reactivate them.' },
 ];
@@ -52,6 +53,17 @@ export function AdminNavLinks({ onNavigate }: { onNavigate?: () => void }) {
         ))}
       </ul>
     </nav>
+  );
+}
+
+/** Ends the admin's session and returns them to the home page */
+export function AdminSignOut() {
+  const { signOut } = useClerk();
+
+  return (
+    <button type="button" className={styles.signOut} onClick={() => signOut({ redirectUrl: '/' })}>
+      Sign out
+    </button>
   );
 }
 

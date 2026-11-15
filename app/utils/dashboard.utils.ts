@@ -7,6 +7,7 @@ import type {
   RosterMember,
 } from '../types/dashboard.types';
 import type { Assignment } from '../types/assignments.types';
+import { organizationName } from './organization.utils';
 /** The availability bar shows six 2-hour slots: 8a, 10a, 12p, 2p, 4p, 6p */
 export const SLOT_STARTS = [8, 10, 12, 14, 16, 18];
 
@@ -90,7 +91,9 @@ export function toDeskAssignment(a: Assignment): DeskAssignment {
     length: a.length,
     compensation: a.compensation,
     organizationId: a.organizationId,
+    createdByName: a.createdByName,
     interestedIds: [],
+    assignedToId: a.assignedToUserId ?? undefined,
     href: assignmentDrawerHref('/dashboard', a.id),
   };
 }
@@ -102,6 +105,35 @@ export function countOnRoster(roster: RosterMember[]): number {
 /** The assignments that belong under a tab: "all" keeps everything */
 export function filterAssignments(assignments: DeskAssignment[], filter: DeskFilter): DeskAssignment[] {
   return filter === 'all' ? assignments : assignments.filter((a) => a.status === filter);
+}
+
+/**
+ * Every word in the query must appear somewhere in the text, in any order — so "marcus london"
+ * finds Marcus in London. An empty query matches everything.
+ */
+export function matchesQuery(query: string, ...parts: (string | undefined)[]): boolean {
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return true;
+
+  const haystack = parts.filter(Boolean).join(' ').toLowerCase();
+  return words.every((word) => haystack.includes(word));
+}
+
+/** Roster cards match on the person, their beats and where they are */
+export function memberMatches(member: RosterMember, query: string): boolean {
+  return matchesQuery(query, member.name, member.specialty, member.city, ...(member.beats ?? []));
+}
+
+/** Assignment cards match on the post, its category, its contact and the organization */
+export function assignmentMatches(assignment: DeskAssignment, query: string): boolean {
+  return matchesQuery(
+    query,
+    assignment.title,
+    assignment.category,
+    assignment.contact.name,
+    assignment.contact.desk,
+    organizationName(assignment.organizationId) ?? undefined
+  );
 }
 /** One person in the Review candidates list */
 export type Candidate = {

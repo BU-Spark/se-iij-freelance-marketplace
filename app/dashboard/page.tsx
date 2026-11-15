@@ -2,16 +2,15 @@ import { Suspense } from 'react';
 import { auth } from '@clerk/nextjs/server';
 import AvailabilityColumn from './components/AvailabilityColumn';
 import AssignmentsColumn from './components/AssignmentsColumn';
-import PageSearch from './components/PageSearch';
+import DeskSearch from './components/DeskSearch';
+import { DeskQueryProvider } from './components/deskQuery';
 import styles from './dashboard.module.css';
-import { ROSTER } from './constants';
 import { NewAssignmentFromUrl } from '../components';
-import type { Assignment } from '../types/assignments.types';
-import type { RosterMember } from '../types/dashboard.types';
-import { listOpenAssignments, loadAssignmentViewer } from '../../lib/assignments';
+import type { AssignmentStatus, RosterMember } from '../types/dashboard.types';
+import { countAssignmentsByStatus, listDeskAssignments, loadAssignmentViewer } from '../../lib/assignments';
 import { loadEditorRoster } from '../../lib/roster';
 import { requireWorkspace } from '../../lib/workspace';
-import { countByStatus, formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
+import { formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
 import AssignmentDrawer from '../components/AssignmentDrawer/AssignmentDrawer';
 import { loadAssignmentView, type AssignmentView } from './assignments/loadAssignmentView';
 
@@ -31,12 +30,17 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
   // The editor desk is only for people with the editor role
   await requireWorkspace('editor');
 
-  let posted: Assignment[] = [];
+  // The first page of the desk's own assignments, plus the real totals for the status bar
+  let posted: Awaited<ReturnType<typeof listDeskAssignments>>['items'] = [];
+  let nextCursor: string | null = null;
+  let counts: Record<AssignmentStatus, number> = { open: 0, invited: 0, assigned: 0 };
   try {
-    // Only the assignments the editor's own organization posted
     const { userId } = await auth();
     const viewer = userId ? await loadAssignmentViewer(userId) : null;
-    posted = await listOpenAssignments(viewer);
+    const [page, statusCounts] = await Promise.all([listDeskAssignments(viewer), countAssignmentsByStatus(viewer)]);
+    posted = page.items;
+    nextCursor = page.nextCursor;
+    counts = statusCounts;
   } catch (error) {
     console.error('Failed to load assignments.', error);
   }
@@ -66,47 +70,53 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
 
   // Everything in the desk comes from the database: no sample cards sit under the real posts
   const assignments = posted.map(toDeskAssignment);
-  const counts = countByStatus(assignments);
 
   return (
-    <div className={styles.shell}>
-      {/* ---- Status bar ---- */}
-      <div className={styles.statusBar}>
-        <div className={styles.statusLead}>
-          <p>
-            <strong>{formatDeskDate(new Date())}</strong>
-          </p>
-          {/* Generic for now: highlights matches in the columns, does not filter yet */}
-          <PageSearch targetId="dashboard-columns" />
+    <DeskQueryProvider>
+      <div className={styles.shell}>
+        {/* ---- Status bar ---- */}
+        <div className={styles.statusBar}>
+          <div className={styles.statusLead}>
+            <p>
+              <strong>{formatDeskDate(new Date())}</strong>
+            </p>
+            {/* filters both columns as the editor types */}
+            <DeskSearch />
+          </div>
+          <ul aria-label="Assignment counts" className={styles.counts}>
+            <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>
+            <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>{counts.invited} pending</li>
+            <li style={{ ['--dot' as string]: 'var(--c-green)' }}>{counts.assigned} assigned</li>
+          </ul>
         </div>
-        <ul aria-label="Assignment counts" className={styles.counts}>
-          <li style={{ ['--dot' as string]: 'var(--c-blue)' }}>{counts.open} open</li>
-          <li style={{ ['--dot' as string]: 'var(--c-amber)' }}>{counts.invited} pending</li>
-          <li style={{ ['--dot' as string]: 'var(--c-green)' }}>{counts.assigned} assigned</li>
-        </ul>
+
+        <main id="dashboard-columns" className={styles.columns}>
+          {/* ---- Left column: who is available ---- */}
+          <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
+
+          {/* ---- Right column: assignments ---- */}
+          <AssignmentsColumn
+            assignments={assignments}
+            roster={roster}
+            nextCursor={nextCursor}
+            total={counts.open + counts.invited + counts.assigned}
+          />
+        </main>
+
+        {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
+        <Suspense fallback={null}>
+          <NewAssignmentFromUrl closeHref="/dashboard" roster={roster} />
+        </Suspense>
+
+        {opened && (
+          <AssignmentDrawer
+            assignment={opened.assignment}
+            canEdit={opened.canEdit}
+            showOrganization
+            closeHref="/dashboard"
+          />
+        )}
       </div>
-
-      <main id="dashboard-columns" className={styles.columns}>
-        {/* ---- Left column: who is available ---- */}
-        <AvailabilityColumn roster={roster} loadFailed={rosterFailed} />
-
-        {/* ---- Right column: assignments ---- */}
-        <AssignmentsColumn assignments={assignments} roster={ROSTER} />
-      </main>
-
-      {/* reads ?new=assignment from the URL; Suspense is required by useSearchParams */}
-      <Suspense fallback={null}>
-        <NewAssignmentFromUrl closeHref="/dashboard" roster={ROSTER} />
-      </Suspense>
-
-      {opened && (
-        <AssignmentDrawer
-          assignment={opened.assignment}
-          canEdit={opened.canEdit}
-          showOrganization
-          closeHref="/dashboard"
-        />
-      )}
-    </div>
+    </DeskQueryProvider>
   );
 }

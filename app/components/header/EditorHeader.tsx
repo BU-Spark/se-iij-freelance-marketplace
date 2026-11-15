@@ -49,6 +49,7 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
       {/* ☰ opens the navigation menu on the left */}
       <HamburgerMenu
         name={myName}
+        photoUrl={profile?.basic.photoUrl}
         roles={roles}
         activeRole={role}
         onRoleChange={(nextRole) => router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard')}
@@ -65,6 +66,7 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
           </Link>
         ) : (
           <Link className={styles.newAssignment} href="/dashboard/freelancer/make-a-pitch">
+            <span aria-hidden="true">+</span>
             Make a Pitch
           </Link>
         )}
