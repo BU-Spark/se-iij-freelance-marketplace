@@ -1,6 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ORGANIZATIONS } from './constants';
+import { ORGANIZATIONS, REACH_DETAIL } from './constants';
 import OrganizationGrid from './OrganizationGrid';
 
 describe('OrganizationGrid', () => {
@@ -20,6 +20,7 @@ describe('OrganizationGrid', () => {
     const drawer = screen.getByRole('dialog', { name: org.name });
     expect(within(drawer).getByText(org.bio)).toBeInTheDocument();
     expect(within(drawer).getByText(org.paymentTerms)).toBeInTheDocument();
+    expect(within(drawer).getByText(REACH_DETAIL[org.reach])).toBeInTheDocument();
     org.coverage.forEach((topic) => expect(within(drawer).getByText(topic)).toBeInTheDocument());
   });
 

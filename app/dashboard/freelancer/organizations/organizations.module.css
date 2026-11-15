@@ -28,6 +28,12 @@
   border-radius: 12px;
 }
 
+.nameRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
 .name {
   margin: 0;
   color: var(--navy-deep);
@@ -38,6 +44,27 @@
 .tagline {
   margin: 0;
   color: var(--muted);
+}
+
+/* where its opportunities are open: local, US only or global */
+.reach {
+  flex-shrink: 0;
+  margin-top: 3px;
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.local {
+  color: var(--c-green-d);
+}
+.us {
+  color: var(--navy);
+}
+.global {
+  color: var(--c-purple);
 }
 
 .beats {
