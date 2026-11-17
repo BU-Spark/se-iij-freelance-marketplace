@@ -3,10 +3,19 @@ import {
   addMonths,
   dateKeyIn,
   dayOfWeek,
+  endOfToday,
+  freeNowExpiry,
+  freeNowPresetOf,
+  freeUntilLabel,
+  fromDateTimeInput,
   isDateKey,
+  isFreeNow,
   MAX_EXCEPTIONS,
+  MAX_FREE_NOW_HOURS,
   monthOf,
+  parseAvailableUntil,
   sanitizeExceptions,
+  toDateTimeInput,
 } from './availability.utils';
 
 describe('isDateKey', () => {
@@ -91,5 +100,116 @@ describe('sanitizeExceptions', () => {
     }));
 
     expect(sanitizeExceptions(everyDay)).toHaveLength(MAX_EXCEPTIONS);
+  });
+});
+
+describe('endOfToday', () => {
+  it('lands on the last instant of the local day', () => {
+    const now = new Date(2026, 10, 4, 15, 0, 0);
+    const end = endOfToday(now);
+
+    expect(end.getTime()).toBeGreaterThan(now.getTime());
+    expect(end.getFullYear()).toBe(2026);
+    expect(end.getMonth()).toBe(10);
+    expect(end.getDate()).toBe(4);
+    expect(end.getHours()).toBe(23);
+    expect(end.getMinutes()).toBe(59);
+    expect(new Date(end.getTime() + 1).getHours()).toBe(0);
+  });
+});
+
+describe('freeNowExpiry', () => {
+  const now = new Date('2026-11-04T12:00:00.000Z');
+
+  it('counts preset timers from now', () => {
+    expect(freeNowExpiry('30m', now)?.toISOString()).toBe('2026-11-04T12:30:00.000Z');
+    expect(freeNowExpiry('1h', now)?.toISOString()).toBe('2026-11-04T13:00:00.000Z');
+    expect(freeNowExpiry('2h', now)?.toISOString()).toBe('2026-11-04T14:00:00.000Z');
+  });
+
+  it('runs "today" to the local end of the day, and has no answer for a custom time', () => {
+    expect(freeNowExpiry('today', now)?.getTime()).toBe(endOfToday(now).getTime());
+    expect(freeNowExpiry('custom', now)).toBeNull();
+  });
+});
+
+describe('isFreeNow', () => {
+  const now = new Date('2026-11-04T12:00:00.000Z');
+
+  it('only counts while the flag is on and its timer is running', () => {
+    expect(isFreeNow(false, null, now)).toBe(false);
+    expect(isFreeNow(true, null, now)).toBe(true);
+    expect(isFreeNow(true, '2026-11-04T12:30:00.000Z', now)).toBe(true);
+    expect(isFreeNow(true, new Date('2026-11-04T11:59:00.000Z'), now)).toBe(false);
+  });
+
+  it('treats a timestamp it cannot read as no timer at all', () => {
+    expect(isFreeNow(true, 'not a time', now)).toBe(true);
+  });
+});
+
+describe('parseAvailableUntil', () => {
+  const now = new Date('2026-11-04T12:00:00.000Z');
+
+  it('accepts a timer within the next few days, and no timer at all', () => {
+    expect(parseAvailableUntil(undefined, now)).toEqual({ valid: true, until: null });
+    expect(parseAvailableUntil(null, now)).toEqual({ valid: true, until: null });
+    expect(parseAvailableUntil('', now)).toEqual({ valid: true, until: null });
+
+    const until = new Date('2026-11-04T15:00:00.000Z');
+    expect(parseAvailableUntil(until.toISOString(), now)).toEqual({ valid: true, until });
+  });
+
+  it('refuses a time in the past, an unreadable timestamp, and one too far off', () => {
+    const tooLate = new Date(now.getTime() + (MAX_FREE_NOW_HOURS + 1) * 3_600_000);
+
+    expect(parseAvailableUntil('2026-11-04T11:59:00.000Z', now).valid).toBe(false);
+    expect(parseAvailableUntil('tomorrow', now).valid).toBe(false);
+    expect(parseAvailableUntil(42, now).valid).toBe(false);
+    expect(parseAvailableUntil(tooLate.toISOString(), now).valid).toBe(false);
+  });
+});
+
+describe('freeNowPresetOf', () => {
+  const now = new Date('2026-11-04T12:00:00.000Z');
+
+  it('finds the preset a saved timer came from', () => {
+    expect(freeNowPresetOf(null, now)).toBe('today');
+    expect(freeNowPresetOf(freeNowExpiry('1h', now)?.toISOString(), now)).toBe('1h');
+    expect(freeNowPresetOf(endOfToday(now).toISOString(), now)).toBe('today');
+  });
+
+  it('falls back to the custom picker for a time none of the presets would set', () => {
+    expect(freeNowPresetOf(new Date(now.getTime() + 47 * 60_000).toISOString(), now)).toBe('custom');
+  });
+});
+
+describe('freeUntilLabel', () => {
+  it('shows a bare time for today, and the weekday once the timer runs past today', () => {
+    const now = new Date('2026-11-04T12:00:00.000Z');
+
+    expect(freeUntilLabel(new Date('2026-11-04T15:30:00.000Z'), now, 'UTC')).toBe('3:30 PM');
+    expect(freeUntilLabel(new Date('2026-11-06T09:00:00.000Z'), now, 'UTC')).toBe('Fri 9:00 AM');
+  });
+
+  it('reads the clock in the zone it is given', () => {
+    const now = new Date('2026-11-04T12:00:00.000Z');
+
+    // 16:30 UTC is 11:30 in New York, still the same local day there
+    expect(freeUntilLabel(new Date('2026-11-04T16:30:00.000Z'), now, 'America/New_York')).toBe('11:30 AM');
+  });
+});
+
+describe('datetime-local helpers', () => {
+  it('round-trips an instant through the browser-local input format', () => {
+    expect(toDateTimeInput('nonsense')).toBe('');
+
+    const iso = fromDateTimeInput('2026-11-04T15:30');
+    expect(iso).not.toBeNull();
+    expect(new Date(iso as string).getHours()).toBe(15);
+    expect(new Date(iso as string).getMinutes()).toBe(30);
+    expect(toDateTimeInput(iso as string)).toBe('2026-11-04T15:30');
+
+    expect(fromDateTimeInput('')).toBeNull();
   });
 });
