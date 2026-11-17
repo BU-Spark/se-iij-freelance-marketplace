@@ -1,7 +1,13 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../../lib/db';
-import { dateKeyIn, isDateKey, sanitizeExceptions } from '../../../utils/availability.utils';
+import {
+  dateKeyIn,
+  isDateKey,
+  isFreeNow,
+  parseAvailableUntil,
+  sanitizeExceptions,
+} from '../../../utils/availability.utils';
 import type { AvailabilityException } from '../../../types/availability.types';
 import type { ProfileRole, StoredAvailability } from '../../../types/profile.types';
 
@@ -24,6 +30,7 @@ const isTimeZone = (value: string) => {
 
 type AvailabilityRow = {
   available_now: boolean | null;
+  available_until: string | Date | null;
   roles: string[] | null;
   freelancer_id: string | null;
   freelancer_availability: StoredAvailability | null;
@@ -36,6 +43,8 @@ type AvailabilityPayload = {
   /** which workspace's hours these are, so the page can word itself for the right side of the desk */
   role: ProfileRole;
   availableNow: boolean;
+  /** when the flag stops on its own; null when it has no timer */
+  availableUntil: string | null;
   timezone: string | null;
   days: string[];
   startsAt: string | null;
@@ -58,23 +67,26 @@ const storedFor = (row: AvailabilityRow): { role: ProfileRole; stored: StoredAva
   return null;
 };
 
-const toPayload = (
-  availableNow: boolean,
-  role: ProfileRole,
-  stored: StoredAvailability | null
-): AvailabilityPayload => ({
-  role,
-  availableNow,
-  timezone: stored?.timezone ?? null,
-  days: stored?.days ?? [],
-  startsAt: stored?.typicalWorkingWindow?.startsAt ?? null,
-  endsAt: stored?.typicalWorkingWindow?.endsAt ?? null,
-  exceptions: sanitizeExceptions(stored?.exceptions),
-});
+const toPayload = (row: AvailabilityRow, role: ProfileRole, stored: StoredAvailability | null): AvailabilityPayload => {
+  const until = row.available_until ? new Date(row.available_until) : null;
+  const freeNow = isFreeNow(row.available_now === true, until);
+
+  return {
+    role,
+    availableNow: freeNow,
+    availableUntil: freeNow && until && !Number.isNaN(until.getTime()) ? until.toISOString() : null,
+    timezone: stored?.timezone ?? null,
+    days: stored?.days ?? [],
+    startsAt: stored?.typicalWorkingWindow?.startsAt ?? null,
+    endsAt: stored?.typicalWorkingWindow?.endsAt ?? null,
+    exceptions: sanitizeExceptions(stored?.exceptions),
+  };
+};
 
 const SELECT_AVAILABILITY = `
   SELECT
     u.available_now,
+    u.available_until,
     u.roles,
     f.user_id AS freelancer_id,
     f.availability AS freelancer_availability,
@@ -133,7 +145,7 @@ export async function GET(request: Request) {
       );
     }
 
-    return NextResponse.json(toPayload(row.available_now === true, role, storedForRole(row, role)));
+    return NextResponse.json(toPayload(row, role, storedForRole(row, role)));
   } catch (error) {
     console.error('Failed to load availability.', error);
     return NextResponse.json({ error: 'Unable to load your availability right now.' }, { status: 500 });
@@ -168,6 +180,15 @@ export async function PATCH(request: Request) {
   if (typeof availableNow !== 'boolean') {
     return NextResponse.json({ error: 'Say whether you are free right now.' }, { status: 400 });
   }
+
+  const timer = parseAvailableUntil(body.availableUntil);
+
+  if (!timer.valid) {
+    return NextResponse.json({ error: 'Choose a timer that ends within the next three days.' }, { status: 400 });
+  }
+
+  // switching off clears the timer with the flag, so the next switch-on starts a fresh one
+  const availableUntil = availableNow ? timer.until : null;
 
   if (typeof timezone !== 'string' || !timezone.trim() || !isTimeZone(timezone.trim())) {
     return NextResponse.json({ error: 'Enter a valid time zone, such as America/New_York.' }, { status: 400 });
@@ -229,10 +250,11 @@ export async function PATCH(request: Request) {
     const updated = await client.query(
       `UPDATE users
           SET available_now = $2,
+              available_until = $3,
               updated_at = NOW()
         WHERE clerk_id = $1
         RETURNING id`,
-      [userId, availableNow]
+      [userId, availableNow, availableUntil]
     );
 
     if (!updated.rowCount) {

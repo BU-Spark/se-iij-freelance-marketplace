@@ -22,6 +22,8 @@ export type BasicInfo = {
   photoUrl?: string;
   /** the person's own "free right now" flag, shown as a dot on their avatar */
   availableNow: boolean;
+  /** when that flag stops counting; null when it has no timer */
+  availableUntil?: string | null;
 };
 
 /** A value a role field holds: text, a chip list, or a number */
@@ -59,6 +61,7 @@ export type ProfileRow = {
   long_bio: string | null;
   photo_key: string | null;
   available_now: boolean | null;
+  available_until: string | Date | null;
   roles: string[] | null;
   preferences: Record<string, unknown> | null;
   editor_id: string | null;

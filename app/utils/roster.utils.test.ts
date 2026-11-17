@@ -202,6 +202,23 @@ describe('toRosterMember', () => {
     expect(toRosterMember({ ...row, available_now: false }, weekend).status).toBe('off');
   });
 
+  it('says when the free-right-now timer runs out, then lets the weekly pattern take over', () => {
+    // a Saturday, when the weekly pattern has them off
+    const weekend = new Date('2026-11-07T12:00:00.000Z');
+    const until = toRosterMember({ ...row, available_now: true, available_until: '2026-11-07T16:30:00.000Z' }, weekend);
+
+    expect(until.status).toBe('available');
+    expect(until.note).toBe('Free until 4:30 PM');
+
+    // once the timer has gone by, the flag no longer counts and Saturday is off again
+    const expired = toRosterMember(
+      { ...row, available_now: true, available_until: '2026-11-07T11:00:00.000Z' },
+      weekend
+    );
+    expect(expired.status).toBe('off');
+    expect(expired.note).toBe('Off today');
+  });
+
   it('marks someone free right now even without a weekly pattern', () => {
     const member = toRosterMember({ ...row, availability: null, available_now: true }, WEDNESDAY_NOON);
 
