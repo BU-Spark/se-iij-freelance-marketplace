@@ -7,6 +7,7 @@ import ProfilePanel from './ProfilePanel';
 import SidePanel from '../SidePanel/SidePanel';
 import { useToast } from '../Toast/ToastProvider';
 import { useProfile } from '../../hooks/useProfile';
+import { freeUntilLabel } from '../../utils/availability.utils';
 import type { BasicInfo, RoleDetails } from '../../types/profile.types';
 import styles from './Profile.module.css';
 
@@ -76,9 +77,13 @@ export default function ProfileFromUrl({ closeHref }: ProfileFromUrlProps) {
     return ok;
   };
 
-  const handleSaveAvailable = async (availableNow: boolean) => {
-    const ok = await saveAvailableNow(availableNow);
-    toast(ok, availableNow ? "You're marked as free right now" : "You're no longer marked as free");
+  const handleSaveAvailable = async (availableNow: boolean, availableUntil: string | null) => {
+    const ok = await saveAvailableNow(availableNow, availableUntil);
+
+    const saved = availableUntil
+      ? `You're marked as free until ${freeUntilLabel(new Date(availableUntil))}`
+      : "You're marked as free right now";
+    toast(ok, availableNow ? saved : "You're no longer marked as free");
     return ok;
   };
 

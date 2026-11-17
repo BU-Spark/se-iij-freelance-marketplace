@@ -239,3 +239,19 @@ Without `AWS_S3_BUCKET_NAME` photo storage reports itself as unconfigured and up
 are rejected, so the rest of the app keeps working. Run `npm run db:migrate` to add
 the `users.photo_key` column. Replacing a photo writes a new object; the previous one
 is left in the bucket.
+
+## Free right now timer
+
+The "I'm free right now" switch on the profile card and in the settings availability
+form sets `users.available_now` and, from this release, stores when it should stop in
+`users.available_until`. Switching the flag on starts at the end of the person's local
+day; the picker under the switch offers 30 minutes, 1 hour, 2 hours, "until end of day"
+or a hand-picked time up to three days out. Switching it off clears the timer too.
+
+Nothing sweeps the table: every read treats a flag whose timer has passed as off. The
+roster, the talent search (including its "available now" filter and ordering) and the
+profile and availability APIs all check the timestamp, and the roster note reads
+"Free until 3:30 PM" while a timer is running. A row saved before this change has no
+timer and stays free until the person switches it off.
+
+Run `npm run db:migrate` to add the `users.available_until` column.

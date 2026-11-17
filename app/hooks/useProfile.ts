@@ -113,12 +113,13 @@ export function createProfileStore(request: ProfileRequest = defaultRequest) {
     load,
     saveBasic: (basic: BasicInfo) => save({ section: 'basic', basic }),
     saveRole: (details: RoleDetails) => save({ section: 'role', role: details.role, facts: details.facts }),
-    saveAvailableNow: async (availableNow: boolean) => {
-      // flip immediately so the switch and the dot respond, and put it back if the save fails
+    saveAvailableNow: async (availableNow: boolean, availableUntil: string | null = null) => {
+      // flip immediately so the switch, its timer and the dot respond, and put it back if the save fails
       const previous = state.profile;
-      if (previous) publish({ profile: { ...previous, basic: { ...previous.basic, availableNow } } });
+      const basic = { availableNow, availableUntil: availableNow ? availableUntil : null };
+      if (previous) publish({ profile: { ...previous, basic: { ...previous.basic, ...basic } } });
 
-      const ok = await save({ section: 'availableNow', availableNow });
+      const ok = await save({ section: 'availableNow', ...basic });
       if (!ok && previous) publish({ profile: previous });
 
       return ok;
