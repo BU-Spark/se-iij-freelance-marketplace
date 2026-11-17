@@ -1,24 +1,27 @@
 import { EDITORS } from './constants';
 import EditorCard from './EditorCard';
-import pageStyles from '../freelancer.module.css';
 import styles from './editors.module.css';
 
 export default function EditorsPage() {
   return (
-    <main className={pageStyles.main}>
-      <div className={styles.intro}>
-        <p className={pageStyles.eyebrow}>Freelancer workspace</p>
-        <h1>Editors</h1>
-        <p>The editors on the desk, the newsroom they work for and the beats they commission.</p>
-      </div>
+    <div className={styles.shell}>
+      <main className={styles.page}>
+        <header className={styles.intro}>
+          <p className={styles.eyebrow}>Freelancer workspace</p>
+          <h1 className={styles.title}>Editors</h1>
+          <p className={styles.lede}>
+            The editors on the desk, the newsroom they work for and the beats they commission.
+          </p>
+        </header>
 
-      <ul className={styles.grid}>
-        {EDITORS.map((editor) => (
-          <li key={editor.id} className={styles.card}>
-            <EditorCard editor={editor} />
-          </li>
-        ))}
-      </ul>
-    </main>
+        <ul className={styles.grid}>
+          {EDITORS.map((editor) => (
+            <li key={editor.id} className={styles.card}>
+              <EditorCard editor={editor} />
+            </li>
+          ))}
+        </ul>
+      </main>
+    </div>
   );
 }
