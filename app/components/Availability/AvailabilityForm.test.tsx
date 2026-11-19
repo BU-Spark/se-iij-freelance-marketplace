@@ -62,6 +62,7 @@ describe('AvailabilityForm', () => {
 
     expect(await screen.findByLabelText('Time zone')).toHaveValue('Europe/London');
     expect(screen.getByLabelText(/free right now/i)).toBeChecked();
+    expect(screen.getByLabelText('Free for')).toHaveValue('today');
     expect(screen.getByLabelText('Start time')).toHaveValue('10:00');
     expect(screen.getByLabelText('End time')).toHaveValue('18:00');
     expect(screen.getByLabelText('Saturday')).toBeChecked();
@@ -95,18 +96,62 @@ describe('AvailabilityForm', () => {
     save();
 
     expect(await screen.findByText(/availability saved/i)).toBeInTheDocument();
-    expect(fetchMock).toHaveBeenLastCalledWith('/api/profile/availability', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        availableNow: true,
-        timezone: 'Europe/London',
-        days: [...WEEKDAYS, 'saturday'],
-        startsAt: '10:00',
-        endsAt: '17:00',
-        exceptions: [],
-      }),
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+
+    expect(body).toMatchObject({
+      availableNow: true,
+      timezone: 'Europe/London',
+      days: [...WEEKDAYS, 'saturday'],
+      startsAt: '10:00',
+      endsAt: '17:00',
+      exceptions: [],
     });
+    // switching on without picking a timer leaves it running to the end of today
+    expect(new Date(body.availableUntil).getTime()).toBeGreaterThan(Date.now());
+  });
+
+  it('lets the person choose when the free-right-now timer ends', async () => {
+    render(<AvailabilityForm userId="user-a" />);
+    await screen.findByLabelText('Time zone');
+
+    fireEvent.click(screen.getByLabelText(/free right now/i));
+    expect(screen.getByLabelText('Free for')).toHaveValue('today');
+
+    fireEvent.change(screen.getByLabelText('Free for'), { target: { value: '1h' } });
+
+    fetchMock.mockResolvedValueOnce(ok({ saved: true }));
+    save();
+    await screen.findByText(/availability saved/i);
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    const hourFromNow = Date.now() + 60 * 60_000;
+
+    expect(body.availableNow).toBe(true);
+    expect(Math.abs(new Date(body.availableUntil).getTime() - hourFromNow)).toBeLessThan(5_000);
+  });
+
+  it('saves a hand-picked timer time', async () => {
+    render(<AvailabilityForm userId="user-a" />);
+    await screen.findByLabelText('Time zone');
+
+    // 45 minutes out, typed the way a datetime-local input holds it
+    const chosen = new Date(Date.now() + 45 * 60_000);
+    const typed = `${chosen.getFullYear()}-${String(chosen.getMonth() + 1).padStart(2, '0')}-${String(chosen.getDate()).padStart(2, '0')}T${String(chosen.getHours()).padStart(2, '0')}:${String(chosen.getMinutes()).padStart(2, '0')}`;
+
+    fireEvent.click(screen.getByLabelText(/free right now/i));
+    fireEvent.change(screen.getByLabelText('Free for'), { target: { value: 'custom' } });
+    fireEvent.change(screen.getByLabelText('Stops at'), { target: { value: typed } });
+
+    fetchMock.mockResolvedValueOnce(ok({ saved: true }));
+    save();
+    await screen.findByText(/availability saved/i);
+
+    const [, init] = fetchMock.mock.calls.at(-1) as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(Math.abs(new Date(body.availableUntil).getTime() - chosen.getTime())).toBeLessThan(60_000);
   });
 
   it('marks a single date the other way round from the usual week', async () => {

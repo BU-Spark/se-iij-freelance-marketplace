@@ -48,6 +48,22 @@
   font-weight: 600;
 }
 
+/* the expiry picker under the "free right now" switch */
+.timer {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.timerHint {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 /* the "free right now" switch */
 .check {
   display: flex;
@@ -244,7 +260,8 @@
 }
 
 @media (max-width: 480px) {
-  .times {
+  .times,
+  .timer {
     grid-template-columns: minmax(0, 1fr);
   }
 }

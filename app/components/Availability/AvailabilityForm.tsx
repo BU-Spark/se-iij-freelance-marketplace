@@ -3,13 +3,16 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import type { AvailabilityException, Weekday } from '../../types/availability.types';
 import type { ProfileRole } from '../../types/profile.types';
-import { WEEKDAYS, dateKeyIn, dayOfWeek, sanitizeExceptions } from '../../utils/availability.utils';
+import { WEEKDAYS, dateKeyIn, dayOfWeek, endOfToday, sanitizeExceptions } from '../../utils/availability.utils';
 import AvailabilityCalendar from './AvailabilityCalendar';
+import FreeNowTimer from './FreeNowTimer';
 import styles from './availability.module.css';
 
 type Draft = {
   /** the "free right now" switch, which editors see immediately */
   freeNow: boolean;
+  /** ISO instant that switch turns itself off at; null when it has no timer */
+  freeUntil: string | null;
   timezone: string;
   days: Weekday[];
   startsAt: string;
@@ -29,6 +32,7 @@ const browserTimeZone = () => {
 
 const DEFAULT: Draft = {
   freeNow: false,
+  freeUntil: null,
   timezone: browserTimeZone(),
   days: WEEKDAYS.slice(0, 5),
   startsAt: '09:00',
@@ -50,9 +54,13 @@ const toDraft = (body: Record<string, unknown>): Draft => {
   const days = Array.isArray(body.days) ? body.days.filter((day): day is string => typeof day === 'string') : null;
   const timezone = typeof body.timezone === 'string' && body.timezone.trim() ? body.timezone : DEFAULT.timezone;
   const today = dateKeyIn(new Date(), timezone);
+  const freeNow = body.availableNow === true;
+  const savedFreeUntil = typeof body.availableUntil === 'string' ? body.availableUntil : null;
 
   return {
-    freeNow: body.availableNow === true,
+    freeNow,
+    // a flag saved before timers existed gets the default one, so the form can show it as it will save
+    freeUntil: freeNow ? (savedFreeUntil ?? endOfToday(new Date()).toISOString()) : null,
     timezone,
     days: days ? WEEKDAYS.filter((day) => days.includes(day)) : DEFAULT.days,
     startsAt: typeof body.startsAt === 'string' ? body.startsAt : DEFAULT.startsAt,
@@ -116,6 +124,17 @@ export default function AvailabilityForm({ userId, role }: AvailabilityFormProps
     setError('');
   };
 
+  const toggleFreeNow = (checked: boolean) => {
+    setDraft((previous) => ({
+      ...previous,
+      freeNow: checked,
+      // switching on starts at the end of today unless a time was already chosen
+      freeUntil: checked ? (previous.freeUntil ?? endOfToday(new Date()).toISOString()) : previous.freeUntil,
+    }));
+    setMessage('');
+    setError('');
+  };
+
   /**
    * One click marks the date the other way round, the next click flips it, the third drops the
    * override — so a date goes "usual week → the opposite → back to the usual week".
@@ -157,6 +176,11 @@ export default function AvailabilityForm({ userId, role }: AvailabilityFormProps
       return;
     }
 
+    if (draft.freeNow && (!draft.freeUntil || new Date(draft.freeUntil).getTime() <= Date.now())) {
+      setError('Choose a time in the future for the free-right-now timer.');
+      return;
+    }
+
     setSaving(true);
     const exceptions = draft.exceptions.filter((entry) => entry.date >= today);
 
@@ -168,6 +192,7 @@ export default function AvailabilityForm({ userId, role }: AvailabilityFormProps
           // names the pattern being edited, so the other role's hours are left alone
           ...(role ? { role } : {}),
           availableNow: draft.freeNow,
+          availableUntil: draft.freeNow ? draft.freeUntil : null,
           timezone,
           days: draft.days,
           startsAt: draft.startsAt,
@@ -197,9 +222,12 @@ export default function AvailabilityForm({ userId, role }: AvailabilityFormProps
   return (
     <form onSubmit={save} className={styles.form}>
       <label className={styles.check}>
-        <input type="checkbox" checked={draft.freeNow} onChange={(event) => update('freeNow', event.target.checked)} />
+        <input type="checkbox" checked={draft.freeNow} onChange={(event) => toggleFreeNow(event.target.checked)} />
         <span>I&apos;m free right now</span>
       </label>
+      {draft.freeNow && (
+        <FreeNowTimer availableUntil={draft.freeUntil} onChange={(until) => update('freeUntil', until)} />
+      )}
       <label className={styles.field}>
         Time zone
         <input
