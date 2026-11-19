@@ -7,13 +7,13 @@ import styles from './talent.module.css';
 
 type TalentCardProps = {
   member: TalentMember;
-  invited: boolean;
-  onInvite: (member: TalentMember) => void;
+  saved: boolean;
+  onSave: (member: TalentMember) => void;
 };
 
 const CLIP_LABEL: Record<string, string> = { article: 'Article', social: 'Social', broadcast: 'Broadcast' };
 
-export default function TalentCard({ member, invited, onInvite }: TalentCardProps) {
+export default function TalentCard({ member, saved, onSave }: TalentCardProps) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
   const { profile } = member;
@@ -56,16 +56,16 @@ export default function TalentCard({ member, invited, onInvite }: TalentCardProp
                 <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" />
               </svg>
             </button>
-            {invited ? (
-              <span className={styles.invited}>Invited</span>
+            {saved ? (
+              <span className={styles.invited}>Saved</span>
             ) : (
               <button
                 type="button"
                 className={styles.inviteSmall}
-                aria-label={`Invite ${member.name} to your roster`}
-                onClick={() => onInvite(member)}
+                aria-label={`Save ${member.name} to your roster`}
+                onClick={() => onSave(member)}
               >
-                Invite
+                Save
               </button>
             )}
             <ReportButton targetType="account" targetId={member.id} targetLabel={member.name} compact />

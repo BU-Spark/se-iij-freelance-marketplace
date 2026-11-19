@@ -41,7 +41,7 @@ const fetchMock = jest.fn();
 
 beforeEach(() => {
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ invited: [] }) });
+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ saved: [] }) });
   global.fetch = fetchMock as unknown as typeof fetch;
 });
 
@@ -111,36 +111,36 @@ describe('TalentSearch', () => {
     expect(screen.getByLabelText('Search')).toHaveValue('');
   });
 
-  it('invites a freelancer and marks the card', async () => {
+  it('saves a freelancer and marks the card', async () => {
     jest.useRealTimers();
     renderPage(<TalentSearch filters={{}} options={options} results={[member()]} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Invite Sarah Jenkins to your roster' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Sarah Jenkins to your roster' }));
 
-    expect(await screen.findByText('Invited')).toBeInTheDocument();
-    expect(screen.getByText('Invited Sarah Jenkins to your roster')).toBeInTheDocument();
+    expect(await screen.findByText('Saved')).toBeInTheDocument();
+    expect(screen.getByText('Saved Sarah Jenkins to your roster')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ freelancerIds: ['user-1'] }),
+      body: JSON.stringify({ freelancerIds: ['user-1'], notify: false }),
     });
   });
 
-  it('shows freelancers who are already on the roster as invited', () => {
-    renderPage(<TalentSearch filters={{}} options={options} results={[member()]} invitedIds={['user-1']} />);
+  it('shows freelancers who are already on the roster as saved', () => {
+    renderPage(<TalentSearch filters={{}} options={options} results={[member()]} savedIds={['user-1']} />);
 
-    expect(screen.getByText('Invited')).toBeInTheDocument();
+    expect(screen.getByText('Saved')).toBeInTheDocument();
   });
 
-  it('reports a refused invite and leaves the card alone', async () => {
+  it('reports a refused save and leaves the card alone', async () => {
     jest.useRealTimers();
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({ error: 'Only editors have a roster.' }) });
     renderPage(<TalentSearch filters={{}} options={options} results={[member()]} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Invite Sarah Jenkins to your roster' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Sarah Jenkins to your roster' }));
 
     expect(await screen.findByText('Only editors have a roster.')).toBeInTheDocument();
-    expect(screen.queryByText('Invited')).not.toBeInTheDocument();
+    expect(screen.queryByText('Saved')).not.toBeInTheDocument();
   });
 
   it('says when nobody has joined yet, and when the search failed', () => {
