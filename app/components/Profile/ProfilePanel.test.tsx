@@ -165,7 +165,7 @@ describe('ProfilePanel', () => {
 
     fireEvent.click(toggle);
 
-    expect(onSaveAvailable).toHaveBeenCalledWith(false);
+    expect(onSaveAvailable).toHaveBeenCalledWith(false, null);
   });
 
   it('has no switch when the panel cannot save', () => {

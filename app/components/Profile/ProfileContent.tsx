@@ -23,8 +23,8 @@ type ProfileContentProps = {
   onSaveBasic?: (basic: BasicInfo) => SaveResult;
   /** if given, each role card gets an Edit button */
   onSaveRole?: (details: RoleDetails) => SaveResult;
-  /** if given, shows the "free right now" switch */
-  onSaveAvailable?: (availableNow: boolean) => SaveResult;
+  /** if given, shows the "free right now" switch and its timer */
+  onSaveAvailable?: (availableNow: boolean, availableUntil: string | null) => SaveResult;
   /** if given, basic info is a row that opens its own drawer instead of an expanded card */
   onOpenBasic?: () => void;
   /** if given, each role is a row that opens its own drawer instead of an expanded card */
@@ -88,7 +88,11 @@ export default function ProfileContent({
       )}
 
       {onSaveAvailable && (
-        <AvailableToggle availableNow={profile.basic.availableNow} onToggle={(next) => void onSaveAvailable(next)} />
+        <AvailableToggle
+          availableNow={profile.basic.availableNow}
+          availableUntil={profile.basic.availableUntil ?? null}
+          onToggle={(next, until) => void onSaveAvailable(next, until)}
+        />
       )}
 
       {onOpenBasic ? (

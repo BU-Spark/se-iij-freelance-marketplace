@@ -67,7 +67,11 @@ describe('profile store', () => {
     await expect(store.saveAvailableNow(true)).resolves.toBe(true);
 
     expect(store.getState().profile?.basic.availableNow).toBe(true);
-    expect(request).toHaveBeenCalledWith('PATCH', { section: 'availableNow', availableNow: true });
+    expect(request).toHaveBeenCalledWith('PATCH', {
+      section: 'availableNow',
+      availableNow: true,
+      availableUntil: null,
+    });
   });
 
   it('puts the flag back when the save fails', async () => {
