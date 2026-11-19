@@ -63,7 +63,8 @@ export default function AssignmentsTable({
           {assignments.map((a) => {
             const organization = organizationName(a.organizationId);
             const name = assignedName(a.assignedToId);
-            const canReview = onReview && a.status !== 'assigned' && a.interestedIds.length > 0;
+            const canReview =
+              onReview && a.status !== 'assigned' && (a.interestedIds.length > 0 || (a.invitedIds?.length ?? 0) > 0);
 
             return (
               <tr key={a.id} className={a.href ? styles.clickableRow : undefined} onClick={() => open(a)}>
@@ -82,7 +83,11 @@ export default function AssignmentsTable({
                 <td data-label="Status">{STATUS_LABEL[a.status]}</td>
                 <td data-label="Deadline">{a.deadline ? formatDeadline(a.deadline) : '—'}</td>
                 <td data-label="Candidates">
-                  {a.status === 'assigned' ? '—' : `${a.interestedIds.length} interested`}
+                  {a.status === 'assigned'
+                    ? '—'
+                    : `${a.interestedIds.length} interested${
+                        a.invitedIds?.length ? ` · ${a.invitedIds.length} invited` : ''
+                      }`}
                 </td>
                 <td data-label="Assigned to">{name ?? '—'}</td>
                 <td className={styles.tableAction}>

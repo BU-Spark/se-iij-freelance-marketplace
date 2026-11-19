@@ -47,11 +47,10 @@ export default function ReviewCandidates({ assignment, roster, onAssign, onClose
                   )}
                 </p>
               </div>
-              {/* you can only assign someone who said they're interested */}
+              {/* an editor can assign anyone they invited, even before the freelancer answers */}
               <button
                 type="button"
                 className={styles.assign}
-                disabled={!isInterested}
                 onClick={() => onAssign(member.id)}
                 aria-label={`Assign ${member.name}`}
               >
