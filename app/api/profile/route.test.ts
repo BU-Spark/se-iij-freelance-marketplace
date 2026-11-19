@@ -27,6 +27,7 @@ const row: ProfileRow = {
   short_bio: 'Local politics reporter',
   long_bio: null,
   photo_key: null,
+  available_until: null,
   available_now: false,
   roles: ['editor'],
   preferences: null,
@@ -197,7 +198,45 @@ describe('PATCH /api/profile', () => {
     queryMock.mockResolvedValue({ rows: [row] });
 
     expect((await PATCH(patch({ section: 'availableNow', availableNow: true }))).status).toBe(200);
-    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('SET available_now = $2'), ['clerk-1', true]);
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('SET available_now = $2'), [
+      'clerk-1',
+      true,
+      null,
+    ]);
+  });
+
+  it('stores the timer that turns the flag off', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk-1' });
+    const client = makeClient();
+    connectMock.mockResolvedValue(client);
+    queryMock.mockResolvedValue({ rows: [row] });
+    const availableUntil = new Date(Date.now() + 60 * 60_000).toISOString();
+
+    expect((await PATCH(patch({ section: 'availableNow', availableNow: true, availableUntil }))).status).toBe(200);
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('available_until = $3'), [
+      'clerk-1',
+      true,
+      new Date(availableUntil),
+    ]);
+  });
+
+  it('clears the timer when the flag is switched off, and refuses one in the past', async () => {
+    authMock.mockResolvedValue({ userId: 'clerk-1' });
+    const client = makeClient();
+    connectMock.mockResolvedValue(client);
+    queryMock.mockResolvedValue({ rows: [row] });
+
+    const past = new Date(Date.now() - 60_000).toISOString();
+    expect((await PATCH(patch({ section: 'availableNow', availableNow: true, availableUntil: past }))).status).toBe(
+      400
+    );
+
+    expect((await PATCH(patch({ section: 'availableNow', availableNow: false }))).status).toBe(200);
+    expect(client.query).toHaveBeenCalledWith(expect.stringContaining('available_until = $3'), [
+      'clerk-1',
+      false,
+      null,
+    ]);
   });
 
   it('rejects a flag that is not a boolean', async () => {

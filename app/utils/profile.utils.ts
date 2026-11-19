@@ -1,4 +1,5 @@
 import { Role } from '../types/user.types';
+import { isFreeNow } from './availability.utils';
 import type { Availability, Weekday } from '../types/availability.types';
 import type { RateUnit } from '../types/dashboard.types';
 import type {
@@ -111,6 +112,12 @@ export const profileRoles = (row: ProfileRow): ProfileRole[] => {
 };
 
 export function toAccountProfile(row: ProfileRow, photoUrl?: string): AccountProfile {
+  // an expired timer reads as "not free", and its timestamp is dropped so the panel offers a fresh one
+  const availableUntil = row.available_until ? new Date(row.available_until) : null;
+  const freeNow = isFreeNow(Boolean(row.available_now), availableUntil);
+  const timer =
+    freeNow && availableUntil && !Number.isNaN(availableUntil.getTime()) ? availableUntil.toISOString() : null;
+
   return {
     id: row.id,
     basic: {
@@ -121,7 +128,8 @@ export function toAccountProfile(row: ProfileRow, photoUrl?: string): AccountPro
       longBio: str(row.long_bio),
       photoKey: row.photo_key ?? undefined,
       photoUrl,
-      availableNow: Boolean(row.available_now),
+      availableNow: freeNow,
+      availableUntil: timer,
     },
     roles: profileRoles(row).map((role) => (role === 'editor' ? editorDetails(row) : freelancerDetails(row))),
   };

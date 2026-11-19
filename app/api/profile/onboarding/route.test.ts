@@ -20,6 +20,7 @@ const row: ProfileRow = {
   short_bio: 'Local politics reporter',
   long_bio: null,
   photo_key: 'photos/user-1/photo.jpg',
+  available_until: null,
   available_now: true,
   roles: ['freelancer'],
   preferences: { theme: 'dark', language: 'English', notifications: { email: true, push: false } },

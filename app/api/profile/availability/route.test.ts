@@ -42,6 +42,7 @@ const stored = {
 
 const row = (overrides: Record<string, unknown> = {}) => ({
   available_now: true,
+  available_until: null,
   roles: ['freelancer'],
   freelancer_id: 'freelancer-1',
   freelancer_availability: stored,
@@ -75,6 +76,7 @@ describe('GET /api/profile/availability', () => {
     expect(await response.json()).toEqual({
       role: 'freelancer',
       availableNow: true,
+      availableUntil: null,
       timezone: 'Europe/London',
       days: ['monday', 'tuesday'],
       startsAt: '09:00',
@@ -139,12 +141,26 @@ describe('GET /api/profile/availability', () => {
     expect(await (await get()).json()).toEqual({
       role: 'freelancer',
       availableNow: false,
+      availableUntil: null,
       timezone: null,
       days: [],
       startsAt: null,
       endsAt: null,
       exceptions: [],
     });
+  });
+
+  it('returns the timer that will turn the flag off', async () => {
+    const until = new Date(Date.now() + 90 * 60_000).toISOString();
+    queryMock.mockResolvedValue({ rows: [row({ available_until: until })] });
+
+    expect(await (await get()).json()).toMatchObject({ availableNow: true, availableUntil: until });
+  });
+
+  it('reads a flag whose timer has run out as not free, and drops the stale timer', async () => {
+    queryMock.mockResolvedValue({ rows: [row({ available_until: '2020-01-01T09:00:00.000Z' })] });
+
+    expect(await (await get()).json()).toMatchObject({ availableNow: false, availableUntil: null });
   });
 
   it('returns the editor pattern when the role is asked for', async () => {
@@ -265,7 +281,8 @@ describe('PATCH /api/profile/availability', () => {
 
     const [userSql, userParams] = client.query.mock.calls[1] as [string, unknown[]];
     expect(userSql).toContain('SET available_now = $2');
-    expect(userParams).toEqual(['clerk-1', true]);
+    expect(userSql).toContain('available_until = $3');
+    expect(userParams).toEqual(['clerk-1', true, null]);
 
     const [freelancerSql, freelancerParams] = client.query.mock.calls[2] as [string, unknown[]];
     expect(freelancerSql).toContain('UPDATE freelancers');
@@ -276,6 +293,31 @@ describe('PATCH /api/profile/availability', () => {
 
     expect(client.query).toHaveBeenLastCalledWith('COMMIT');
     expect(client.release).toHaveBeenCalled();
+  });
+
+  it('writes the timer with the switch, and clears it when the switch goes off', async () => {
+    const until = new Date(Date.now() + 60 * 60_000).toISOString();
+
+    expect((await patch({ ...validBody, availableUntil: until })).status).toBe(200);
+
+    const [, withTimer] = client.query.mock.calls[1] as [string, unknown[]];
+    expect(withTimer).toEqual(['clerk-1', true, new Date(until)]);
+
+    client.query.mockClear();
+    expect((await patch({ ...validBody, availableNow: false, availableUntil: until })).status).toBe(200);
+
+    const [, switchedOff] = client.query.mock.calls[1] as [string, unknown[]];
+    expect(switchedOff).toEqual(['clerk-1', false, null]);
+  });
+
+  it('refuses a timer that has already passed or is too far off', async () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    const tooLate = new Date(Date.now() + 30 * 24 * 60 * 60_000).toISOString();
+
+    expect((await patch({ ...validBody, availableUntil: past })).status).toBe(400);
+    expect((await patch({ ...validBody, availableUntil: tooLate })).status).toBe(400);
+    expect((await patch({ ...validBody, availableUntil: 'tomorrow' })).status).toBe(400);
+    expect(connectMock).not.toHaveBeenCalled();
   });
 
   it('writes only the pattern for the role being edited', async () => {

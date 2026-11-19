@@ -2,9 +2,11 @@ import { db } from './db';
 import type { TalentClip, TalentFilterOptions, TalentFilters, TalentMember } from '../app/types/talent.types';
 import { toRosterMember, type RosterRow } from '../app/utils/roster.utils';
 import { TALENT_PAGE_SIZE } from '../app/utils/talent.utils';
+import { isFreeNow } from '../app/utils/availability.utils';
 
 type TalentRow = RosterRow & {
   available_now: boolean | null;
+  available_until: string | Date | null;
   short_bio: string | null;
   long_bio: string | null;
   community_covered: string | null;
@@ -48,7 +50,7 @@ function toTalentMember(row: TalentRow, now: Date): TalentMember {
   return {
     ...toRosterMember(row, now),
     mediums: texts(row.work_mediums),
-    availableNow: row.available_now === true,
+    availableNow: isFreeNow(row.available_now === true, row.available_until, now),
     profile: {
       shortBio: text(row.short_bio),
       longBio: text(row.long_bio),
@@ -90,7 +92,10 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
 
   if (filters.medium) where.push(`${param(filters.medium)} = ANY(f.work_mediums)`);
   if (filters.location) where.push(`f.location = ${param(filters.location)}`);
-  if (filters.availableNow) where.push('u.available_now = true');
+  // a timer that has run out no longer counts, even though its flag is still set
+  if (filters.availableNow) {
+    where.push('u.available_now = true AND (u.available_until IS NULL OR u.available_until > NOW())');
+  }
 
   const sql = `
     SELECT
@@ -98,6 +103,7 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
       u.first_name,
       u.last_name,
       u.available_now,
+      u.available_until,
       u.short_bio,
       u.long_bio,
       f.location,
@@ -112,7 +118,9 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
     FROM users u
     JOIN freelancers f ON f.user_id = u.id
     WHERE ${where.join('\n      AND ')}
-    ORDER BY u.available_now DESC NULLS LAST, u.first_name, u.last_name
+    ORDER BY (u.available_now AND (u.available_until IS NULL OR u.available_until > NOW())) DESC NULLS LAST,
+             u.first_name,
+             u.last_name
     LIMIT ${param(TALENT_PAGE_SIZE)}
   `;
 

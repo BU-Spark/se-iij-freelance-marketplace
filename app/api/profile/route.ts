@@ -10,6 +10,7 @@ import {
   toAccountProfile,
   validateBasic,
 } from '../../utils/profile.utils';
+import { parseAvailableUntil } from '../../utils/availability.utils';
 import type { AccountProfile, ProfileRole } from '../../types/profile.types';
 
 export const runtime = 'nodejs';
@@ -222,14 +223,26 @@ export async function PATCH(request: Request) {
         return NextResponse.json({ error: 'The profile payload is invalid.' }, { status: 400 });
       }
 
+      // the timer is optional, but an instant that is not within the next few days is a mistake
+      const timer = parseAvailableUntil(body.availableUntil);
+
+      if (!timer.valid) {
+        await connection.query('ROLLBACK');
+        return NextResponse.json({ error: 'Choose a timer that ends within the next three days.' }, { status: 400 });
+      }
+
+      // switching off clears the timer with the flag, so the next switch-on starts a fresh one
+      const until = body.availableNow ? timer.until : null;
+
       // one flag on the person, so it is a single update rather than a role upsert
       const updated = await connection.query(
         `UPDATE users
            SET available_now = $2,
+               available_until = $3,
                updated_at = NOW()
          WHERE clerk_id = $1
          RETURNING id`,
-        [userId, body.availableNow]
+        [userId, body.availableNow, until]
       );
 
       notFound = updated.rowCount === 0;

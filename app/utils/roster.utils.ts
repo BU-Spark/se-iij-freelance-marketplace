@@ -1,6 +1,6 @@
 import type { AvailabilityStatus, HourWindow, RosterMember } from '../types/dashboard.types';
 import type { AvailabilityException, Weekday } from '../types/availability.types';
-import { addDays, dateKeyIn, dayOfWeek, sanitizeExceptions } from './availability.utils';
+import { addDays, dateKeyIn, dayOfWeek, freeUntilLabel, isFreeNow, sanitizeExceptions } from './availability.utils';
 
 /** The availability blob as stored today: a weekly pattern, one working window, and dated overrides */
 export type RosterAvailability = {
@@ -22,6 +22,8 @@ export type RosterRow = {
   availability: RosterAvailability | null;
   /** the person's own "free right now" flag, which beats the weekly pattern */
   available_now?: boolean | null;
+  /** when that flag stops counting; empty when it has no timer */
+  available_until?: string | Date | null;
 };
 
 /** Monday-first, matching the week strip and `availability.days` */
@@ -164,7 +166,8 @@ export function beatsOf(row: RosterRow): string[] {
 export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMember {
   const availability = parseAvailability(row.availability);
   // saying "I'm free right now" outranks whatever the weekly pattern says about this hour
-  const freeNow = row.available_now === true;
+  const freeUntil = row.available_until ? new Date(row.available_until) : null;
+  const freeNow = isFreeNow(row.available_now === true, freeUntil, now);
   const status = freeNow ? 'available' : availabilityStatus(availability, now);
 
   return {
@@ -175,7 +178,11 @@ export function toRosterMember(row: RosterRow, now: Date = new Date()): RosterMe
     city: str(row.location),
     status,
     openHours: status === 'off' ? [] : openHours(availability),
-    note: freeNow ? 'Free right now' : rosterNote(availability, status),
+    note: freeNow
+      ? freeUntil
+        ? `Free until ${freeUntilLabel(freeUntil, now, availability?.timezone)}`
+        : 'Free right now'
+      : rosterNote(availability, status),
     weekDays: weekDays(availability),
     monthDays: monthDays(availability, now),
     monthDayDates: monthDayDates(availability, now),
