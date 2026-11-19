@@ -1,8 +1,25 @@
 import type { Organization } from '../../../types/organization.types';
 
+/** Who a newsroom takes work from: freelancers near it, anywhere in the US, or anywhere at all */
+export type OrgReach = 'local' | 'us' | 'global';
+
+export const REACH_LABEL: Record<OrgReach, string> = {
+  local: 'Local',
+  us: 'US only',
+  global: 'Global',
+};
+
+/** The longer wording for the drawer, where there is room to say what the label means */
+export const REACH_DETAIL: Record<OrgReach, string> = {
+  local: 'Local: for freelancers in or near the city',
+  us: 'US only: open to freelancers anywhere in the US',
+  global: 'Global: open to freelancers anywhere',
+};
+
 /** What a freelancer needs to know about a newsroom before pitching it */
 export type OrgProfile = Pick<Organization, 'id' | 'name' | 'city' | 'bio'> & {
   tagline: string;
+  reach: OrgReach;
   beats: string[];
   openAssignments: number;
   rate: string;
@@ -23,6 +40,7 @@ export const ORGANIZATIONS: OrgProfile[] = [
     id: 'meridian',
     name: 'The Meridian Post',
     city: 'New York',
+    reach: 'local',
     tagline: 'Metro and national news with a civic-accountability focus',
     beats: ['Politics', 'Government Accountability', 'Law/Legal Issues'],
     openAssignments: 4,
@@ -39,6 +57,7 @@ export const ORGANIZATIONS: OrgProfile[] = [
     id: 'crosswind',
     name: 'Crosswind Weekly',
     city: 'Berlin',
+    reach: 'global',
     tagline: 'Long-form European features and narrative reporting',
     beats: ['Foreign Policy', 'Culture', 'Climate'],
     openAssignments: 2,
@@ -55,6 +74,7 @@ export const ORGANIZATIONS: OrgProfile[] = [
     id: 'signal',
     name: 'Signal Room',
     city: 'Remote',
+    reach: 'us',
     tagline: 'A nonprofit newsroom on technology and public life',
     beats: ['Tech', 'Health', 'Investigations'],
     openAssignments: 3,
@@ -71,6 +91,7 @@ export const ORGANIZATIONS: OrgProfile[] = [
     id: 'broadsheet',
     name: 'Broadsheet Pacific',
     city: 'Tokyo',
+    reach: 'global',
     tagline: 'English-language Asia-Pacific news and analysis',
     beats: ['World', 'Business', 'National Security'],
     openAssignments: 1,

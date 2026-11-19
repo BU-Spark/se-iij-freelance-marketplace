@@ -9,7 +9,7 @@ export default function OrganizationsPage() {
       <div className={styles.intro}>
         <p className={pageStyles.eyebrow}>Freelancer workspace</p>
         <h1>Organizations</h1>
-        <p>Newsrooms on the desk, what they cover and what they pay.</p>
+        <p>Newsrooms on the desk, what they cover, what they pay and whether their work is local, US only or global.</p>
       </div>
 
       <OrganizationGrid orgs={ORGANIZATIONS} />
