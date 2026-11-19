@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
   preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   -- The person's own "I'm free right now" flag, shown as the dot on their avatar
   available_now BOOLEAN NOT NULL DEFAULT FALSE,
+  -- When that flag stops counting on its own; NULL means it has no timer
+  available_until TIMESTAMPTZ,
   -- Set by the Story Match team when an account may no longer sign in
   suspended_at TIMESTAMPTZ,
   suspension_reason TEXT,
@@ -90,6 +92,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS available_now BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS available_until TIMESTAMPTZ;
 -- Admins suspend accounts from the Accounts tab; the Clerk ban stops the sign-in, these record why
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspension_reason TEXT;
