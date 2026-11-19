@@ -12,6 +12,14 @@
   border-bottom: 1px solid #eceef2;
 }
 
+/* category + grey tags, with the report flag kept to the right */
+.headTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 /* category + grey tags */
 .tags {
   display: flex;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { RosterCard, useToast } from '../../components';
+import { RosterCard, ReportButton, useToast } from '../../components';
 import Modal from '../../components/Modal/Modal';
 import InvitePicker from './InvitePicker';
 import type { AvailabilityStatus, RosterMember } from '../../types/dashboard.types';
@@ -371,31 +371,34 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
                       <span className={styles.added}>
                         {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
                       </span>
-                      {confirmingId === member.id ? (
-                        <span className={styles.confirm}>
-                          Remove?
+                      <span className={styles.footerActions}>
+                        {confirmingId === member.id ? (
+                          <span className={styles.confirm}>
+                            Remove?
+                            <button
+                              type="button"
+                              className={styles.dangerLink}
+                              disabled={saving}
+                              onClick={() => void remove(member)}
+                            >
+                              Yes, remove
+                            </button>
+                            <button type="button" className={styles.textButton} onClick={() => setConfirmingId(null)}>
+                              Cancel
+                            </button>
+                          </span>
+                        ) : (
                           <button
                             type="button"
-                            className={styles.dangerLink}
-                            disabled={saving}
-                            onClick={() => void remove(member)}
+                            className={styles.textButton}
+                            aria-label={`Remove ${member.name} from your roster`}
+                            onClick={() => setConfirmingId(member.id)}
                           >
-                            Yes, remove
+                            Remove
                           </button>
-                          <button type="button" className={styles.textButton} onClick={() => setConfirmingId(null)}>
-                            Cancel
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.textButton}
-                          aria-label={`Remove ${member.name} from your roster`}
-                          onClick={() => setConfirmingId(member.id)}
-                        >
-                          Remove
-                        </button>
-                      )}
+                        )}
+                        <ReportButton targetType="account" targetId={member.id} targetLabel={member.name} compact />
+                      </span>
                     </>
                   }
                 />

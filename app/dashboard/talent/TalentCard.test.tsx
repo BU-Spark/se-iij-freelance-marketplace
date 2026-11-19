@@ -27,6 +27,11 @@ const member = (overrides: Partial<TalentMember> = {}): TalentMember => ({
 });
 
 describe('TalentCard', () => {
+  it('offers a small flag to report the freelancer', () => {
+    render(<TalentCard member={member()} invited={false} onInvite={jest.fn()} />);
+    expect(screen.getByRole('button', { name: 'Report Sarah Jenkins' })).toBeInTheDocument();
+  });
+
   it('starts collapsed and opens into the full profile', () => {
     render(<TalentCard member={member()} invited={false} onInvite={jest.fn()} />);
 
