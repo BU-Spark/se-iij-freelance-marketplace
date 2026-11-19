@@ -120,7 +120,7 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
       });
 
       const body = (await response.json().catch(() => null)) as {
-        invited?: { freelancerId: string; invitedAt: string }[];
+        saved?: { freelancerId: string; invitedAt: string }[];
         error?: string;
       } | null;
 
@@ -129,7 +129,7 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
         return;
       }
 
-      const invitedAt = new Map((body?.invited ?? []).map((row) => [row.freelancerId, row.invitedAt]));
+      const invitedAt = new Map((body?.saved ?? []).map((row) => [row.freelancerId, row.invitedAt]));
       const added = chosen.map((member) => ({
         ...member,
         invitedAt: invitedAt.get(member.id) ?? new Date().toISOString(),

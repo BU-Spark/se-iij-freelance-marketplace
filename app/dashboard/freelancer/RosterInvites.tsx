@@ -11,8 +11,8 @@ const invitedOn = (iso: string) =>
   new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
 /**
- * Editors asking this freelancer onto their roster. Accepting is what actually puts them on it, so
- * the answer is saved before the row changes.
+ * Editors who saved this freelancer to their roster. The favorite is already in place, so answering
+ * is optional: it just tells the editor whether they are interested.
  */
 export default function RosterInvites({ invites }: RosterInvitesProps) {
   const [items, setItems] = useState(invites);
@@ -40,8 +40,8 @@ export default function RosterInvites({ invites }: RosterInvitesProps) {
       );
       showToast(
         response === 'accepted'
-          ? `You joined ${invite.editorName}'s roster`
-          : `Declined ${invite.editorName}'s invitation`,
+          ? `Let ${invite.editorName} know you're interested`
+          : `Told ${invite.editorName} you're not available right now`,
         response === 'accepted' ? 'success' : 'info'
       );
     } catch (error) {
@@ -59,7 +59,7 @@ export default function RosterInvites({ invites }: RosterInvitesProps) {
   return (
     <section className={styles.invites} aria-labelledby="invites-heading">
       <h2 id="invites-heading" className={styles.invitesTitle}>
-        Roster invitations
+        Saved by editors
         {waiting > 0 && (
           <span className={styles.invitesCount} aria-label={`${waiting} waiting on your answer`}>
             {waiting}
@@ -67,7 +67,8 @@ export default function RosterInvites({ invites }: RosterInvitesProps) {
         )}
       </h2>
       <p className={styles.invitesIntro}>
-        Editors who would like to work with you. You join their roster only once you accept.
+        Editors who saved you to their roster. You&apos;re on it either way — accept to let them know you&apos;re
+        interested.
       </p>
 
       <ul className={styles.inviteList}>
@@ -76,7 +77,7 @@ export default function RosterInvites({ invites }: RosterInvitesProps) {
             <div className={styles.inviteWho}>
               <strong>{invite.editorName}</strong>
               <span>
-                {invite.organizationId ? `${invite.organizationId} · ` : ''}Invited {invitedOn(invite.invitedAt)}
+                {invite.organizationId ? `${invite.organizationId} · ` : ''}Saved {invitedOn(invite.invitedAt)}
               </span>
             </div>
 

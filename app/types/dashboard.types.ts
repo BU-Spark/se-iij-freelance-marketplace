@@ -2,7 +2,10 @@
 
 export type AvailabilityStatus = 'available' | 'busy' | 'off';
 
-/** An invitation waits for the freelancer; only an accepted one puts them on the roster */
+/**
+ * A saved favorite's optional notification: pending until the freelancer answers, then accepted or
+ * declined. The answer is informational only; the row itself is what puts someone on the roster.
+ */
 export type RosterInviteStatus = 'pending' | 'accepted' | 'declined';
 
 /** open = posted, invited = waiting on a freelancer (shown as "pending"), assigned = taken */
@@ -39,10 +42,12 @@ export type RosterMember = {
   /** every beat they cover, so the roster can filter on more than the headline */
   beats?: string[];
   city: string;
-  /** ISO timestamp of when the editor added them; only set on an editor's own roster */
+  /** ISO timestamp of when the editor saved them; only set on an editor's own roster */
   invitedAt?: string;
-  /** where the invite stands; only set when this member has an invite row */
+  /** where the optional notification stands; only set when this member was notified */
   inviteStatus?: RosterInviteStatus;
+  /** true when the editor chose to tell the freelancer they were saved */
+  notified?: boolean;
   status: AvailabilityStatus;
   openHours: HourWindow[];
   note: string;

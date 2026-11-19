@@ -187,9 +187,10 @@ CREATE INDEX IF NOT EXISTS content_flags_target_idx ON content_flags (target_typ
 CREATE INDEX IF NOT EXISTS content_flags_reporter_target_idx
   ON content_flags (reporter_user_id, target_type, target_id, status);
 
--- An editor's roster: the freelancers they have invited to work with them. The row *is* the invite,
--- so inviting again is a no-op and removing someone deletes it. Only an accepted invite puts the
--- person on the roster; asking again after a decline re-opens the same row.
+-- An editor's roster: the freelancers they have saved to work with them. The row *is* the favorite,
+-- so saving again is a no-op and removing someone deletes it. A favorite is on the roster straight
+-- away; `status` only records the freelancer's answer to an optional notification, so it never
+-- gates pitches or assignments. Asking again after a decline re-opens the same row.
 CREATE TABLE IF NOT EXISTS roster_invites (
   editor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -205,6 +206,10 @@ CREATE INDEX IF NOT EXISTS roster_invites_freelancer_idx ON roster_invites (free
 -- Columns added after roster_invites shipped: the invite used to count as accepted on creation
 ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;
+-- Whether the freelancer was told they were saved. A silent favorite stays private; a notified one
+-- can be answered, but either way the row itself is the roster membership. Existing rows predate
+-- the favorites model, so they were notifications and default to true.
+ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS notified BOOLEAN NOT NULL DEFAULT TRUE;
 
 DO $$
 BEGIN
