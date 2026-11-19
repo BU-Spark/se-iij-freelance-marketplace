@@ -328,6 +328,12 @@
 }
 
 /* card footer */
+.footerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .added {
   color: var(--muted);
   font-size: 13px;

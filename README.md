@@ -240,6 +240,21 @@ are rejected, so the rest of the app keeps working. Run `npm run db:migrate` to 
 the `users.photo_key` column. Replacing a photo writes a new object; the previous one
 is left in the bucket.
 
+## Reporting accounts, assignments and pitches
+
+Every signed-in person can raise a flag on a person's account, an assignment or a pitch: the
+small flag on talent and roster cards, on assignment cards and in the assignment drawer, and in
+the editor's pitch inbox opens a short reason form. [`POST /api/flags`](./app/api/flags/route.ts)
+takes the reporter from the session and reads the target's current name or title from the
+database, so the queue cannot be filled with a false label from the browser. A person cannot
+flag their own content, and a second flag on the same target while one is still open is
+acknowledged without being stored twice.
+
+Flags land in `/admin` beside account appeals. The team can mark one in review, resolve it or
+dismiss it, and every decision stays in the Done tab where it can be changed or reopened.
+[`PATCH /api/admin/flags/[id]`](<./app/api/admin/flags/[id]/route.ts>) is admin-only. Run
+`npm run db:migrate` to add the `content_flags` table.
+
 ## Free right now timer
 
 The "I'm free right now" switch on the profile card and in the settings availability

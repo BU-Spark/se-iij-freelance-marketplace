@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ReportButton from '../../../components/ReportButton/ReportButton';
 import type { Assignment } from '../../../types/assignments.types';
 import { formatCompensation } from '../../../utils/assignment.utils';
 import { categoryColor } from '../../../utils/category.utils';
@@ -63,14 +64,17 @@ export default function AssignmentDetail({
           {a.category}
         </span>
         <span className={`${cardStyles.pill} ${cardStyles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
-        {canEdit && (
-          <span className={styles.cardActions}>
-            <DeleteAssignmentButton assignmentId={a.id} onDeleted={onDeleted} />
-            <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
-              Edit
-            </button>
-          </span>
-        )}
+        <span className={styles.cardActions}>
+          {!canEdit && <ReportButton targetType="assignment" targetId={a.id} targetLabel={a.title} compact />}
+          {canEdit && (
+            <>
+              <DeleteAssignmentButton assignmentId={a.id} onDeleted={onDeleted} />
+              <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
+                Edit
+              </button>
+            </>
+          )}
+        </span>
       </div>
 
       <div>

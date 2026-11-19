@@ -1,7 +1,7 @@
 'use client';
 
 import { useId, useState } from 'react';
-import { RosterCard } from '../../components';
+import { RosterCard, ReportButton } from '../../components';
 import type { TalentMember } from '../../types/talent.types';
 import styles from './talent.module.css';
 
@@ -68,6 +68,7 @@ export default function TalentCard({ member, invited, onInvite }: TalentCardProp
                 Invite
               </button>
             )}
+            <ReportButton targetType="account" targetId={member.id} targetLabel={member.name} compact />
           </div>
 
           {open && (
