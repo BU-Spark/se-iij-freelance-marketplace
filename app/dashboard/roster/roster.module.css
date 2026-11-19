@@ -339,6 +339,12 @@
   font-size: 13px;
 }
 
+.footerActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .confirm {
   display: inline-flex;
   align-items: center;
@@ -513,4 +519,36 @@
 .pendingDeclined {
   background: #f7e3e3;
   color: #8a2f2f;
+}
+
+/* optional notification choice inside the add-to-roster dialog */
+.notifyRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.notifyRow input {
+  margin-top: 2px;
+}
+
+.notifyRow span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.notifyRow strong {
+  color: var(--navy-deep);
+  font-size: 14px;
+}
+
+.notifyRow small {
+  color: var(--muted);
+  font-size: 13px;
 }
