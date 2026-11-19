@@ -164,6 +164,29 @@ CREATE TABLE IF NOT EXISTS account_appeals (
 CREATE INDEX IF NOT EXISTS account_appeals_status_created_idx ON account_appeals (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS account_appeals_user_idx ON account_appeals (user_id);
 
+-- A flag is a report someone raised about an account, an assignment, or a pitch. The three targets
+-- live in different tables, so the row keeps (type, id) instead of a foreign key; the label is copied
+-- at report time, which keeps the queue readable if the target is later edited or deleted.
+CREATE TABLE IF NOT EXISTS content_flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type TEXT NOT NULL CHECK (target_type IN ('account', 'assignment', 'pitch')),
+  target_id UUID NOT NULL,
+  target_label TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  -- Kept even if the reporter's account goes, so the team can still read what was sent
+  reporter_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  reporter_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'reviewing', 'resolved', 'dismissed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS content_flags_status_created_idx ON content_flags (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS content_flags_target_idx ON content_flags (target_type, target_id);
+-- The repeat-report check looks up one person's active flags on the same target
+CREATE INDEX IF NOT EXISTS content_flags_reporter_target_idx
+  ON content_flags (reporter_user_id, target_type, target_id, status);
+
 -- An editor's roster: the freelancers they have invited to work with them. The row *is* the invite,
 -- so inviting again is a no-op and removing someone deletes it. Only an accepted invite puts the
 -- person on the roster; asking again after a decline re-opens the same row.
