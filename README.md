@@ -255,6 +255,23 @@ dismiss it, and every decision stays in the Done tab where it can be changed or 
 [`PATCH /api/admin/flags/[id]`](<./app/api/admin/flags/[id]/route.ts>) is admin-only. Run
 `npm run db:migrate` to add the `content_flags` table.
 
+## Rosters and favorites
+
+An editor's roster is a saved shortlist, not a membership request. Saving someone from
+[Find talent](./app/dashboard/talent/page.tsx) or the [roster page](./app/dashboard/roster/page.tsx)
+adds them straight away, so they appear on the desk and can be assigned without waiting for an
+answer. Roster membership is not checked when a freelancer pitches an editor either.
+
+The optional "Notify them" checkbox in the add dialog is the only part that reaches the freelancer.
+They see the editor under "Saved by editors" and can accept or decline, but the answer only tells
+the editor whether they are interested — it never changes the roster. A silent favorite starts as
+`accepted` with `notified = false`, so it stays private; a notified one starts as `pending` with
+`notified = true`.
+
+Saving is one row in `roster_invites`; removing someone deletes it. Inviting people who are not on
+StoryMatch yet is planned for later. Run `npm run db:migrate` to add the `roster_invites.notified`
+column.
+
 ## Free right now timer
 
 The "I'm free right now" switch on the profile card and in the settings availability

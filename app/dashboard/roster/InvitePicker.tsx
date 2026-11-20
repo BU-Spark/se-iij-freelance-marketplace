@@ -43,7 +43,7 @@ export default function InvitePicker({ people, picked, onToggle }: InvitePickerP
       {results.length === 0 ? (
         <p className={styles.empty}>No freelancer matches “{query.trim()}”.</p>
       ) : (
-        <ul className={styles.list} aria-label="Freelancers you can invite">
+        <ul className={styles.list} aria-label="Freelancers you can save">
           {results.map((person) => {
             const on = picked.includes(person.id);
             return (
