@@ -6,9 +6,15 @@ on:
   pull_request:
     branches: [main, dev, version-2]
 
+# A new push to a PR cancels that PR's in-progress run.
+# Pushes to main/dev/version-2 are never cancelled, so every merge gets a full result.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
-  lint:
-    name: Lint (ESLint)
+  ci:
+    name: Lint, test, build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,39 +24,19 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+
       - name: Run ESLint (fails on errors)
         run: npx eslint .
 
-  test:
-    name: Unit tests (Jest)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
       - name: Run Jest with coverage
         run: npm run test:coverage -- --ci
+
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
 
-  build:
-    name: Build (Next.js)
-    needs: [lint, test] # only runs if lint AND tests pass
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.x
-          cache: npm
-      - name: Install dependencies
-        run: npm ci
+      # Steps run in order, so the build only runs if lint AND tests pass
       - name: Build the app
         run: npm run build
