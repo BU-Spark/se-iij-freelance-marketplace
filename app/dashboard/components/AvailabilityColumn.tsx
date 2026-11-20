@@ -51,8 +51,7 @@ export default function AvailabilityColumn({ roster, loadFailed = false }: Avail
           <li className={styles.emptyRoster}>
             <strong>No one on your roster yet</strong>
             <span>
-              Freelancers you invite appear here once they accept.{' '}
-              <Link href="/dashboard/roster">Build your roster</Link>
+              Freelancers you save appear here right away. <Link href="/dashboard/roster">Build your roster</Link>
             </span>
           </li>
         ) : shown.length === 0 ? (

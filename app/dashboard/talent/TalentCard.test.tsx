@@ -33,7 +33,7 @@ describe('TalentCard', () => {
   });
 
   it('starts collapsed and opens into the full profile', () => {
-    render(<TalentCard member={member()} invited={false} onInvite={jest.fn()} />);
+    render(<TalentCard member={member()} saved={false} onSave={jest.fn()} />);
 
     const toggle = screen.getByRole('button', { name: 'View profile' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -69,8 +69,8 @@ describe('TalentCard', () => {
           mediums: [],
           profile: { shortBio: '', longBio: '', communityCovered: '', rate: '', tools: [], portfolio: [] },
         })}
-        invited={false}
-        onInvite={jest.fn()}
+        saved={false}
+        onSave={jest.fn()}
       />
     );
 
@@ -78,15 +78,15 @@ describe('TalentCard', () => {
     expect(screen.getByText(/hasn.t added more to their profile yet/i)).toBeInTheDocument();
   });
 
-  it('invites, and shows Invited once done', () => {
-    const onInvite = jest.fn();
-    const { rerender } = render(<TalentCard member={member()} invited={false} onInvite={onInvite} />);
+  it('saves, and shows Saved once done', () => {
+    const onSave = jest.fn();
+    const { rerender } = render(<TalentCard member={member()} saved={false} onSave={onSave} />);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Invite Sarah Jenkins to your roster' }));
-    expect(onInvite).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Sarah Jenkins to your roster' }));
+    expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-1' }));
 
-    rerender(<TalentCard member={member()} invited onInvite={onInvite} />);
-    expect(screen.getByText('Invited')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /invite sarah/i })).not.toBeInTheDocument();
+    rerender(<TalentCard member={member()} saved onSave={onSave} />);
+    expect(screen.getByText('Saved')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /save sarah/i })).not.toBeInTheDocument();
   });
 });
