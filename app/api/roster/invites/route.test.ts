@@ -32,7 +32,9 @@ beforeEach(() => {
   jest.clearAllMocks();
   authMock.mockResolvedValue({ userId: 'clerk-1' });
   rolesMock.mockResolvedValue(['editor']);
-  inviteMock.mockResolvedValue({ invited: [{ freelancerId: ID, invitedAt: '2026-11-11T09:00:00.000Z' }] });
+  inviteMock.mockResolvedValue({
+    saved: [{ freelancerId: ID, invitedAt: '2026-11-11T09:00:00.000Z', status: 'accepted', notified: false }],
+  });
 });
 
 describe('POST /api/roster/invites', () => {
@@ -73,14 +75,21 @@ describe('POST /api/roster/invites', () => {
     expect(inviteMock).not.toHaveBeenCalled();
   });
 
-  it('invites the chosen freelancers to the signed-in editor roster', async () => {
+  it('saves the chosen freelancers to the signed-in editor roster', async () => {
     const response = await post({ freelancerIds: [ID, OTHER] });
 
     expect(response.status).toBe(200);
-    expect(inviteMock).toHaveBeenCalledWith('clerk-1', [ID, OTHER]);
+    expect(inviteMock).toHaveBeenCalledWith('clerk-1', [ID, OTHER], false);
     expect(await response.json()).toEqual({
-      invited: [{ freelancerId: ID, invitedAt: '2026-11-11T09:00:00.000Z' }],
+      saved: [{ freelancerId: ID, invitedAt: '2026-11-11T09:00:00.000Z', status: 'accepted', notified: false }],
     });
+  });
+
+  it('passes the optional notification choice through', async () => {
+    const response = await post({ freelancerIds: [ID], notify: true });
+
+    expect(response.status).toBe(200);
+    expect(inviteMock).toHaveBeenCalledWith('clerk-1', [ID], true);
   });
 
   it('asks people to finish onboarding when there is no roster owner yet', async () => {

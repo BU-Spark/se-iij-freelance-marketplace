@@ -5,7 +5,7 @@ import type { RosterMember } from '../../types/dashboard.types';
 import RosterBrowser from './RosterBrowser';
 import styles from './roster.module.css';
 
-// A new invite has to show up on the next visit
+// A new save has to show up on the next visit
 export const dynamic = 'force-dynamic';
 
 export default async function RosterPage() {
@@ -13,13 +13,12 @@ export default async function RosterPage() {
   await requireWorkspace('editor');
 
   let members: RosterMember[] = [];
-  let pending: RosterMember[] = [];
   let invitable: RosterMember[] = [];
   let loadFailed = false;
 
   try {
     const { userId } = await auth();
-    if (userId) ({ members, pending, invitable } = await loadEditorRoster(userId));
+    if (userId) ({ members, invitable } = await loadEditorRoster(userId));
   } catch (error) {
     console.error('Failed to load the roster.', error);
     loadFailed = true;
@@ -27,7 +26,7 @@ export default async function RosterPage() {
 
   return (
     <div className={styles.shell}>
-      <RosterBrowser members={members} pending={pending} invitable={invitable} loadFailed={loadFailed} />
+      <RosterBrowser members={members} invitable={invitable} loadFailed={loadFailed} />
     </div>
   );
 }

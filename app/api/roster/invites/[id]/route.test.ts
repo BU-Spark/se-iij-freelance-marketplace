@@ -167,6 +167,6 @@ describe('PATCH /api/roster/invites/[id]', () => {
     const response = await answer({ response: 'accepted' });
 
     expect(response.status).toBe(500);
-    expect(await response.json()).toEqual({ error: 'Unable to answer the invitation right now.' });
+    expect(await response.json()).toEqual({ error: 'Unable to answer the notification right now.' });
   });
 });
