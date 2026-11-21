@@ -31,10 +31,10 @@ describe('Old assignment detail URL', () => {
     expect(redirect).toHaveBeenCalledWith('/dashboard?assignment=assignment-1');
   });
 
-  it('opens the drawer on the freelancer assignments page for freelancers', async () => {
+  it('opens the drawer on the freelancer dashboard for freelancers', async () => {
     loadViewerMock.mockResolvedValue({ userId: 'user-5', roles: ['freelancer'], organizationId: null });
 
     await expect(visit()).rejects.toThrow('NEXT_REDIRECT');
-    expect(redirect).toHaveBeenCalledWith('/dashboard/assignments?assignment=assignment-1');
+    expect(redirect).toHaveBeenCalledWith('/dashboard/freelancer?assignment=assignment-1');
   });
 });
