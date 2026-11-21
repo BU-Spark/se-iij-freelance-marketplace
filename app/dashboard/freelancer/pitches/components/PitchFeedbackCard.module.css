@@ -1,0 +1,82 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 18px;
+  border: 1px solid #eceef2;
+  border-radius: 12px;
+  background: #fbfcfd;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.decision {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.accepted {
+  background: #e8f6ee;
+  color: #17663a;
+}
+
+.rejected {
+  background: #f0f2f5;
+  color: #4a5468;
+}
+
+.revision_requested {
+  background: #fff4e5;
+  color: #8a4b00;
+}
+
+.date {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.sections {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+}
+
+.sections dt {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sections dd {
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+.action {
+  align-self: flex-start;
+  color: var(--c-blue);
+  font-weight: 600;
+}
+
+.empty {
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px dashed #d5dae3;
+  border-radius: 12px;
+  background: #f8f9fb;
+  color: var(--muted);
+}
