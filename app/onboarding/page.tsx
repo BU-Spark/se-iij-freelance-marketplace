@@ -15,6 +15,7 @@ import EditorPreferencesStep from './steps/editor/EditorPreferencesStep';
 import FreelancerProfileStep from './steps/freelancer/FreelancerProfileStep';
 import FreelancerPreferencesStep from './steps/freelancer/FreelancerPreferencesStep';
 import { detectTimezone, toProfile } from '../utils/profile.utils';
+import { loadProfile } from '../hooks';
 
 /** Canonical order, so the flow always runs editor steps before freelancer steps */
 const ALL_ROLES: OnboardingRole[] = ['editor', 'freelancer'];
@@ -55,6 +56,8 @@ const scrollTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
 export default function OnboardingPage() {
   const [roles, setRoles] = useState<OnboardingRole[]>([]);
+  /** Roles already on the saved profile when a flow is seeded to add another one */
+  const [existingRoles, setExistingRoles] = useState<OnboardingRole[]>([]);
   const [index, setIndex] = useState(0);
   const [data, setData] = useState<ProfileData>(EMPTY);
   const [orgs, setOrgs] = useState<OrgOption[]>(DEFAULT_ORGS);
@@ -90,8 +93,11 @@ export default function OnboardingPage() {
         };
         if (cancelled) return;
 
-        const nextRoles = ALL_ROLES.filter((role) => saved.includes(role) || role === requested);
+        // Only the requested role needs its steps; the roles already on the profile are skipped.
+        const nextRoles = ALL_ROLES.filter((role) => role === requested);
+        const held = ALL_ROLES.filter((role) => saved.includes(role) && role !== requested);
         setSeeded(true);
+        setExistingRoles(held);
         setRoles(nextRoles);
         setData((d) => ({ ...d, ...answers, timezone: answers.timezone || d.timezone }));
         setIndex(Math.max(0, buildSequence(nextRoles, false).indexOf(`${requested}-profile`)));
@@ -109,6 +115,11 @@ export default function OnboardingPage() {
 
   const sequence = useMemo(() => buildSequence(roles, !seeded), [roles, seeded]);
   const step = sequence[Math.min(index, sequence.length - 1)];
+  /** What the API writes: the roles being walked plus any the saved profile already has */
+  const submitRoles = useMemo(
+    () => ALL_ROLES.filter((role) => roles.includes(role) || existingRoles.includes(role)),
+    [roles, existingRoles]
+  );
   /** The shared account fields belong to the first profile step, whatever sits before it */
   const firstProfileIndex = sequence.findIndex((candidate) => candidate.endsWith('-profile'));
   const errors = useMemo(() => validateStep(step, roles, data), [step, roles, data]);
@@ -127,6 +138,9 @@ export default function OnboardingPage() {
 
   /** Roles are only rebuildable from the picker, so keep them in canonical order */
   const toggleRole = (role: OnboardingRole) => {
+    // a held role is already on the profile, so it is not part of what this flow edits
+    if (existingRoles.includes(role)) return;
+
     setRoleError(null);
     setRoles((list) =>
       ALL_ROLES.filter((candidate) => (candidate === role ? !list.includes(role) : list.includes(candidate)))
@@ -207,7 +221,7 @@ export default function OnboardingPage() {
       const response = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toProfile(roles, data)),
+        body: JSON.stringify(toProfile(submitRoles, data)),
       });
 
       if (!response.ok) {
@@ -218,6 +232,10 @@ export default function OnboardingPage() {
             : 'Unable to save your profile right now.';
         throw new Error(message);
       }
+
+      // The header and profile panel read one shared copy of the profile. Refresh it now that
+      // the new role exists, or the old roles stay on screen until the page is reloaded.
+      await loadProfile();
 
       setIndex(sequence.length - 1);
       scrollTop();
@@ -273,7 +291,13 @@ export default function OnboardingPage() {
 
       <main className={styles.main}>
         {step === 'role' && (
-          <RoleStep selected={roles} onToggle={toggleRole} onNext={goNext} error={roleError ?? undefined} />
+          <RoleStep
+            selected={roles}
+            held={existingRoles}
+            onToggle={toggleRole}
+            onNext={goNext}
+            error={roleError ?? undefined}
+          />
         )}
 
         {step === 'age' && (
@@ -317,7 +341,7 @@ export default function OnboardingPage() {
 
         {step === 'done' && (
           <DoneStep
-            roles={roles}
+            roles={submitRoles}
             data={data}
             org={selectedOrg}
             onEdit={() => {

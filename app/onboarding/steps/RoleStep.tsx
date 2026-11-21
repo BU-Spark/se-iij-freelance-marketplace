@@ -32,22 +32,27 @@ const ROLES: {
 
 type RoleStepProps = {
   selected: OnboardingRole[];
+  /** Roles already on the saved profile; they are not offered again when adding another one */
+  held?: OnboardingRole[];
   onToggle: (role: OnboardingRole) => void;
   onNext: () => void;
   error?: string;
 };
 
-export default function RoleStep({ selected, onToggle, onNext, error }: RoleStepProps) {
+export default function RoleStep({ selected, held = [], onToggle, onNext, error }: RoleStepProps) {
+  const offered = ROLES.filter(({ id }) => !held.includes(id));
+
   return (
     <section className={`${shared.narrow} ${shared.fadeIn}`}>
       <h1 className={shared.h1}>Welcome aboard</h1>
       <p className={shared.lead}>
-        The assignment desk that connects newsroom editors with the independent journalists who can take the work. Pick
-        the roles you work in — you can choose both.
+        {held.length > 0
+          ? 'Add the other role you work in. Everything you have already set up stays as it is.'
+          : 'The assignment desk that connects newsroom editors with the independent journalists who can take the work. Pick the roles you work in — you can choose both.'}
       </p>
 
       <div className={styles.roleGrid}>
-        {ROLES.map(({ id, title, accent, Icon, desc, cta }) => {
+        {offered.map(({ id, title, accent, Icon, desc, cta }) => {
           const active = selected.includes(id);
 
           return (

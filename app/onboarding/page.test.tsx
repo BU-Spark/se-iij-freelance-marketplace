@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import OnboardingPage from './page';
+import { loadProfile } from '../hooks';
 
 // This suite exercises the full multi-step flow and can exceed Jest's 5s
 // per-test default when it runs alongside the rest of the suite.
@@ -34,6 +35,10 @@ jest.mock('@clerk/nextjs', () => ({
   useUser: () => ({ user: mockClerkUser, isLoaded: true }),
 }));
 
+// The page refreshes the shared profile store after a save; that is exercised by the store's own
+// tests, so here it only needs to be observable and must not become a second HTTP request.
+jest.mock('../hooks', () => ({ loadProfile: jest.fn() }));
+
 // jsdom doesn't implement scrollTo, and the page calls it when changing steps
 beforeAll(() => {
   window.scrollTo = jest.fn();
@@ -53,6 +58,8 @@ beforeEach(() => {
     ok: true,
     json: async () => ({ saved: true, roles: ['editor'] }),
   });
+
+  (loadProfile as jest.Mock).mockClear();
 });
 
 const chip = (label: string) => screen.getByRole('button', { name: new RegExp(`^[+✓]\\s*${label}$`, 'i') });
@@ -664,6 +671,36 @@ describe('adding the other role from the profile panel', () => {
 
     expect(screen.getByLabelText(/first name/i)).toHaveValue('Sarah');
     expect(screen.getByLabelText(/work email/i)).toHaveValue('sarah@newsroom.example');
+  });
+
+  it('does not offer the role they already have when changing roles', async () => {
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /change role/i }));
+
+    expect(screen.getByRole('button', { name: /i'm an editor/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /i'm a freelancer/i })).not.toBeInTheDocument();
+  });
+
+  it('skips the steps for the role they already have and keeps it in the save', async () => {
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+
+    await fillEditorStep();
+    next();
+
+    // the flow runs this role's profile and preferences only; the saved freelancer role is skipped
+    expect(screen.getByText(/step 3 of 3 — how you work/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /your reporting/i })).not.toBeInTheDocument();
+
+    submit();
+    await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
+
+    const body = postedPayload();
+    // the saved role is sent back unchanged, so the server keeps it on the account
+    expect(body.roles).toEqual(['editor', 'freelancer']);
+    expect(body.freelancer.reportingBeats).toEqual(['Housing']);
+    // the shared profile store is refreshed, so the new role shows without a page reload
+    expect(loadProfile).toHaveBeenCalled();
   });
 
   it('accepts an address Clerk already verified without sending a new code', async () => {
