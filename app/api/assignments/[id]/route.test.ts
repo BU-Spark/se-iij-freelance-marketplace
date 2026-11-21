@@ -68,7 +68,7 @@ describe('PATCH /api/assignments/[id]', () => {
     jest.resetAllMocks();
     authMock.mockResolvedValue({ userId: 'clerk-1' });
     getAssignmentMock.mockResolvedValue(existing);
-    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
+    loadViewerMock.mockResolvedValue({ userId: 'user-1', roles: ['editor'], organizationId: 'org-1' });
     queryMock.mockResolvedValue({ rowCount: 1, rows: [{ id: 'assignment-1' }] });
   });
 
@@ -87,7 +87,7 @@ describe('PATCH /api/assignments/[id]', () => {
     expect(response.status).toBe(400);
   });
 
-  it('saves the edit for an editor from the posting organization, keeping the original slug', async () => {
+  it('saves the edit for the editor who posted it, keeping the original slug', async () => {
     const response = await patch(edit);
 
     expect(response.status).toBe(200);
@@ -106,6 +106,15 @@ describe('PATCH /api/assignments/[id]', () => {
       new Date('2030-01-02T04:00:00.000Z'),
       '900',
     ]);
+  });
+
+  it('answers 404 to a colleague in the same organization', async () => {
+    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
+
+    const response = await patch(edit);
+
+    expect(response.status).toBe(404);
+    expect(queryMock).not.toHaveBeenCalled();
   });
 
   it('answers 404 to editors from another organization', async () => {
@@ -161,7 +170,7 @@ describe('DELETE /api/assignments/[id]', () => {
     jest.resetAllMocks();
     authMock.mockResolvedValue({ userId: 'clerk-1' });
     getAssignmentMock.mockResolvedValue(existing);
-    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
+    loadViewerMock.mockResolvedValue({ userId: 'user-1', roles: ['editor'], organizationId: 'org-1' });
     deleteMock.mockResolvedValue(true);
   });
 
@@ -172,12 +181,37 @@ describe('DELETE /api/assignments/[id]', () => {
     expect(deleteMock).not.toHaveBeenCalled();
   });
 
-  it("deletes an assignment the editor's organization posted", async () => {
+  it('deletes an assignment the editor posted', async () => {
     const response = await remove();
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ deleted: true, id: existing.id });
     expect(deleteMock).toHaveBeenCalledWith(existing.id);
+  });
+
+  it('will not delete an assignment a colleague in the same organization posted', async () => {
+    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
+
+    expect((await remove()).status).toBe(404);
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
+  it('will not let a freelancer delete an editor’s posting', async () => {
+    loadViewerMock.mockResolvedValue({ userId: 'user-5', roles: ['freelancer'], organizationId: null });
+
+    expect((await remove()).status).toBe(404);
+    expect(deleteMock).not.toHaveBeenCalled();
+  });
+
+  it('will not let someone who is an editor and a freelancer delete a post they did not write', async () => {
+    loadViewerMock.mockResolvedValue({
+      userId: 'user-5',
+      roles: ['freelancer', 'editor'],
+      organizationId: 'org-1',
+    });
+
+    expect((await remove()).status).toBe(404);
+    expect(deleteMock).not.toHaveBeenCalled();
   });
 
   it('will not delete an assignment from another organization', async () => {

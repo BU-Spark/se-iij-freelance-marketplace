@@ -147,6 +147,11 @@ assignment appears on the next request. The editor dashboard and the freelancer 
 load the same rows, so what people see is exactly what an organization posted — there is no
 sample data to fall back on, and an empty desk simply says nothing is open.
 
+Whoever wrote a post is the only person who may edit, delete or assign it. Colleagues in the
+same organization can read it on the organization page, and freelancers can read it while it
+is open, but neither can change another person's post — the API answers 404 so ids from other
+desks do not leak.
+
 Onboarding lets a user pick one role or both. Each selected role gets a profile and
 a preferences step, so the flow is three steps for one role and five for both, and
 the shared account fields (name, email, location) are collected once on the first

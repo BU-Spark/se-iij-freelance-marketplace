@@ -15,8 +15,8 @@ type RouteContext = { params: Promise<{ id: string }> };
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Assigns a freelancer to an assignment. Only editors from the organization that posted it may do
- * this, and only freelancers who finished onboarding can be picked — the body never decides either.
+ * Assigns a freelancer to an assignment. Only the editor who posted it may do this, and only
+ * freelancers who finished onboarding can be picked — the body never decides either.
  * Roster membership is not checked: saving someone is a favorite, not a gate on assignment work.
  */
 export async function POST(request: Request, { params }: RouteContext) {

@@ -139,6 +139,7 @@ export default async function OrganizationPage({ searchParams }: OrganizationPag
         <AssignmentDrawer
           assignment={opened.assignment}
           canEdit={opened.canEdit}
+          canReport={false}
           showOrganization
           closeHref="/dashboard/organization"
         />
