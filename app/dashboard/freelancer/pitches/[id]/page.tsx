@@ -6,6 +6,7 @@ import PitchDetail from '../../../../components/PitchDetail/PitchDetail';
 import { canViewPitch, getPitch, loadPitchViewer, toPitch } from '../../../../../lib/pitches';
 import { requireWorkspace } from '../../../../../lib/workspace';
 import { PITCH_STATUS_LABEL } from '../../../pitches/constants';
+import PitchStatusTracker from '../components/PitchStatusTracker';
 import styles from '../myPitches.module.css';
 
 type PitchDetailPageProps = { params: Promise<{ id: string }> };
@@ -39,6 +40,7 @@ export default async function FreelancerPitchDetailPage({ params }: PitchDetailP
             <span className={styles.eyebrow}>Pitch status</span>
             <span className={`${styles.pill} ${styles[pitch.status]}`}>{PITCH_STATUS_LABEL[pitch.status]}</span>
           </div>
+          <PitchStatusTracker status={pitch.status} />
 
           <PitchDetail pitch={toPitch(pitch)} />
 
