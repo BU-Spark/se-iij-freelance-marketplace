@@ -41,7 +41,7 @@ const fetchMock = jest.fn();
 
 beforeEach(() => {
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ invited: [] }) });
+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ saved: [] }) });
   global.fetch = fetchMock as unknown as typeof fetch;
 });
 
@@ -128,7 +128,7 @@ describe('RosterBrowser', () => {
   it('invites people who are off today too, and adds them to the roster', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ invited: [{ freelancerId: 'user-3', invitedAt: '2026-11-11T09:00:00.000Z' }] }),
+      json: async () => ({ saved: [{ freelancerId: 'user-3', invitedAt: '2026-11-11T09:00:00.000Z' }] }),
     });
     renderPage(<RosterBrowser members={members} invitable={[outsider]} />);
 
