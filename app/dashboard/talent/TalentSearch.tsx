@@ -15,22 +15,22 @@ type TalentSearchProps = {
   filters: TalentFilters;
   options: TalentFilterOptions;
   results: TalentMember[];
-  /** freelancers already on this editor's roster */
-  invitedIds?: string[];
+  /** freelancers already saved to this editor's roster */
+  savedIds?: string[];
   loadFailed?: boolean;
 };
 
 const TYPING_DELAY_MS = 300;
 
 /*
- * Inviting saves the freelancer to the editor's roster through the same API the roster page uses,
- * so the two pages agree about who has been invited.
+ * Saving uses the same API the roster page uses, so the two pages agree about who is on the roster.
+ * Saving is immediate; the freelancer is not asked to accept first.
  */
 export default function TalentSearch({
   filters,
   options,
   results,
-  invitedIds = [],
+  savedIds = [],
   loadFailed = false,
 }: TalentSearchProps) {
   const router = useRouter();
@@ -39,7 +39,7 @@ export default function TalentSearch({
   const [isPending, startTransition] = useTransition();
 
   const [query, setQuery] = useState(filters.q ?? '');
-  const [invited, setInvited] = useState<string[]>(invitedIds);
+  const [saved, setSaved] = useState<string[]>(savedIds);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(typingTimer.current), []);
@@ -65,25 +65,25 @@ export default function TalentSearch({
     apply({});
   };
 
-  const invite = async (member: TalentMember) => {
+  const save = async (member: TalentMember) => {
     try {
       const response = await fetch('/api/roster/invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ freelancerIds: [member.id] }),
+        body: JSON.stringify({ freelancerIds: [member.id], notify: false }),
       });
 
       if (!response.ok) {
         const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        showToast(body?.error ?? 'Could not invite them right now.', 'error');
+        showToast(body?.error ?? 'Could not save them right now.', 'error');
         return;
       }
 
-      setInvited((list) => (list.includes(member.id) ? list : [...list, member.id]));
-      showToast(`Invited ${member.name} to your roster`);
+      setSaved((list) => (list.includes(member.id) ? list : [...list, member.id]));
+      showToast(`Saved ${member.name} to your roster`);
     } catch (error) {
-      console.error('Could not invite the freelancer to the roster.', error);
-      showToast('Could not invite them right now.', 'error');
+      console.error('Could not save the freelancer to the roster.', error);
+      showToast('Could not save them right now.', 'error');
     }
   };
 
@@ -180,7 +180,7 @@ export default function TalentSearch({
         <ul className={`${styles.grid} ${styles.talentGrid} ${isPending ? styles.stale : ''}`}>
           {results.map((member) => (
             <li key={member.id}>
-              <TalentCard member={member} invited={invited.includes(member.id)} onInvite={invite} />
+              <TalentCard member={member} saved={saved.includes(member.id)} onSave={save} />
             </li>
           ))}
         </ul>

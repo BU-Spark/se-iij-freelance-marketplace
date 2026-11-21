@@ -127,9 +127,6 @@ export async function listSavedIds(editorClerkId: string): Promise<string[]> {
   return rows.map((row) => row.freelancer_user_id);
 }
 
-/** Kept for callers that still use the old name; renamed to `listSavedIds`. */
-export const listInvitedIds = listSavedIds;
-
 export type InviteResult = {
   saved: {
     freelancerId: string;
