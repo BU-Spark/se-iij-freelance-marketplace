@@ -37,6 +37,14 @@ export type VerificationRequest = {
   requestedAt: string;
 };
 
+/** One beat the team offers to freelancers during onboarding */
+export type Beat = {
+  id: string;
+  name: string;
+  /** Where it sits in the onboarding picker; lower comes first */
+  sortOrder: number;
+};
+
 /** One person's account as the Story Match team sees it on the Accounts tab */
 export type AdminAccount = {
   id: string;
