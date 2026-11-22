@@ -31,7 +31,10 @@ export const TOPICS = [
 /** The chip that unlocks the free-text "Your beat" field */
 export const BEAT_OTHER = 'Other/Not listed here';
 
-/** The beats a freelancer can cover; kept in the same order the desk uses when planning */
+/**
+ * The built-in beat list. The team manages the live list from the admin Beats tab, which is what the
+ * onboarding picker reads; this copy seeds a new database and stands in if it cannot be read.
+ */
 export const BEATS = [
   'Politics',
   'Government Accountability',

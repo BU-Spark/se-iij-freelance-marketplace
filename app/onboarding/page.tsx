@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { IIJLogo } from '../components';
 import styles from './onboarding.module.css';
-import { DEFAULT_ORGS, EMPTY } from './constants';
+import { BEAT_OTHER, BEATS, DEFAULT_ORGS, EMPTY } from './constants';
 import type { OnboardingRole, OrgOption, ProfileData, ProfileErrors, Step, Touched } from '../types/onboarding.types';
 import { validateProfile, validateStep } from '../utils/validation.utils';
 import RoleStep from './steps/RoleStep';
@@ -58,6 +58,8 @@ export default function OnboardingPage() {
   const [index, setIndex] = useState(0);
   const [data, setData] = useState<ProfileData>(EMPTY);
   const [orgs, setOrgs] = useState<OrgOption[]>(DEFAULT_ORGS);
+  /** The beats the team currently offers; the built-in list stands in until it can be read */
+  const [beats, setBeats] = useState<string[]>(BEATS);
   const [touched, setTouched] = useState<Touched>({});
   const [roleError, setRoleError] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
@@ -69,6 +71,36 @@ export default function OnboardingPage() {
   // Seeded in an effect so the server and first client render agree on the value
   useEffect(() => {
     setData((d) => (d.timezone ? d : { ...d, timezone: detectTimezone() }));
+  }, []);
+
+  // The team manages the beat list, so the picker reads it when the flow opens. If the endpoint
+  // cannot be reached the built-in list keeps onboarding usable.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadBeats = async () => {
+      try {
+        const response = await fetch('/api/beats');
+        if (!response.ok) return;
+
+        const body: unknown = await response.json();
+        if (!body || typeof body !== 'object' || !('beats' in body) || !Array.isArray(body.beats)) return;
+
+        const names = body.beats.filter((name): name is string => typeof name === 'string');
+        if (cancelled) return;
+
+        // "Other" belongs to the picker itself, not the managed list, so it always comes last
+        setBeats([...new Set([...names, BEAT_OTHER])]);
+      } catch {
+        // leave the built-in list in place
+      }
+    };
+
+    void loadBeats();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   // Arriving from "Add the freelancer role": reopen the saved profile and land on that role,
@@ -307,6 +339,7 @@ export default function OnboardingPage() {
         {step === 'freelancer-profile' && (
           <FreelancerProfileStep
             {...stepProps}
+            beatOptions={beats}
             onBackToRoles={backToRoles}
             showBasics={index === firstProfileIndex}
             onNext={goNext}

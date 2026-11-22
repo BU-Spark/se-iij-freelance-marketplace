@@ -3,7 +3,7 @@ import shared from '../../onboarding.module.css';
 import FormStep from '../FormStep';
 import PhotoField from '../../fields/PhotoField';
 import ShortBioField from '../../fields/ShortBioField';
-import { BEAT_OTHER, BEATS, MEDIUMS, SKILLS } from '../../constants';
+import { BEAT_OTHER, MEDIUMS, SKILLS } from '../../constants';
 import { fieldError } from '../../helpers';
 import type {
   OrgOption,
@@ -17,6 +17,8 @@ import type {
 type FreelancerProfileStepProps = {
   data: ProfileData;
   orgs: OrgOption[];
+  /** The beats the team currently offers, in the order the picker shows them */
+  beatOptions: string[];
   errors: ProfileErrors;
   touched: Touched;
   shake: boolean;
@@ -89,7 +91,7 @@ export default function FreelancerProfileStep(p: FreelancerProfileStepProps) {
             update('reportingBeats', tags);
             touch('reportingBeats');
           }}
-          suggestions={BEATS}
+          suggestions={p.beatOptions}
           allowCustom={false}
           ariaLabel="Search beats"
           placeholder="Search beats…"
