@@ -32,12 +32,30 @@ const deleteBeat = async (beat: Beat) => {
   }
 };
 
+/** Ask the admin API to move a beat one place; it answers with the whole list in its new order */
+const reorderBeats = async (beat: Beat, direction: 'up' | 'down') => {
+  const response = await fetch(`/api/admin/beats/${beat.id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ direction }),
+  });
+
+  const body = (await response.json().catch(() => null)) as { beats?: Beat[]; error?: string } | null;
+
+  if (!response.ok) {
+    throw new Error(body?.error ?? 'Unable to move this beat right now.');
+  }
+
+  return body?.beats ?? null;
+};
+
 /** Add beats to the onboarding picker, or take one away so it is no longer offered */
 export default function BeatList({ beats }: { beats: Beat[] }) {
   const [items, setItems] = useState(beats);
   const [name, setName] = useState('');
   const [adding, setAdding] = useState(false);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [moving, setMoving] = useState<string | null>(null);
   const { showToast } = useToast();
 
   const add = async (event: FormEvent<HTMLFormElement>) => {
@@ -82,6 +100,27 @@ export default function BeatList({ beats }: { beats: Beat[] }) {
     }
   };
 
+  const move = async (beat: Beat, direction: 'up' | 'down') => {
+    setMoving(beat.id);
+
+    try {
+      const next = await reorderBeats(beat, direction);
+
+      if (!next) {
+        showToast('Unable to move this beat right now.', 'error');
+        return;
+      }
+
+      setItems(next);
+      showToast(`${beat.name} moved ${direction}.`, 'info');
+    } catch (error) {
+      console.error('Could not move the beat.', error);
+      showToast(error instanceof Error ? error.message : 'Unable to move this beat right now.', 'error');
+    } finally {
+      setMoving(null);
+    }
+  };
+
   return (
     <section>
       <form className={styles.beatForm} onSubmit={add}>
@@ -108,16 +147,34 @@ export default function BeatList({ beats }: { beats: Beat[] }) {
       ) : (
         <>
           <p className={styles.hint}>
-            Freelancers pick from this list during onboarding. Removing a beat only stops it being offered — anyone who
-            already picked it keeps it on their profile.
+            Freelancers pick from this list in the order shown; use the arrows to change it. Removing a beat only stops
+            it being offered — anyone who already picked it keeps it on their profile.
           </p>
 
           <ul className={styles.list}>
-            {items.map((beat) => (
+            {items.map((beat, index) => (
               <li key={beat.id} className={styles.row}>
                 <div className={styles.rowTop}>
                   <h2 className={styles.rowTitle}>{beat.name}</h2>
                   <div className={styles.actions} role="group" aria-label={`Actions for ${beat.name}`}>
+                    <button
+                      type="button"
+                      className={styles.action}
+                      aria-label={`Move ${beat.name} up`}
+                      disabled={index === 0 || moving !== null}
+                      onClick={() => move(beat, 'up')}
+                    >
+                      ↑
+                    </button>
+                    <button
+                      type="button"
+                      className={styles.action}
+                      aria-label={`Move ${beat.name} down`}
+                      disabled={index === items.length - 1 || moving !== null}
+                      onClick={() => move(beat, 'down')}
+                    >
+                      ↓
+                    </button>
                     <button
                       type="button"
                       className={`${styles.action} ${styles.dangerAction}`}
