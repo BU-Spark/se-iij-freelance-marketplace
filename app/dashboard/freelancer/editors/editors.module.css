@@ -1,13 +1,40 @@
-/* Same page frame and card look as the Organizations page, so the two freelancer lists read alike */
+/* Matches the Organizations page, editor desk and My pitches: grey page, centred column, white rounded cards */
+.shell {
+  min-height: 100%;
+  background: #f5f6f8;
+}
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 28px clamp(16px, 4vw, 64px) 80px;
+  color: var(--ink);
+}
+
+/* title block */
 .intro {
-  margin-top: 28px;
+  display: flex;
+  flex-direction: column;
 }
-.intro h1 {
-  margin: 8px 0;
-  color: var(--navy-deep);
+.eyebrow {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--c-blue);
+}
+.title {
+  margin: 0;
   font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--navy-deep);
 }
-.intro > p:last-child {
+.lede {
+  margin: 6px 0 0;
   color: var(--muted);
 }
 
@@ -16,69 +43,80 @@
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
   gap: 16px;
   padding: 0;
-  margin: 24px 0;
+  margin: 0;
   list-style: none;
 }
+/* same card as the Organizations grid */
 .card {
   display: flex;
   gap: 16px;
-  padding: 20px;
+  padding: 20px 22px;
   background: var(--white);
-  border: 1px solid #dfe4ec;
-  border-radius: 12px;
+  border: 1px solid #eceef2;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  overflow-wrap: anywhere;
 }
 
 .body {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
   min-width: 0;
   flex: 1;
 }
 .heading {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 4px 12px;
+  flex-direction: column;
+  gap: 2px;
 }
 .name {
   margin: 0;
   color: var(--navy-deep);
-  font-size: 17px;
-  font-weight: 700;
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 600;
+  line-height: 1.25;
 }
 .role,
 .city {
   margin: 0;
   color: var(--muted);
-  font-size: 13px;
+  font-size: 14px;
 }
 .org {
   margin: 0;
   color: var(--ink);
   font-size: 14px;
+  font-weight: 500;
 }
 
+/* desks use the same pill as the beats on the Organizations cards */
 .desks {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 8px;
   padding: 0;
   margin: 0;
   list-style: none;
 }
 .desk {
-  padding: 3px 8px;
-  border-radius: 16px;
-  background: #e7f0ff;
-  color: #174ea6;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #eef2fd;
+  color: #1e3a9e;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .email {
-  color: var(--muted);
-  font-size: 13px;
-  overflow-wrap: anywhere;
+  align-self: flex-start;
+  color: var(--c-blue);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.email:hover,
+.email:focus-visible {
+  text-decoration: underline;
 }
