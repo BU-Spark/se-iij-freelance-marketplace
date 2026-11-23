@@ -1,0 +1,85 @@
+.tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* each step after the first is joined to the one before by a short rule */
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.step + .step::before {
+  content: '';
+  width: 32px;
+  height: 2px;
+  margin: 0 10px;
+  background: #d5dae3;
+}
+
+.done + .step::before {
+  background: var(--c-blue);
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  border: 2px solid #d5dae3;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.done .dot {
+  border-color: var(--c-blue);
+  background: var(--c-blue);
+}
+
+.current {
+  font-weight: 600;
+  color: var(--c-blue);
+}
+
+.current .dot {
+  border-color: var(--c-blue);
+  box-shadow: 0 0 0 3px #eef2fd;
+}
+
+.accepted {
+  color: #17663a;
+}
+
+.accepted .dot {
+  border-color: #17663a;
+  background: #17663a;
+  box-shadow: 0 0 0 3px #e8f6ee;
+}
+
+.declined {
+  color: #4a5468;
+}
+
+.declined .dot {
+  border-color: #4a5468;
+  background: #4a5468;
+  box-shadow: 0 0 0 3px #f0f2f5;
+}
+
+.next {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
