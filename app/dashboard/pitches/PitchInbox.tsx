@@ -115,7 +115,7 @@ export default function PitchInbox({ pitches }: PitchInboxProps) {
         <section aria-label="Pitch details" className={styles.detail}>
           {selected ? (
             <>
-              <PitchDetail pitch={selected} />
+              <PitchDetail pitch={selected} showReport />
               <PitchActions
                 key={selected.id}
                 status={selected.status}

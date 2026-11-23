@@ -239,3 +239,51 @@ Without `AWS_S3_BUCKET_NAME` photo storage reports itself as unconfigured and up
 are rejected, so the rest of the app keeps working. Run `npm run db:migrate` to add
 the `users.photo_key` column. Replacing a photo writes a new object; the previous one
 is left in the bucket.
+
+## Reporting accounts, assignments and pitches
+
+Every signed-in person can raise a flag on a person's account, an assignment or a pitch: the
+small flag on talent and roster cards, on assignment cards and in the assignment drawer, and in
+the editor's pitch inbox opens a short reason form. [`POST /api/flags`](./app/api/flags/route.ts)
+takes the reporter from the session and reads the target's current name or title from the
+database, so the queue cannot be filled with a false label from the browser. A person cannot
+flag their own content, and a second flag on the same target while one is still open is
+acknowledged without being stored twice.
+
+Flags land in `/admin` beside account appeals. The team can mark one in review, resolve it or
+dismiss it, and every decision stays in the Done tab where it can be changed or reopened.
+[`PATCH /api/admin/flags/[id]`](<./app/api/admin/flags/[id]/route.ts>) is admin-only. Run
+`npm run db:migrate` to add the `content_flags` table.
+
+## Rosters and favorites
+
+An editor's roster is a saved shortlist, not a membership request. Saving someone from
+[Find talent](./app/dashboard/talent/page.tsx) or the [roster page](./app/dashboard/roster/page.tsx)
+adds them straight away, so they appear on the desk and can be assigned without waiting for an
+answer. Roster membership is not checked when a freelancer pitches an editor either.
+
+The optional "Notify them" checkbox in the add dialog is the only part that reaches the freelancer.
+They see the editor under "Saved by editors" and can accept or decline, but the answer only tells
+the editor whether they are interested — it never changes the roster. A silent favorite starts as
+`accepted` with `notified = false`, so it stays private; a notified one starts as `pending` with
+`notified = true`.
+
+Saving is one row in `roster_invites`; removing someone deletes it. Inviting people who are not on
+StoryMatch yet is planned for later. Run `npm run db:migrate` to add the `roster_invites.notified`
+column.
+
+## Free right now timer
+
+The "I'm free right now" switch on the profile card and in the settings availability
+form sets `users.available_now` and, from this release, stores when it should stop in
+`users.available_until`. Switching the flag on starts at the end of the person's local
+day; the picker under the switch offers 30 minutes, 1 hour, 2 hours, "until end of day"
+or a hand-picked time up to three days out. Switching it off clears the timer too.
+
+Nothing sweeps the table: every read treats a flag whose timer has passed as off. The
+roster, the talent search (including its "available now" filter and ordering) and the
+profile and availability APIs all check the timestamp, and the roster note reads
+"Free until 3:30 PM" while a timer is running. A row saved before this change has no
+timer and stays free until the person switches it off.
+
+Run `npm run db:migrate` to add the `users.available_until` column.

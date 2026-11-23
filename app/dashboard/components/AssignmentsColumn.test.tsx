@@ -63,8 +63,8 @@ describe('AssignmentsColumn', () => {
     fireEvent.click(within(cardFor(election)).getByRole('button', { name: /review candidates/i }));
     const dialog = screen.getByRole('dialog', { name: election });
     expect(within(dialog).getByText(/4 invited · 3 signaled interest/)).toBeInTheDocument();
-    // Jonah hasn't answered, so he can't be assigned yet
-    expect(within(dialog).getByRole('button', { name: 'Assign Jonah Weiss' })).toBeDisabled();
+    // a candidate who has not answered can still be assigned
+    expect(within(dialog).getByRole('button', { name: 'Assign Jonah Weiss' })).toBeEnabled();
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Assign Marcus Thorne' }));
 
@@ -75,6 +75,24 @@ describe('AssignmentsColumn', () => {
       expect.objectContaining({ method: 'POST', body: JSON.stringify({ memberId: 'marcus' }) })
     );
     expect(within(cardFor(election)).getByText('Assigned to Marcus Thorne')).toBeInTheDocument();
+  });
+
+  it('assigns a candidate who has not answered yet', async () => {
+    render(<AssignmentsColumn assignments={SAMPLE_ASSIGNMENTS} roster={ROSTER} />);
+    const election = 'Election Night Live Coverage: District 4';
+
+    fireEvent.click(within(cardFor(election)).getByRole('button', { name: /review candidates/i }));
+    const dialog = screen.getByRole('dialog', { name: election });
+    expect(within(dialog).getByText('Awaiting response')).toBeInTheDocument();
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Assign Jonah Weiss' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/assignments/election-d4/assign',
+      expect.objectContaining({ method: 'POST', body: JSON.stringify({ memberId: 'jonah' }) })
+    );
+    expect(within(cardFor(election)).getByText('Assigned to Jonah Weiss')).toBeInTheDocument();
   });
 
   it('keeps the popup open and says so when the assignment will not save', async () => {

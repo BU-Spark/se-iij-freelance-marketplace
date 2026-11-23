@@ -89,7 +89,7 @@ describe('ProfileFromUrl', () => {
     renderPanel();
     fireEvent.click(screen.getByRole('switch', { name: /free right now/i }));
 
-    await waitFor(() => expect(saveAvailableNow).toHaveBeenCalledWith(false));
+    await waitFor(() => expect(saveAvailableNow).toHaveBeenCalledWith(false, null));
     expect(await screen.findByText(/no longer marked as free/i)).toBeInTheDocument();
   });
 

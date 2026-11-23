@@ -54,14 +54,15 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
 }
 
 /**
- * Answers an invitation. The id is the *editor's* account, seen from the freelancer's side, mirroring
- * how DELETE names the freelancer for the editor.
+ * Answers the optional notification. The id is the *editor's* account, seen from the freelancer's
+ * side, mirroring how DELETE names the freelancer for the editor. The answer does not change the
+ * editor's roster: the favorite was saved before the freelancer was ever told.
  */
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { userId } = await auth();
 
   if (!userId) {
-    return NextResponse.json({ error: 'You must be signed in to answer an invitation.' }, { status: 401 });
+    return NextResponse.json({ error: 'You must be signed in to answer a notification.' }, { status: 401 });
   }
 
   const { id } = await params;
@@ -72,11 +73,11 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
   try {
     if (!(await loadProfileRoles(userId)).includes('freelancer')) {
-      return NextResponse.json({ error: 'Only freelancers can answer an invitation.' }, { status: 403 });
+      return NextResponse.json({ error: 'Only freelancers can answer a notification.' }, { status: 403 });
     }
   } catch (error) {
-    console.error('Could not check whether this person can answer invitations.', error);
-    return NextResponse.json({ error: 'Unable to answer the invitation right now.' }, { status: 500 });
+    console.error('Could not check whether this person can answer notifications.', error);
+    return NextResponse.json({ error: 'Unable to answer the notification right now.' }, { status: 500 });
   }
 
   let body: unknown;
@@ -89,7 +90,7 @@ export async function PATCH(request: Request, { params }: RouteContext) {
   const response = (body as { response?: unknown } | null)?.response;
 
   if (response !== 'accepted' && response !== 'declined') {
-    return NextResponse.json({ error: 'Say whether you accept or decline the invitation.' }, { status: 400 });
+    return NextResponse.json({ error: 'Say whether you accept or decline the notification.' }, { status: 400 });
   }
 
   try {
@@ -97,18 +98,18 @@ export async function PATCH(request: Request, { params }: RouteContext) {
 
     if (answered === null) {
       return NextResponse.json(
-        { error: 'Finish onboarding before answering invitations.', code: 'onboarding_required' },
+        { error: 'Finish onboarding before answering notifications.', code: 'onboarding_required' },
         { status: 400 }
       );
     }
 
     if (!answered) {
-      return NextResponse.json({ error: 'There is no invitation waiting from that editor.' }, { status: 404 });
+      return NextResponse.json({ error: 'There is no notification waiting from that editor.' }, { status: 404 });
     }
 
     return NextResponse.json({ status: response });
   } catch (error) {
-    console.error('Failed to answer a roster invitation.', error);
-    return NextResponse.json({ error: 'Unable to answer the invitation right now.' }, { status: 500 });
+    console.error('Failed to answer a roster notification.', error);
+    return NextResponse.json({ error: 'Unable to answer the notification right now.' }, { status: 500 });
   }
 }

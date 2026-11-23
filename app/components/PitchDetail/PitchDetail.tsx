@@ -1,4 +1,5 @@
 import Avatar from '../Avatar/Avatar';
+import ReportButton from '../ReportButton/ReportButton';
 import type { Pitch } from '../../types/dashboard.types';
 import { categoryColor } from '../../utils/category.utils';
 import { pitchHeading } from '../../utils/pitch.utils';
@@ -8,22 +9,29 @@ import { PITCH_FACTS } from './pitchFields';
 
 type PitchDetailProps = {
   pitch: Pitch;
+  /** editors can flag a pitch from their inbox; a freelancer reading their own does not need it */
+  showReport?: boolean;
 };
 
-export default function PitchDetail({ pitch }: PitchDetailProps) {
+export default function PitchDetail({ pitch, showReport = false }: PitchDetailProps) {
   return (
     <article className={styles.detail}>
       <header className={styles.head}>
-        <div className={styles.tags}>
-          <span className={styles.category}>
-            <span className={styles.dot} style={{ background: categoryColor(pitch.category) }} aria-hidden="true" />
-            {pitch.category}
-          </span>
-          {pitch.tags.map((t) => (
-            <span key={t} className={styles.tag}>
-              {t}
+        <div className={styles.headTop}>
+          <div className={styles.tags}>
+            <span className={styles.category}>
+              <span className={styles.dot} style={{ background: categoryColor(pitch.category) }} aria-hidden="true" />
+              {pitch.category}
             </span>
-          ))}
+            {pitch.tags.map((t) => (
+              <span key={t} className={styles.tag}>
+                {t}
+              </span>
+            ))}
+          </div>
+          {showReport && (
+            <ReportButton targetType="pitch" targetId={pitch.id} targetLabel={pitchHeading(pitch.slug)} compact />
+          )}
         </div>
 
         <h2 className={styles.title}>{pitchHeading(pitch.slug)}</h2>

@@ -2,7 +2,7 @@
 
 import SidePanel from '../../../components/SidePanel/SidePanel';
 import DetailList from '../../../components/DetailList/DetailList';
-import type { OrgProfile } from './constants';
+import { REACH_DETAIL, type OrgProfile } from './constants';
 import styles from './organizations.module.css';
 
 type OrganizationPanelProps = {
@@ -30,6 +30,7 @@ export default function OrganizationPanel({ org, onClose }: OrganizationPanelPro
 
         <DetailList
           items={[
+            { label: 'Opportunities', value: REACH_DETAIL[org.reach], wide: true },
             { label: 'Founded', value: org.founded },
             { label: 'Staff', value: org.staffSize },
             { label: 'Rate', value: org.rate },

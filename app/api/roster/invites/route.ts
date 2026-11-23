@@ -12,8 +12,9 @@ const MAX_INVITES = 50;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
- * Adds freelancers to the signed-in editor's roster. `/api` is outside the middleware matcher, so
- * the editor check happens here rather than being assumed.
+ * Saves freelancers to the signed-in editor's roster. `/api` is outside the middleware matcher, so
+ * the editor check happens here rather than being assumed. Saving is immediate; `notify` only
+ * decides whether the freelancer is told about it.
  */
 export async function POST(request: Request) {
   const { userId } = await auth();
@@ -42,13 +43,14 @@ export async function POST(request: Request) {
   }
 
   const freelancerIds = (body as { freelancerIds?: unknown } | null)?.freelancerIds;
+  const notify = (body as { notify?: unknown } | null)?.notify === true;
 
   if (!Array.isArray(freelancerIds) || freelancerIds.length === 0) {
-    return NextResponse.json({ error: 'Choose at least one freelancer to invite.' }, { status: 400 });
+    return NextResponse.json({ error: 'Choose at least one freelancer to save.' }, { status: 400 });
   }
 
   if (freelancerIds.length > MAX_INVITES) {
-    return NextResponse.json({ error: `Invite at most ${MAX_INVITES} freelancers at a time.` }, { status: 400 });
+    return NextResponse.json({ error: `Save at most ${MAX_INVITES} freelancers at a time.` }, { status: 400 });
   }
 
   if (!freelancerIds.every((id) => typeof id === 'string' && UUID.test(id))) {
@@ -56,19 +58,19 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await inviteFreelancers(userId, freelancerIds);
+    const result = await inviteFreelancers(userId, freelancerIds, notify);
 
     // No `users` row yet: the page would not have offered a roster either
     if (!result) {
       return NextResponse.json(
-        { error: 'Finish onboarding before inviting freelancers.', code: 'onboarding_required' },
+        { error: 'Finish onboarding before saving freelancers.', code: 'onboarding_required' },
         { status: 400 }
       );
     }
 
-    return NextResponse.json(result);
+    return NextResponse.json({ saved: result.saved });
   } catch (error) {
-    console.error('Failed to add freelancers to a roster.', error);
+    console.error('Failed to save freelancers to a roster.', error);
     return NextResponse.json({ error: 'Unable to add to your roster right now.' }, { status: 500 });
   }
 }

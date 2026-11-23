@@ -47,6 +47,16 @@ describe('AssignmentDetail', () => {
     expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
   });
 
+  it('offers a flag to report it to readers who cannot edit it', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit={false} />);
+    expect(screen.getByRole('button', { name: 'Report Election night' })).toBeInTheDocument();
+  });
+
+  it('does not ask editors to report their own posting', () => {
+    render(<AssignmentDetail assignment={assignment} canEdit />);
+    expect(screen.queryByRole('button', { name: 'Report Election night' })).not.toBeInTheDocument();
+  });
+
   it('offers Delete next to Edit to the editors who may delete it', () => {
     render(<AssignmentDetail assignment={assignment} canEdit />);
 

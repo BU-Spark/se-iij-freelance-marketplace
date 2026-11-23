@@ -20,8 +20,8 @@ type ProfilePanelProps = {
   onSaveBasic?: (basic: BasicInfo) => SaveResult;
   /** if given, each role's drawer gets an Edit button */
   onSaveRole?: (details: RoleDetails) => SaveResult;
-  /** if given, My profile shows the "free right now" switch */
-  onSaveAvailable?: (availableNow: boolean) => SaveResult;
+  /** if given, My profile shows the "free right now" switch and its timer */
+  onSaveAvailable?: (availableNow: boolean, availableUntil: string | null) => SaveResult;
 };
 
 /** The quick view from the header avatar; the settings page shows the same cards expanded */

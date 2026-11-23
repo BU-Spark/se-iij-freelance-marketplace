@@ -1,0 +1,8 @@
+/* Serif type for the freelancer workspace only; the editor side keeps its sans text.
+   Redefining --font-sans here also reaches the modules that ask for it by name.
+   display: contents keeps this wrapper out of the page layout. */
+.serif {
+  --font-sans: var(--font-source-serif), Georgia, serif;
+  display: contents;
+  font-family: var(--font-sans);
+}

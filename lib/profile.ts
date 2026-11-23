@@ -16,6 +16,7 @@ const PROFILE_SQL = `
     u.long_bio,
     u.photo_key,
     u.available_now,
+    u.available_until,
     u.roles,
     u.preferences,
     e.user_id AS editor_id,

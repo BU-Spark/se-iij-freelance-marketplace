@@ -7,7 +7,7 @@ import FreelancerDashboard from './FreelancerDashboard';
 import RosterInvites from './RosterInvites';
 import styles from './freelancer.module.css';
 
-// An invitation sent a moment ago has to show up on the next visit
+// A notification sent a moment ago has to show up on the next visit
 export const dynamic = 'force-dynamic';
 
 export default async function FreelancerPage() {
@@ -17,7 +17,7 @@ export default async function FreelancerPage() {
   try {
     if (userId) invites = await listInvitesForFreelancer(userId);
   } catch (error) {
-    console.error('Failed to load roster invitations.', error);
+    console.error('Failed to load saved-by notifications.', error);
   }
 
   // The feed is the open assignments editors have actually posted, not a demo list
@@ -34,7 +34,7 @@ export default async function FreelancerPage() {
   return (
     // Same frame as the editor desk: status bar under the header, then two columns (see FreelancerDashboard)
     <main className={styles.main}>
-      {/* declined invitations are left out: the editor sees the answer on their roster */}
+      {/* declined notifications are left out: the editor sees the answer on their roster */}
       <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} dateLabel={formatDeskDate(new Date())}>
         <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
       </FreelancerDashboard>

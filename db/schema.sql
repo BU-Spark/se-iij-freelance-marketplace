@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
   preferences JSONB NOT NULL DEFAULT '{}'::jsonb,
   -- The person's own "I'm free right now" flag, shown as the dot on their avatar
   available_now BOOLEAN NOT NULL DEFAULT FALSE,
+  -- When that flag stops counting on its own; NULL means it has no timer
+  available_until TIMESTAMPTZ,
   -- Set by the Story Match team when an account may no longer sign in
   suspended_at TIMESTAMPTZ,
   suspension_reason TEXT,
@@ -90,6 +92,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences JSONB NOT NULL DEFAULT '{}'::jsonb;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS available_now BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS available_until TIMESTAMPTZ;
 -- Admins suspend accounts from the Accounts tab; the Clerk ban stops the sign-in, these record why
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspended_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS suspension_reason TEXT;
@@ -161,9 +164,33 @@ CREATE TABLE IF NOT EXISTS account_appeals (
 CREATE INDEX IF NOT EXISTS account_appeals_status_created_idx ON account_appeals (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS account_appeals_user_idx ON account_appeals (user_id);
 
--- An editor's roster: the freelancers they have invited to work with them. The row *is* the invite,
--- so inviting again is a no-op and removing someone deletes it. Only an accepted invite puts the
--- person on the roster; asking again after a decline re-opens the same row.
+-- A flag is a report someone raised about an account, an assignment, or a pitch. The three targets
+-- live in different tables, so the row keeps (type, id) instead of a foreign key; the label is copied
+-- at report time, which keeps the queue readable if the target is later edited or deleted.
+CREATE TABLE IF NOT EXISTS content_flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type TEXT NOT NULL CHECK (target_type IN ('account', 'assignment', 'pitch')),
+  target_id UUID NOT NULL,
+  target_label TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  -- Kept even if the reporter's account goes, so the team can still read what was sent
+  reporter_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  reporter_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'reviewing', 'resolved', 'dismissed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS content_flags_status_created_idx ON content_flags (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS content_flags_target_idx ON content_flags (target_type, target_id);
+-- The repeat-report check looks up one person's active flags on the same target
+CREATE INDEX IF NOT EXISTS content_flags_reporter_target_idx
+  ON content_flags (reporter_user_id, target_type, target_id, status);
+
+-- An editor's roster: the freelancers they have saved to work with them. The row *is* the favorite,
+-- so saving again is a no-op and removing someone deletes it. A favorite is on the roster straight
+-- away; `status` only records the freelancer's answer to an optional notification, so it never
+-- gates pitches or assignments. Asking again after a decline re-opens the same row.
 CREATE TABLE IF NOT EXISTS roster_invites (
   editor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -179,6 +206,10 @@ CREATE INDEX IF NOT EXISTS roster_invites_freelancer_idx ON roster_invites (free
 -- Columns added after roster_invites shipped: the invite used to count as accepted on creation
 ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;
+-- Whether the freelancer was told they were saved. A silent favorite stays private; a notified one
+-- can be answered, but either way the row itself is the roster membership. Existing rows predate
+-- the favorites model, so they were notifications and default to true.
+ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS notified BOOLEAN NOT NULL DEFAULT TRUE;
 
 DO $$
 BEGIN

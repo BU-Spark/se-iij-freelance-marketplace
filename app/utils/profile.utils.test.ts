@@ -245,6 +245,7 @@ const baseRow: ProfileRow = {
   short_bio: 'Local politics reporter',
   long_bio: null,
   photo_key: 'photos/user-1/photo.jpg',
+  available_until: null,
   available_now: true,
   roles: ['editor'],
   preferences: null,
@@ -307,6 +308,19 @@ const freelancerRow: ProfileRow = {
 };
 
 describe('toAccountProfile', () => {
+  it('treats an expired free-right-now timer as switched off', () => {
+    const until = new Date(Date.now() + 30 * 60_000).toISOString();
+    expect(toAccountProfile({ ...baseRow, available_until: until }).basic).toMatchObject({
+      availableNow: true,
+      availableUntil: until,
+    });
+
+    expect(toAccountProfile({ ...baseRow, available_until: '2020-01-01T09:00:00.000Z' }).basic).toMatchObject({
+      availableNow: false,
+      availableUntil: null,
+    });
+  });
+
   it('maps the row and the signed photo URL onto the panel profile', () => {
     const profile = toAccountProfile(baseRow, 'https://signed.example/photo.jpg');
 
@@ -319,6 +333,7 @@ describe('toAccountProfile', () => {
       photoKey: 'photos/user-1/photo.jpg',
       photoUrl: 'https://signed.example/photo.jpg',
       availableNow: true,
+      availableUntil: null,
     });
     expect(profile.roles[0]).toMatchObject({
       role: 'editor',

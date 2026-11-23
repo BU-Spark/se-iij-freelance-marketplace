@@ -4,7 +4,11 @@ import { PITCHES } from '../../../test/fixtures/pitches';
 import { pitchHeading } from '../../utils/pitch.utils';
 
 const newCount = PITCHES.filter((p) => p.status === 'new').length;
-const cardFor = (slug: string) => screen.queryByRole('button', { name: new RegExp(pitchHeading(slug)) });
+// scope to the pitch list: the detail pane also has a "Report <title>" button
+const cardFor = (slug: string) =>
+  within(screen.getByRole('region', { name: 'Inbox' })).queryByRole('button', {
+    name: new RegExp(pitchHeading(slug)),
+  });
 const tab = (name: string) =>
   within(screen.getByRole('group', { name: /filter pitches/i })).getByRole('button', { name });
 const action = (name: RegExp) =>

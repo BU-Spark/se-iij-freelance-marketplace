@@ -1,19 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { RosterCard, useToast } from '../../components';
+import { RosterCard, ReportButton, useToast } from '../../components';
 import Modal from '../../components/Modal/Modal';
 import InvitePicker from './InvitePicker';
-import type { AvailabilityStatus, RosterMember } from '../../types/dashboard.types';
+import type { AvailabilityStatus, RosterInviteStatus, RosterMember } from '../../types/dashboard.types';
 import { US_STATE_NAMES, matchesLocation, usStateOf } from '../../utils/location.utils';
 import styles from './roster.module.css';
 
 type RosterBrowserProps = {
-  /** freelancers who accepted the invitation and are on the roster */
+  /** freelancers saved to the roster, including anyone notified who has not answered */
   members: RosterMember[];
-  /** invitations still waiting on an answer, or turned down */
-  pending?: RosterMember[];
-  /** everyone else, who can still be invited */
+  /** everyone else, who can still be saved */
   invitable: RosterMember[];
   /** the load failed, which is different from an empty roster */
   loadFailed?: boolean;
@@ -53,10 +51,10 @@ function compare(sort: SortKey) {
 }
 
 /*
- * Invites and removals are saved through the roster API; the list only changes once the server confirms
- * them, so a failed request shows an error instead of a roster that is not really there.
+ * Saves and removals go through the roster API; the list only changes once the server confirms them,
+ * so a failed request shows an error instead of a roster that is not really there.
  */
-export default function RosterBrowser({ members, pending = [], invitable, loadFailed = false }: RosterBrowserProps) {
+export default function RosterBrowser({ members, invitable, loadFailed = false }: RosterBrowserProps) {
   const { showToast } = useToast();
 
   const [query, setQuery] = useState('');
@@ -67,11 +65,12 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
 
   const [inviting, setInviting] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
+  /** tell the freelancers they were saved; off by default so favorites stay private */
+  const [notify, setNotify] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const [roster, setRoster] = useState(members);
-  const [waiting, setWaiting] = useState(pending);
   const [others, setOthers] = useState(invitable);
-  /** true while an invite or a removal is in flight */
+  /** true while a save or a removal is in flight */
   const [saving, setSaving] = useState(false);
 
   const beats = options(roster.flatMap(beatsOf));
@@ -101,6 +100,7 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
 
   const openInvite = () => {
     setPicked([]);
+    setNotify(false);
     setInviting(true);
   };
 
@@ -116,11 +116,11 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
       const response = await fetch('/api/roster/invites', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ freelancerIds: chosen.map((member) => member.id) }),
+        body: JSON.stringify({ freelancerIds: chosen.map((member) => member.id), notify }),
       });
 
       const body = (await response.json().catch(() => null)) as {
-        invited?: { freelancerId: string; invitedAt: string }[];
+        saved?: { freelancerId: string; invitedAt: string }[];
         error?: string;
       } | null;
 
@@ -129,20 +129,25 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
         return;
       }
 
-      const invitedAt = new Map((body?.invited ?? []).map((row) => [row.freelancerId, row.invitedAt]));
+      const savedAt = new Map((body?.saved ?? []).map((row) => [row.freelancerId, row.invitedAt]));
       const added = chosen.map((member) => ({
         ...member,
-        invitedAt: invitedAt.get(member.id) ?? new Date().toISOString(),
-        inviteStatus: 'pending' as const,
+        invitedAt: savedAt.get(member.id) ?? new Date().toISOString(),
+        inviteStatus: (notify ? 'pending' : 'accepted') as RosterInviteStatus,
+        notified: notify,
       }));
 
-      // an invitation only reaches the roster once the freelancer accepts
-      setWaiting((list) => [...list, ...added]);
+      // saving is immediate: the freelancer is on the roster whether or not they were told
+      setRoster((list) => [...list, ...added]);
       setOthers((list) => list.filter((member) => !picked.includes(member.id)));
       showToast(
         added.length === 1
-          ? `Invited ${added[0].name} — they will appear once they accept`
-          : `Invited ${added.length} freelancers — they will appear once they accept`
+          ? notify
+            ? `Saved ${added[0].name} and let them know`
+            : `Saved ${added[0].name} to your roster`
+          : notify
+            ? `Saved ${added.length} freelancers and let them know`
+            : `Saved ${added.length} freelancers to your roster`
       );
       setInviting(false);
     } catch (error) {
@@ -167,18 +172,13 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
       }
 
       setRoster((list) => list.filter((m) => m.id !== member.id));
-      setWaiting((list) => list.filter((m) => m.id !== member.id));
-      // they go back to the invite list, so the editor can change their mind
+      // they go back to the directory, so the editor can save them again
       setOthers((list) =>
-        [...list, { ...member, invitedAt: undefined, inviteStatus: undefined }].sort((a, b) =>
+        [...list, { ...member, invitedAt: undefined, inviteStatus: undefined, notified: undefined }].sort((a, b) =>
           a.name.localeCompare(b.name)
         )
       );
-      showToast(
-        member.inviteStatus === 'pending'
-          ? `Cancelled the invitation to ${member.name}`
-          : `Removed ${member.name} from your roster`
-      );
+      showToast(`Removed ${member.name} from your roster`);
     } catch (error) {
       console.error('Could not remove the freelancer from the roster.', error);
       showToast('Could not remove them from your roster right now.', 'error');
@@ -199,7 +199,7 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
 
   const inviteButton = (
     <button type="button" className={styles.inviteButton} onClick={openInvite} disabled={others.length === 0}>
-      <span aria-hidden="true">+</span> Invite freelancers
+      <span aria-hidden="true">+</span> Add freelancers
     </button>
   );
 
@@ -216,56 +216,17 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
               </span>
             )}
           </h1>
-          <p className={styles.description}>Freelancers you&apos;ve invited to work with you.</p>
+          <p className={styles.description}>Freelancers you&apos;ve saved to work with.</p>
         </div>
         <div className={styles.headingSide}>{inviteButton}</div>
       </div>
-
-      {waiting.length > 0 && (
-        <section className={styles.pending} aria-labelledby="pending-heading">
-          <div className={styles.pendingIntro}>
-            <h2 id="pending-heading" className={styles.pendingTitle}>
-              Waiting on a response
-              <span className={styles.countBadge}>{waiting.length}</span>
-            </h2>
-            <p>They join your roster once they accept the invitation.</p>
-          </div>
-          <ul className={styles.pendingList}>
-            {waiting.map((member) => (
-              <li key={member.id} className={styles.pendingRow}>
-                <div className={styles.pendingWho}>
-                  <strong>{member.name}</strong>
-                  <span>{[member.specialty, member.city].filter(Boolean).join(' · ')}</span>
-                </div>
-                <span
-                  className={
-                    member.inviteStatus === 'declined'
-                      ? `${styles.pendingStatus} ${styles.pendingDeclined}`
-                      : styles.pendingStatus
-                  }
-                >
-                  {member.inviteStatus === 'declined' ? 'Declined' : 'Pending response'}
-                </span>
-                <button
-                  type="button"
-                  className={styles.textButton}
-                  disabled={saving}
-                  onClick={() => void remove(member)}
-                >
-                  {member.inviteStatus === 'declined' ? 'Remove' : 'Cancel invite'}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
 
       {roster.length === 0 ? (
         <div className={styles.empty} role="status">
           <h2>No one on your roster yet</h2>
           <p>
             {others.length > 0
-              ? 'Invite freelancers you work with, and they will show up here with their beats and availability.'
+              ? 'Save freelancers you work with, and they will show up here with their beats and availability.'
               : 'No freelancers have finished setting up their profile yet. Check back once some have joined.'}
           </p>
           {others.length > 0 && inviteButton}
@@ -369,33 +330,51 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
                   footer={
                     <>
                       <span className={styles.added}>
-                        {member.invitedAt ? `Added ${formatAdded(member.invitedAt)}` : 'On your roster'}
+                        {member.invitedAt ? `Saved ${formatAdded(member.invitedAt)}` : 'On your roster'}
                       </span>
-                      {confirmingId === member.id ? (
-                        <span className={styles.confirm}>
-                          Remove?
+                      <span className={styles.footerActions}>
+                        {member.notified && member.inviteStatus && (
+                          <span
+                            className={
+                              member.inviteStatus === 'declined'
+                                ? `${styles.pendingStatus} ${styles.pendingDeclined}`
+                                : styles.pendingStatus
+                            }
+                          >
+                            {member.inviteStatus === 'pending'
+                              ? 'Notified'
+                              : member.inviteStatus === 'accepted'
+                                ? 'Accepted'
+                                : 'Declined'}
+                          </span>
+                        )}
+                        {confirmingId === member.id ? (
+                          <span className={styles.confirm}>
+                            Remove?
+                            <button
+                              type="button"
+                              className={styles.dangerLink}
+                              disabled={saving}
+                              onClick={() => void remove(member)}
+                            >
+                              Yes, remove
+                            </button>
+                            <button type="button" className={styles.textButton} onClick={() => setConfirmingId(null)}>
+                              Cancel
+                            </button>
+                          </span>
+                        ) : (
                           <button
                             type="button"
-                            className={styles.dangerLink}
-                            disabled={saving}
-                            onClick={() => void remove(member)}
+                            className={styles.textButton}
+                            aria-label={`Remove ${member.name} from your roster`}
+                            onClick={() => setConfirmingId(member.id)}
                           >
-                            Yes, remove
+                            Remove
                           </button>
-                          <button type="button" className={styles.textButton} onClick={() => setConfirmingId(null)}>
-                            Cancel
-                          </button>
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          className={styles.textButton}
-                          aria-label={`Remove ${member.name} from your roster`}
-                          onClick={() => setConfirmingId(member.id)}
-                        >
-                          Remove
-                        </button>
-                      )}
+                        )}
+                        <ReportButton targetType="account" targetId={member.id} targetLabel={member.name} compact />
+                      </span>
                     </>
                   }
                 />
@@ -407,8 +386,8 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
 
       {inviting && (
         <Modal
-          title="Invite to your roster"
-          subtitle="Pick the freelancers you want to work with. You can remove them any time."
+          title="Add to your roster"
+          subtitle="Save the freelancers you want to work with. You can remove them any time."
           onClose={() => setInviting(false)}
           footer={
             <>
@@ -432,6 +411,13 @@ export default function RosterBrowser({ members, pending = [], invitable, loadFa
           }
         >
           <InvitePicker people={others} picked={picked} onToggle={togglePick} />
+          <label className={styles.notifyRow}>
+            <input type="checkbox" checked={notify} onChange={(event) => setNotify(event.target.checked)} />
+            <span>
+              <strong>Notify them</strong>
+              <small>Optional. They are on your roster either way; this just lets them know.</small>
+            </span>
+          </label>
         </Modal>
       )}
     </main>

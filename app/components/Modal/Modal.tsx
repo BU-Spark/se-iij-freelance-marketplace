@@ -18,6 +18,13 @@ type ModalProps = {
 export default function Modal({ title, onClose, eyebrow, subtitle, footer, children }: ModalProps) {
   const titleId = useId(); // a unique id, so screen readers know which heading names the popup
   const boxRef = useRef<HTMLDivElement>(null);
+  const closeRef = useRef(onClose);
+
+  // Escape should always call the newest handler, but must not restart the mount effect (which
+  // would steal focus from a field the dialog is collecting, e.g. a report reason)
+  useEffect(() => {
+    closeRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     // remember what was focused (e.g. the button that opened this), to give focus back on close
@@ -25,7 +32,7 @@ export default function Modal({ title, onClose, eyebrow, subtitle, footer, child
     boxRef.current?.focus();
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeRef.current();
     };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -35,7 +42,7 @@ export default function Modal({ title, onClose, eyebrow, subtitle, footer, child
       document.body.style.overflow = '';
       opener?.focus();
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div className={styles.overlay}>

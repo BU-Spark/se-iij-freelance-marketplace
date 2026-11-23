@@ -1,11 +1,14 @@
-import type { OrgProfile } from './constants';
+import { REACH_LABEL, type OrgProfile } from './constants';
 import styles from './organizations.module.css';
 
 /** One newsroom in the Organizations grid: name, tagline, beats and the numbers a freelancer scans for */
 export default function OrganizationCard({ org }: { org: OrgProfile }) {
   return (
     <>
-      <h2 className={styles.name}>{org.name}</h2>
+      <div className={styles.nameRow}>
+        <h2 className={styles.name}>{org.name}</h2>
+        <span className={`${styles.reach} ${styles[org.reach]}`}>{REACH_LABEL[org.reach]}</span>
+      </div>
       <p className={styles.tagline}>{org.tagline}</p>
 
       <ul className={styles.beats} aria-label="Beats">

@@ -15,7 +15,10 @@ describe('buildTalentQuery', () => {
 
     expect(sql).toContain("'freelancer' = ANY(u.roles)");
     expect(sql).not.toContain('ILIKE');
-    expect(sql).toMatch(/ORDER BY u\.available_now DESC/);
+    // people whose timer has run out sort as not free, even though their flag is still set
+    expect(sql).toMatch(
+      /ORDER BY \(u\.available_now AND \(u\.available_until IS NULL OR u\.available_until > NOW\(\)\)\) DESC/
+    );
     expect(params).toEqual([TALENT_PAGE_SIZE]);
   });
 
@@ -39,7 +42,7 @@ describe('buildTalentQuery', () => {
     expect(sql).toContain('$2 = ANY(f.beats) OR $2 = ANY(f.beat_tags)');
     expect(sql).toContain('$3 = ANY(f.work_mediums)');
     expect(sql).toContain('f.location = $4');
-    expect(sql).toContain('u.available_now = true');
+    expect(sql).toContain('u.available_now = true AND (u.available_until IS NULL OR u.available_until > NOW())');
     expect(sql).toContain('LIMIT $5');
     expect(params).toEqual(['%housing%', 'Politics', 'Audio', 'Leeds, UK', TALENT_PAGE_SIZE]);
   });
@@ -87,6 +90,30 @@ describe('searchTalent', () => {
   it('passes database errors up so the page can show its failed state', async () => {
     queryMock.mockRejectedValue(new Error('db down'));
     await expect(searchTalent({})).rejects.toThrow('db down');
+  });
+
+  it('stops calling someone free once their timer has run out', async () => {
+    queryMock.mockResolvedValue({
+      rows: [
+        {
+          id: 'user-1',
+          first_name: 'Sarah',
+          last_name: 'Jenkins',
+          available_now: true,
+          available_until: '2020-01-01T09:00:00.000Z',
+          location: 'Leeds, UK',
+          beats: ['Politics'],
+          beat_tags: [],
+          work_mediums: ['Text'],
+          availability: null,
+        },
+      ],
+    });
+
+    const [member] = await searchTalent({});
+
+    expect(member.availableNow).toBe(false);
+    expect(member.status).toBe('off');
   });
 });
 

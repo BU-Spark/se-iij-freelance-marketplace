@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ToastProvider } from '../components/Toast/ToastProvider';
 import type { Appeal } from '../../lib/appeals';
@@ -38,6 +38,7 @@ const fetchMock = jest.fn();
 
 beforeEach(() => {
   fetchMock.mockReset();
+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({}) });
   global.fetch = fetchMock as unknown as typeof fetch;
 });
 
@@ -49,10 +50,12 @@ const button = (group: string, name: string) =>
   within(screen.getByRole('group', { name: group })).getByRole('button', { name: new RegExp(`^${name}`) });
 const view = (name: string) => button('Show', name);
 const filter = (name: string) => button('Type', name);
-const click = (label: string, action: string) =>
-  userEvent.click(
-    within(screen.getByRole('group', { name: `Actions for ${label}` })).getByRole('button', { name: action })
-  );
+const click = async (label: string, action: string) => {
+  const target = button(`Actions for ${label}`, action);
+  // a second decision waits for the previous request to finish and re-enable the buttons
+  await waitFor(() => expect(target).toBeEnabled());
+  await userEvent.click(target);
+};
 
 const renderInbox = (appeals: Appeal[] = [appeal]) =>
   render(
@@ -106,7 +109,7 @@ describe('AdminInbox', () => {
 
     await click('City council budget leak', 'Mark in review');
 
-    expect(screen.getByText('Flag marked as in review.')).toBeInTheDocument();
+    expect(await screen.findByText('Flag marked as in review.')).toBeInTheDocument();
     expect(
       within(screen.getByRole('group', { name: 'Actions for City council budget leak' })).queryByRole('button', {
         name: 'Mark in review',
@@ -122,7 +125,7 @@ describe('AdminInbox', () => {
 
     await click('City council budget leak', action);
 
-    expect(screen.getByText(message)).toBeInTheDocument();
+    expect(await screen.findByText(message)).toBeInTheDocument();
     expect(screen.queryByText('City council budget leak')).not.toBeInTheDocument();
     expect(view('Done')).toHaveTextContent('Done1');
 
@@ -138,16 +141,33 @@ describe('AdminInbox', () => {
   it('lets a done decision be changed or reopened', async () => {
     renderInbox([]);
     await click('City council budget leak', 'Resolve');
+    await screen.findByText('Flag resolved. You can still change it under Done.');
     await userEvent.click(view('Done'));
 
     await click('City council budget leak', 'Change to dismissed');
+    await screen.findByText('Flag dismissed. You can still change it under Done.');
     expect(within(screen.getByRole('listitem')).getByText('Dismissed')).toBeInTheDocument();
 
     await click('City council budget leak', 'Reopen');
+    await screen.findByText('Flag marked as in review.');
     expect(view('Done')).toHaveTextContent('Done0');
 
     await userEvent.click(view('To do'));
     expect(screen.getByText('City council budget leak')).toBeInTheDocument();
+  });
+
+  it('leaves the flag where it was when the status cannot be saved', async () => {
+    fetchMock.mockResolvedValue({
+      ok: false,
+      json: async () => ({ error: 'Only the Story Match team can change flags.' }),
+    });
+    renderInbox([]);
+
+    await click('City council budget leak', 'Resolve');
+
+    expect(await screen.findByText('Only the Story Match team can change flags.')).toBeInTheDocument();
+    expect(screen.getByText('City council budget leak')).toBeInTheDocument();
+    expect(view('Done')).toHaveTextContent('Done0');
   });
 
   it('reactivates the account from an appeal and takes it off the list', async () => {

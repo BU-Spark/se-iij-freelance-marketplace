@@ -59,6 +59,12 @@
   overflow-wrap: anywhere;
 }
 
+.nameRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
 .name {
   margin: 0;
   color: var(--navy-deep);
@@ -72,6 +78,27 @@
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
+}
+
+/* where its opportunities are open: local, US only or global */
+.reach {
+  flex-shrink: 0;
+  margin-top: 3px;
+  padding: 2px 9px;
+  border: 1px solid currentColor;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.local {
+  color: var(--c-green-d);
+}
+.us {
+  color: var(--navy);
+}
+.global {
+  color: var(--c-purple);
 }
 
 /* beats use the "Open" pill colours from the assignment cards */

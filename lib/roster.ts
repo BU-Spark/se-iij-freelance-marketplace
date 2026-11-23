@@ -12,6 +12,7 @@ const SELECT_FREELANCERS = `
     u.first_name,
     u.last_name,
     u.available_now,
+    u.available_until,
     f.location,
     f.beats,
     f.beat_tags,
@@ -28,12 +29,16 @@ export async function listRoster(now: Date = new Date()): Promise<RosterMember[]
   return rows.map((row) => toRosterMember(row, now));
 }
 
-/** A row from the editor's own roster query: the freelancer, plus how this editor's invite stands */
-type EditorRosterRow = RosterRow & { invited_at: string | Date | null; status: RosterInviteStatus | null };
+/** A row from the editor's own roster query: the freelancer, plus how this editor's save stands */
+type EditorRosterRow = RosterRow & {
+  invited_at: string | Date | null;
+  status: RosterInviteStatus | null;
+  notified: boolean | null;
+};
 
 /**
- * The same freelancers, annotated with this editor's invite. A LEFT JOIN keeps everyone in the
- * result so the page can offer the rest as people still to invite.
+ * The same freelancers, annotated with this editor's save. A LEFT JOIN keeps everyone in the
+ * result so the page can offer the rest as people still to save.
  */
 const SELECT_EDITOR_ROSTER = `
   SELECT
@@ -41,13 +46,15 @@ const SELECT_EDITOR_ROSTER = `
     u.first_name,
     u.last_name,
     u.available_now,
+    u.available_until,
     f.location,
     f.beats,
     f.beat_tags,
     f.work_mediums,
     f.availability,
     r.invited_at,
-    r.status
+    r.status,
+    r.notified
   FROM users u
   JOIN freelancers f ON f.user_id = u.id
   LEFT JOIN roster_invites r
@@ -58,11 +65,9 @@ const SELECT_EDITOR_ROSTER = `
 `;
 
 export type EditorRoster = {
-  /** freelancers who accepted, with the date they were added */
+  /** freelancers saved to the roster, with the date they were added */
   members: RosterMember[];
-  /** invitations still waiting on an answer, or turned down */
-  pending: RosterMember[];
-  /** everyone else in the directory, who can still be invited */
+  /** everyone else in the directory, who can still be saved */
   invitable: RosterMember[];
 };
 
@@ -76,17 +81,17 @@ async function userIdFor(clerkId: string): Promise<string | null> {
 }
 
 /**
- * Whose roster? The signed-in editor's, split into the people who accepted, the invitations still
- * waiting on an answer (or turned down), and the people who could still be invited.
+ * Whose roster? The signed-in editor's, split into the people they have saved and the people who
+ * could still be saved. A notification answer never changes membership: a decline stays on the
+ * roster with the answer recorded, so the editor decides when to remove someone.
  */
 export async function loadEditorRoster(editorClerkId: string, now: Date = new Date()): Promise<EditorRoster> {
   const editorId = await userIdFor(editorClerkId);
-  if (!editorId) return { members: [], pending: [], invitable: [] };
+  if (!editorId) return { members: [], invitable: [] };
 
   const { rows } = await db.query<EditorRosterRow>(SELECT_EDITOR_ROSTER, [editorId]);
 
   const members: RosterMember[] = [];
-  const pending: RosterMember[] = [];
   const invitable: RosterMember[] = [];
 
   for (const row of rows) {
@@ -94,26 +99,28 @@ export async function loadEditorRoster(editorClerkId: string, now: Date = new Da
 
     if (!row.invited_at || !row.status) {
       invitable.push(member);
-    } else if (row.status === 'accepted') {
-      members.push({ ...member, invitedAt: isoString(row.invited_at), inviteStatus: row.status });
     } else {
-      pending.push({ ...member, invitedAt: isoString(row.invited_at), inviteStatus: row.status });
+      members.push({
+        ...member,
+        invitedAt: isoString(row.invited_at),
+        inviteStatus: row.status,
+        notified: row.notified === true,
+      });
     }
   }
 
-  return { members, pending, invitable };
+  return { members, invitable };
 }
 
-/** The freelancer ids this editor has already invited, for marking the talent directory */
-export async function listInvitedIds(editorClerkId: string): Promise<string[]> {
+/** The freelancer ids this editor has already saved, for marking the talent directory */
+export async function listSavedIds(editorClerkId: string): Promise<string[]> {
   const editorId = await userIdFor(editorClerkId);
   if (!editorId) return [];
 
   const { rows } = await db.query<{ freelancer_user_id: string }>(
     `SELECT freelancer_user_id
        FROM roster_invites
-      WHERE editor_user_id = $1
-        AND status <> 'declined'`,
+      WHERE editor_user_id = $1`,
     [editorId]
   );
 
@@ -121,16 +128,26 @@ export async function listInvitedIds(editorClerkId: string): Promise<string[]> {
 }
 
 export type InviteResult = {
-  invited: { freelancerId: string; invitedAt: string; status: RosterInviteStatus }[];
+  saved: {
+    freelancerId: string;
+    invitedAt: string;
+    status: RosterInviteStatus;
+    notified: boolean;
+  }[];
 };
 
 /**
- * Asks freelancers to join this editor's roster. Only accounts that really hold the freelancer role
- * are taken, and the invite starts as pending until they answer. A declined invite can be asked
- * again (the same row reopens); an accepted one is left alone.
+ * Saves freelancers to this editor's roster. Only accounts that really hold the freelancer role are
+ * taken. Saving is immediate: the row is the membership, so nobody has to accept before they can
+ * be pitched or assigned. `notify` optionally tells the freelancer, and their answer is recorded
+ * without changing the roster. A declined row reopens when saved again.
  * Returns null when the signed-in person has no `users` row yet.
  */
-export async function inviteFreelancers(editorClerkId: string, freelancerIds: string[]): Promise<InviteResult | null> {
+export async function inviteFreelancers(
+  editorClerkId: string,
+  freelancerIds: string[],
+  notify = false
+): Promise<InviteResult | null> {
   const editorId = await userIdFor(editorClerkId);
   if (!editorId) return null;
 
@@ -138,27 +155,33 @@ export async function inviteFreelancers(editorClerkId: string, freelancerIds: st
     freelancer_user_id: string;
     invited_at: string | Date;
     status: RosterInviteStatus;
+    notified: boolean;
   }>(
-    `INSERT INTO roster_invites (editor_user_id, freelancer_user_id)
-     SELECT $1, u.id
+    `INSERT INTO roster_invites (editor_user_id, freelancer_user_id, status, notified)
+     SELECT $1, u.id,
+            CASE WHEN $3 THEN 'pending' ELSE 'accepted' END,
+            $3
        FROM users u
       WHERE u.id = ANY($2::uuid[])
         AND 'freelancer' = ANY(u.roles)
         AND u.id <> $1
      ON CONFLICT (editor_user_id, freelancer_user_id) DO UPDATE
-        SET status = 'pending',
+        SET status = EXCLUDED.status,
+            notified = EXCLUDED.notified,
             invited_at = NOW(),
             responded_at = NULL
       WHERE roster_invites.status = 'declined'
-     RETURNING freelancer_user_id, invited_at, status`,
-    [editorId, freelancerIds]
+         OR (EXCLUDED.notified AND NOT roster_invites.notified)
+     RETURNING freelancer_user_id, invited_at, status, notified`,
+    [editorId, freelancerIds, notify]
   );
 
   return {
-    invited: rows.map((row) => ({
+    saved: rows.map((row) => ({
       freelancerId: row.freelancer_user_id,
       invitedAt: isoString(row.invited_at),
       status: row.status,
+      notified: row.notified,
     })),
   };
 }
@@ -181,7 +204,7 @@ export async function removeFromRoster(editorClerkId: string, freelancerId: stri
   return (result.rowCount ?? 0) > 0;
 }
 
-/** An invitation as the freelancer sees it: who asked, and whether they have answered */
+/** A saved-by notification as the freelancer sees it: who saved them, and whether they answered */
 export type RosterInvite = {
   /** the editor's `users` id; what the freelancer answers to */
   editorId: string;
@@ -212,10 +235,11 @@ const SELECT_INVITES = `
   JOIN users e ON e.id = r.editor_user_id
   LEFT JOIN editors ed ON ed.user_id = e.id
   WHERE r.freelancer_user_id = $1
+    AND r.notified
   ORDER BY CASE r.status WHEN 'pending' THEN 0 ELSE 1 END, r.invited_at DESC
 `;
 
-/** Every editor who has asked this freelancer onto their roster, unanswered first */
+/** Every editor who chose to tell this freelancer they were saved, unanswered first */
 export async function listInvitesForFreelancer(freelancerClerkId: string): Promise<RosterInvite[]> {
   const freelancerId = await userIdFor(freelancerClerkId);
   if (!freelancerId) return [];
@@ -236,8 +260,8 @@ export async function listInvitesForFreelancer(freelancerClerkId: string): Promi
 }
 
 /**
- * Accepts or declines an invitation addressed to the signed-in freelancer. Only a pending invite can
- * be answered, so a second answer cannot overwrite the first.
+ * Records the freelancer's answer to a notification. Only a pending notification can be answered,
+ * so a second answer cannot overwrite the first. The answer never changes roster membership.
  * True when it was answered, false when there was nothing pending, null when the person has no row.
  */
 export async function respondToInvite(
@@ -254,6 +278,7 @@ export async function respondToInvite(
             responded_at = NOW()
       WHERE editor_user_id = $1
         AND freelancer_user_id = $2
+        AND notified
         AND status = 'pending'`,
     [editorId, freelancerId, response]
   );
