@@ -1,8 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { auth } from '@clerk/nextjs/server';
-import type { PitchFeedback } from '../../../../types/dashboard.types';
 import PitchDetail from '../../../../components/PitchDetail/PitchDetail';
+import PitchFeedbackCard from '../components/PitchFeedbackCard';
 import { canViewPitch, getPitch, loadPitchViewer, toPitch } from '../../../../../lib/pitches';
 import { requireWorkspace } from '../../../../../lib/workspace';
 import { PITCH_STATUS_LABEL } from '../../../pitches/constants';
@@ -10,12 +10,6 @@ import PitchStatusTracker from '../components/PitchStatusTracker';
 import styles from '../myPitches.module.css';
 
 type PitchDetailPageProps = { params: Promise<{ id: string }> };
-
-const DECISION_LABEL: Record<PitchFeedback['decision'], string> = {
-  accepted: 'Accepted',
-  rejected: 'Rejected',
-  revision_requested: 'Revision requested',
-};
 
 export default async function FreelancerPitchDetailPage({ params }: PitchDetailPageProps) {
   await requireWorkspace('freelancer');
@@ -48,16 +42,7 @@ export default async function FreelancerPitchDetailPage({ params }: PitchDetailP
             <h2 id="pitch-feedback-heading" className={styles.feedbackTitle}>
               Editor feedback
             </h2>
-            {pitch.feedback ? (
-              <>
-                <p>{DECISION_LABEL[pitch.feedback.decision]}</p>
-                <p>{pitch.feedback.comments}</p>
-                {pitch.feedback.strengths && <p>Strengths: {pitch.feedback.strengths}</p>}
-                {pitch.feedback.improvements && <p>Improvements: {pitch.feedback.improvements}</p>}
-              </>
-            ) : (
-              <p className={styles.feedbackEmpty}>No feedback has been shared on this pitch yet.</p>
-            )}
+            <PitchFeedbackCard feedback={pitch.feedback} feedbackAt={pitch.feedback_at} />
           </section>
         </section>
       </main>
