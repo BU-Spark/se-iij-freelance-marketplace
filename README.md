@@ -182,6 +182,10 @@ Removing a beat only stops it being offered. Profiles store the names people pic
 anyone who already chose it keeps it; nothing is rewritten. `Other/Not listed here` is not part of
 the managed list — it is the chip that reveals the free-text field, and it is always offered.
 
+New beats go to the end of the list; the ↑ and ↓ buttons on each row change the order freelancers
+see. The move runs in a transaction that renumbers the whole list, so two admins reordering at once
+cannot leave the order in an odd state.
+
 `npm run db:migrate` creates the `beats` table and seeds it once from the built-in list in
 [`app/onboarding/constants.ts`](./app/onboarding/constants.ts). The seed is skipped when the table
 already has rows, so a beat the team removes is not brought back by the next migration.
