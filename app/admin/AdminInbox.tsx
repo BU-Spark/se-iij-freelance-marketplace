@@ -53,7 +53,6 @@ export default function AdminInbox({ appeals = [], reports }: { appeals?: Appeal
   const [view, setView] = useState<View>('todo');
   const [filter, setFilter] = useState<Filter>('all');
   const [appealItems, setAppealItems] = useState(appeals);
-  // To Do: send status changes to the backend once the flags API exists
   const [flags, setFlags] = useState(reports);
   const [busy, setBusy] = useState<string | null>(null);
   const { showToast } = useToast();
@@ -73,9 +72,30 @@ export default function AdminInbox({ appeals = [], reports }: { appeals?: Appeal
   const shown = filter === 'all' ? inView : inView.filter((e) => e.kind === filter);
   const countFor = (f: Filter) => (f === 'all' ? inView.length : inView.filter((e) => e.kind === f).length);
 
-  const setStatus = (id: string, status: FlagStatus) => {
-    setFlags((list) => list.map((f) => (f.id === id ? { ...f, status } : f)));
-    showToast(MESSAGES[status], status === 'reviewing' ? 'info' : 'success');
+  const setStatus = async (id: string, status: FlagStatus) => {
+    setBusy(id);
+
+    try {
+      const response = await fetch(`/api/admin/flags/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status }),
+      });
+
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { error?: string } | null;
+        showToast(body?.error ?? 'Unable to update this flag right now.', 'error');
+        return;
+      }
+
+      setFlags((list) => list.map((f) => (f.id === id ? { ...f, status } : f)));
+      showToast(MESSAGES[status], status === 'reviewing' ? 'info' : 'success');
+    } catch (error) {
+      console.error('Could not update a flag from the inbox.', error);
+      showToast('Unable to update this flag right now.', 'error');
+    } finally {
+      setBusy(null);
+    }
   };
 
   const reactivate = async (appeal: Appeal) => {
@@ -108,7 +128,8 @@ export default function AdminInbox({ appeals = [], reports }: { appeals?: Appeal
     <button
       type="button"
       className={clsx(styles.action, primary && styles.primaryAction)}
-      onClick={() => setStatus(flag.id, status)}
+      disabled={busy === flag.id}
+      onClick={() => void setStatus(flag.id, status)}
     >
       {label}
     </button>

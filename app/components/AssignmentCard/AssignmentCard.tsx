@@ -16,19 +16,22 @@ type AssignmentCardProps = {
   assignment: DeskAssignment;
   /** name of the freelancer it was assigned to, if any */
   assignedName?: string;
-  /** if given, shows a "Review candidates →" button when people are interested */
+  /** if given, shows a "Review candidates →" button when people are interested or invited */
   onReview?: () => void;
 };
 
-// "3 interested", "No one interested yet", or "Assigned to Marcus Thorne"
+// "3 interested", "4 invited", or "Assigned to Marcus Thorne"
 function interestText(a: DeskAssignment, assignedName?: string): string {
   if (a.status === 'assigned') return assignedName ? `Assigned to ${assignedName}` : 'Assigned';
-  const n = a.interestedIds.length;
-  return n === 0 ? 'No one interested yet' : `${n} interested`;
+  const interested = a.interestedIds.length;
+  const invited = a.invitedIds?.length ?? 0;
+  if (interested === 0) return invited > 0 ? `${invited} invited` : 'No one interested yet';
+  return invited > 0 ? `${interested} interested · ${invited} invited` : `${interested} interested`;
 }
 
 export default function AssignmentCard({ assignment: a, assignedName, onReview }: AssignmentCardProps) {
-  const canReview = onReview && a.status !== 'assigned' && a.interestedIds.length > 0;
+  const canReview =
+    onReview && a.status !== 'assigned' && (a.interestedIds.length > 0 || (a.invitedIds?.length ?? 0) > 0);
   const contactLine = [a.contact.name, a.contact.desk].filter(Boolean).join(', ');
   const organization = organizationName(a.organizationId);
 

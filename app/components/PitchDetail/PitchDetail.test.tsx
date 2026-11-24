@@ -33,4 +33,11 @@ describe('PitchDetail', () => {
       expect(screen.queryByText(label)).not.toBeInTheDocument()
     );
   });
+
+  it('shows the report flag only when the editor inbox asks for it', () => {
+    expect(screen.queryByRole('button', { name: `Report ${pitchHeading(pitch.slug)}` })).not.toBeInTheDocument();
+
+    render(<PitchDetail pitch={pitch} showReport />);
+    expect(screen.getByRole('button', { name: `Report ${pitchHeading(pitch.slug)}` })).toBeInTheDocument();
+  });
 });

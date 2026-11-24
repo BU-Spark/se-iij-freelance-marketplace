@@ -148,6 +148,97 @@ BEGIN
   END IF;
 END $$;
 
+-- The beats onboarding offers. The Story Match team adds and removes them from the Beats tab, so
+-- the list is data rather than a constant. Removing a beat only stops it being offered: people who
+-- already picked it keep the name in their profile.
+CREATE TABLE IF NOT EXISTS beats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  -- Where the beat sits in the picker; new beats are appended
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Names are unique regardless of case, so "Local" and "local" cannot both be offered
+CREATE UNIQUE INDEX IF NOT EXISTS beats_name_key ON beats (LOWER(name));
+
+-- Seed the original list once, on the first migration that creates the table. Guarding on an empty
+-- table means a beat the team removes is not brought back by a later migration run.
+INSERT INTO beats (name, sort_order)
+SELECT seeded.name, seeded.sort_order
+  FROM (VALUES
+    ('Politics', 0),
+    ('Government Accountability', 1),
+    ('Law/Legal Issues', 2),
+    ('Foreign Policy', 3),
+    ('National Security', 4),
+    ('Military', 5),
+    ('Policy', 6),
+    ('Finance/Economics', 7),
+    ('Tech', 8),
+    ('Business', 9),
+    ('Personal Finance', 10),
+    ('Real Estate', 11),
+    ('Careers', 12),
+    ('Labor/Workers Rights', 13),
+    ('Culture', 14),
+    ('Internet Culture', 15),
+    ('Media/Power', 16),
+    ('Entertainment/Hollywood', 17),
+    ('Music', 18),
+    ('Film/Movies', 19),
+    ('Books/Writing', 20),
+    ('Art', 21),
+    ('History', 22),
+    ('Comedy', 23),
+    ('Design', 24),
+    ('Photography', 25),
+    ('Games/Gaming', 26),
+    ('Architecture', 27),
+    ('Museums', 28),
+    ('Climate/Environment', 29),
+    ('Health/Wellness', 30),
+    ('Science', 31),
+    ('Energy', 32),
+    ('Mental Health', 33),
+    ('Cancer', 34),
+    ('Weather', 35),
+    ('Food', 36),
+    ('Travel', 37),
+    ('Lifestyle', 38),
+    ('Fashion', 39),
+    ('Fitness', 40),
+    ('Parenting', 41),
+    ('Home', 42),
+    ('Restaurants and bars', 43),
+    ('Recipes', 44),
+    ('Sports', 45),
+    ('Outdoors', 46),
+    ('Dating/Romance', 47),
+    ('Things to do', 48),
+    ('Self-Help', 49),
+    ('Beauty', 50),
+    ('Local', 51),
+    ('Education', 52),
+    ('Housing', 53),
+    ('Urban Planning', 54),
+    ('Transportation', 55),
+    ('Crime', 56),
+    ('Construction', 57),
+    ('Agriculture', 58),
+    ('LGBTQIA', 59),
+    ('Identity/Belonging', 60),
+    ('Gender', 61),
+    ('Immigration', 62),
+    ('Human Rights', 63),
+    ('Criminal Justice', 64),
+    ('Faith/Religion', 65),
+    ('Activism', 66),
+    ('Inequality', 67),
+    ('General News', 68)
+  ) AS seeded(name, sort_order)
+ WHERE NOT EXISTS (SELECT 1 FROM beats);
+
 -- A suspended person can ask the team to look again. The form is public because a ban blocks sign-in,
 -- so the account is matched by email rather than by whoever is calling.
 CREATE TABLE IF NOT EXISTS account_appeals (
@@ -164,9 +255,33 @@ CREATE TABLE IF NOT EXISTS account_appeals (
 CREATE INDEX IF NOT EXISTS account_appeals_status_created_idx ON account_appeals (status, created_at DESC);
 CREATE INDEX IF NOT EXISTS account_appeals_user_idx ON account_appeals (user_id);
 
--- An editor's roster: the freelancers they have invited to work with them. The row *is* the invite,
--- so inviting again is a no-op and removing someone deletes it. Only an accepted invite puts the
--- person on the roster; asking again after a decline re-opens the same row.
+-- A flag is a report someone raised about an account, an assignment, or a pitch. The three targets
+-- live in different tables, so the row keeps (type, id) instead of a foreign key; the label is copied
+-- at report time, which keeps the queue readable if the target is later edited or deleted.
+CREATE TABLE IF NOT EXISTS content_flags (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  target_type TEXT NOT NULL CHECK (target_type IN ('account', 'assignment', 'pitch')),
+  target_id UUID NOT NULL,
+  target_label TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  -- Kept even if the reporter's account goes, so the team can still read what was sent
+  reporter_user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  reporter_name TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'reviewing', 'resolved', 'dismissed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS content_flags_status_created_idx ON content_flags (status, created_at DESC);
+CREATE INDEX IF NOT EXISTS content_flags_target_idx ON content_flags (target_type, target_id);
+-- The repeat-report check looks up one person's active flags on the same target
+CREATE INDEX IF NOT EXISTS content_flags_reporter_target_idx
+  ON content_flags (reporter_user_id, target_type, target_id, status);
+
+-- An editor's roster: the freelancers they have saved to work with them. The row *is* the favorite,
+-- so saving again is a no-op and removing someone deletes it. A favorite is on the roster straight
+-- away; `status` only records the freelancer's answer to an optional notification, so it never
+-- gates pitches or assignments. Asking again after a decline re-opens the same row.
 CREATE TABLE IF NOT EXISTS roster_invites (
   editor_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -182,6 +297,10 @@ CREATE INDEX IF NOT EXISTS roster_invites_freelancer_idx ON roster_invites (free
 -- Columns added after roster_invites shipped: the invite used to count as accepted on creation
 ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'pending';
 ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;
+-- Whether the freelancer was told they were saved. A silent favorite stays private; a notified one
+-- can be answered, but either way the row itself is the roster membership. Existing rows predate
+-- the favorites model, so they were notifications and default to true.
+ALTER TABLE roster_invites ADD COLUMN IF NOT EXISTS notified BOOLEAN NOT NULL DEFAULT TRUE;
 
 DO $$
 BEGIN

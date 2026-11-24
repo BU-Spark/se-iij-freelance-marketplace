@@ -4,7 +4,7 @@ import type { Assignment } from '../../types/assignments.types';
 
 export type AssignmentView = {
   assignment: Assignment;
-  /** true for editors from the organization that posted it */
+  /** true for the editor who posted it */
   canEdit: boolean;
 };
 

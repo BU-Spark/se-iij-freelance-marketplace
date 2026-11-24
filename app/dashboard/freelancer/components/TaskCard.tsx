@@ -19,7 +19,7 @@ export function TaskCard({ task, freelancerId }: TaskCardProps) {
       <h3>
         {/* only open work can be read in full; invitations and assigned work stay summary-only for now */}
         {task.status === 'open' ? (
-          <Link href={assignmentDrawerHref('/dashboard/assignments', task.id)} scroll={false}>
+          <Link href={assignmentDrawerHref('/dashboard/freelancer', task.id)} scroll={false}>
             {task.title}
           </Link>
         ) : (

@@ -11,6 +11,7 @@ import styles from './admin.module.css';
 export const ADMIN_TABS = [
   { label: 'Inbox', href: '/admin', description: 'Appeals and flags waiting on the team, newest first.' },
   { label: 'Verification', href: '/admin/verification', description: 'Check who people say they are.' },
+  { label: 'Beats', href: '/admin/beats', description: 'Choose the beats freelancers can pick during onboarding.' },
   { label: 'Accounts', href: '/admin/accounts', description: 'Find people and suspend or reactivate them.' },
 ];
 

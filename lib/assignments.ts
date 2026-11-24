@@ -208,19 +208,35 @@ export async function getAssignment(id: string): Promise<Assignment | null> {
 }
 
 /**
- * True when the assignment belongs to the editor's desk.
+ * True when the assignment is on the editor's desk: their own post, or a post their organization
+ * made. This decides what an editor may read, not what they may change.
  * A post made by an organization belongs to that organization only, so an editor who moves
- * to another desk loses the right to change it; posts made before the editor joined an
- * organization belong to whoever wrote them.
+ * to another desk loses sight of it; posts made before the editor joined an organization belong
+ * to whoever wrote them.
  */
 export function belongsToViewer(viewer: AssignmentViewer, assignment: Assignment): boolean {
   if (assignment.organizationId) return viewer.organizationId === assignment.organizationId;
   return assignment.createdByUserId === viewer.userId;
 }
 
-/** Only editors from the organization that posted the assignment may edit it */
+/**
+ * True when this editor wrote the post. An organization post also has to be written while they
+ * were in that organization, so an editor who moves desks loses the right to change it; a post
+ * made before they joined an organization stays theirs.
+ */
+export function authoredByViewer(viewer: AssignmentViewer, assignment: Assignment): boolean {
+  if (assignment.createdByUserId !== viewer.userId) return false;
+  if (assignment.organizationId) return viewer.organizationId === assignment.organizationId;
+  return true;
+}
+
+/**
+ * Only the editor who posted the assignment may edit, delete or assign it. Colleagues in the same
+ * organization can read it on the organization page, and freelancers can read it while it is open,
+ * but neither may change someone else's post.
+ */
 export function canEditAssignment(viewer: AssignmentViewer | null | undefined, assignment: Assignment): boolean {
-  return isEditor(viewer) && belongsToViewer(viewer, assignment);
+  return isEditor(viewer) && authoredByViewer(viewer, assignment);
 }
 
 /** Editors see their organization's assignments; everyone else sees open ones */

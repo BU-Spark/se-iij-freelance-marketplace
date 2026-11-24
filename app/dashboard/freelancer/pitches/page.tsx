@@ -3,10 +3,7 @@ import { auth } from '@clerk/nextjs/server';
 import type { Pitch } from '../../../types/dashboard.types';
 import { listPitchesForFreelancer, loadPitchViewer } from '../../../../lib/pitches';
 import { requireWorkspace } from '../../../../lib/workspace';
-import { PITCH_STATUS_LABEL } from '../../pitches/constants';
-import { categoryColor } from '../../../utils/category.utils';
-import { timeAgo } from '../../../utils/dashboard.utils';
-import { pitchHeading } from '../../../utils/pitch.utils';
+import MyPitchesList from './components/MyPitchesList';
 import styles from './myPitches.module.css';
 
 // A review changes the statuses shown here, so the list is never served from a cache
@@ -37,31 +34,7 @@ export default async function MyPitchesPage() {
         </header>
 
         {pitches.length ? (
-          <ul className={styles.list}>
-            {pitches.map((pitch) => (
-              <li key={pitch.id}>
-                <Link href={`/dashboard/freelancer/pitches/${pitch.id}`} className={styles.card}>
-                  <span className={styles.top}>
-                    <span className={styles.category}>
-                      <span
-                        className={styles.dot}
-                        style={{ background: categoryColor(pitch.category) }}
-                        aria-hidden="true"
-                      />
-                      {pitch.category}
-                    </span>
-                    <span className={`${styles.pill} ${styles[pitch.status]}`}>{PITCH_STATUS_LABEL[pitch.status]}</span>
-                  </span>
-                  <span className={styles.pitchTitle}>{pitchHeading(pitch.slug)}</span>
-                  <span className={styles.summary}>{pitch.summary}</span>
-                  <span className={styles.footer}>
-                    <span className={styles.meta}>Submitted {timeAgo(pitch.submittedAt)}</span>
-                    <span className={styles.more}>View pitch and feedback →</span>
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <MyPitchesList pitches={pitches} />
         ) : (
           <p className={styles.panel}>
             You haven&apos;t submitted a pitch yet. <Link href="/dashboard/freelancer/make-a-pitch">Make a pitch</Link>.

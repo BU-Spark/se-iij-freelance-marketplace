@@ -147,6 +147,11 @@ assignment appears on the next request. The editor dashboard and the freelancer 
 load the same rows, so what people see is exactly what an organization posted — there is no
 sample data to fall back on, and an empty desk simply says nothing is open.
 
+Whoever wrote a post is the only person who may edit, delete or assign it. Colleagues in the
+same organization can read it on the organization page, and freelancers can read it while it
+is open, but neither can change another person's post — the API answers 404 so ids from other
+desks do not leak.
+
 Onboarding lets a user pick one role or both. Each selected role gets a profile and
 a preferences step, so the flow is three steps for one role and five for both, and
 the shared account fields (name, email, location) are collected once on the first
@@ -187,6 +192,25 @@ Set the app service's `DATABASE_URL` to the PostgreSQL service reference
 (`${{Postgres.DATABASE_URL}}`, replacing `Postgres` with the exact Railway service
 name). The private hostname is available from Railway services, not from a local
 computer.
+
+## Beats
+
+Freelancers pick the beats they cover during onboarding. That list is data, not a constant: the
+Story Match team adds and removes beats from the **Beats** tab in the admin area, and the onboarding
+picker reads [`GET /api/beats`](./app/api/beats/route.ts) when it opens, so a change is live on the
+next visit.
+
+Removing a beat only stops it being offered. Profiles store the names people picked directly, so
+anyone who already chose it keeps it; nothing is rewritten. `Other/Not listed here` is not part of
+the managed list — it is the chip that reveals the free-text field, and it is always offered.
+
+New beats go to the end of the list; the ↑ and ↓ buttons on each row change the order freelancers
+see. The move runs in a transaction that renumbers the whole list, so two admins reordering at once
+cannot leave the order in an odd state.
+
+`npm run db:migrate` creates the `beats` table and seeds it once from the built-in list in
+[`app/onboarding/constants.ts`](./app/onboarding/constants.ts). The seed is skipped when the table
+already has rows, so a beat the team removes is not brought back by the next migration.
 
 ## Work (business) email verification
 
@@ -261,6 +285,38 @@ Without `AWS_S3_BUCKET_NAME` photo storage reports itself as unconfigured and up
 are rejected, so the rest of the app keeps working. Run `npm run db:migrate` to add
 the `users.photo_key` column. Replacing a photo writes a new object; the previous one
 is left in the bucket.
+
+## Reporting accounts, assignments and pitches
+
+Every signed-in person can raise a flag on a person's account, an assignment or a pitch: the
+small flag on talent and roster cards, on assignment cards and in the assignment drawer, and in
+the editor's pitch inbox opens a short reason form. [`POST /api/flags`](./app/api/flags/route.ts)
+takes the reporter from the session and reads the target's current name or title from the
+database, so the queue cannot be filled with a false label from the browser. A person cannot
+flag their own content, and a second flag on the same target while one is still open is
+acknowledged without being stored twice.
+
+Flags land in `/admin` beside account appeals. The team can mark one in review, resolve it or
+dismiss it, and every decision stays in the Done tab where it can be changed or reopened.
+[`PATCH /api/admin/flags/[id]`](<./app/api/admin/flags/[id]/route.ts>) is admin-only. Run
+`npm run db:migrate` to add the `content_flags` table.
+
+## Rosters and favorites
+
+An editor's roster is a saved shortlist, not a membership request. Saving someone from
+[Find talent](./app/dashboard/talent/page.tsx) or the [roster page](./app/dashboard/roster/page.tsx)
+adds them straight away, so they appear on the desk and can be assigned without waiting for an
+answer. Roster membership is not checked when a freelancer pitches an editor either.
+
+The optional "Notify them" checkbox in the add dialog is the only part that reaches the freelancer.
+They see the editor under "Saved by editors" and can accept or decline, but the answer only tells
+the editor whether they are interested — it never changes the roster. A silent favorite starts as
+`accepted` with `notified = false`, so it stays private; a notified one starts as `pending` with
+`notified = true`.
+
+Saving is one row in `roster_invites`; removing someone deletes it. Inviting people who are not on
+StoryMatch yet is planned for later. Run `npm run db:migrate` to add the `roster_invites.notified`
+column.
 
 ## Free right now timer
 

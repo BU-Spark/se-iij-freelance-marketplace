@@ -67,8 +67,7 @@ describe('Dashboard', () => {
     countsMock.mockResolvedValue({ open: 0, invited: 0, assigned: 0 });
     getAssignmentMock.mockResolvedValue(null);
     loadEditorRosterMock.mockResolvedValue({
-      members: ROSTER.slice(0, 2),
-      pending: [ROSTER[2]],
+      members: ROSTER.slice(0, 3),
       invitable: ROSTER.slice(3),
     });
   });
@@ -116,20 +115,20 @@ describe('Dashboard', () => {
     expect(screen.queryByText(/election night/i)).not.toBeInTheDocument();
   });
 
-  it('shows only the freelancers who accepted a place on the editor roster', async () => {
+  it('shows every freelancer the editor saved, even before they answer a notification', async () => {
     await renderDashboard();
     const column = screen.getByRole('region', { name: /availability/i });
-    const accepted = ROSTER.slice(0, 2);
-    const onToday = accepted.filter((m) => m.status !== 'off').length;
+    const saved = ROSTER.slice(0, 3);
+    const onToday = saved.filter((m) => m.status !== 'off').length;
 
-    expect(within(column).getByText(`${onToday} of ${accepted.length} on roster`)).toBeInTheDocument();
-    accepted.forEach((m) => {
+    expect(within(column).getByText(`${onToday} of ${saved.length} on roster`)).toBeInTheDocument();
+    saved.forEach((m) => {
       expect(within(column).getByRole('heading', { level: 3, name: m.name })).toBeInTheDocument();
     });
-    expect(within(column).getByText(accepted[0].note)).toBeInTheDocument();
+    expect(within(column).getByText(saved[0].note)).toBeInTheDocument();
 
-    // a pending invite and the wider directory stay out of the availability column
-    ROSTER.slice(2).forEach((m) => {
+    // the wider directory stays out of the availability column
+    ROSTER.slice(3).forEach((m) => {
       expect(within(column).queryByRole('heading', { level: 3, name: m.name })).not.toBeInTheDocument();
     });
   });
@@ -146,7 +145,7 @@ describe('Dashboard', () => {
   });
 
   it('points at the roster page when the editor has none yet', async () => {
-    loadEditorRosterMock.mockResolvedValue({ members: [], pending: [ROSTER[0]], invitable: ROSTER.slice(1) });
+    loadEditorRosterMock.mockResolvedValue({ members: [], invitable: ROSTER });
     await renderDashboard();
     const column = screen.getByRole('region', { name: /availability/i });
 

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import ReportButton from '../ReportButton/ReportButton';
 import type { Assignment } from '../../types/assignments.types';
 import { formatCompensation } from '../../utils/assignment.utils';
 import { categoryColor } from '../../utils/category.utils';
@@ -22,6 +23,7 @@ export default function OpenAssignmentCard({ assignment: a, href }: OpenAssignme
         </span>
         <span className={`${styles.pill} ${styles.open}`}>Open</span>
         {a.deadline && <span className={styles.deadline}>Due {formatDeadline(new Date(a.deadline))}</span>}
+        <ReportButton targetType="assignment" targetId={a.id} targetLabel={a.title} compact />
       </div>
 
       <div>

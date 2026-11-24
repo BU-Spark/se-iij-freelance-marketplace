@@ -42,7 +42,7 @@ it('links an open task to its full details in the assignment drawer', () => {
   render(<TaskCard task={databaseTask} freelancerId="priya" />);
   expect(screen.getByRole('link', { name: 'City hall budget vote' })).toHaveAttribute(
     'href',
-    '/dashboard/assignments?assignment=db-task'
+    '/dashboard/freelancer?assignment=db-task'
   );
 });
 

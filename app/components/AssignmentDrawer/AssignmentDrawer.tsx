@@ -11,10 +11,12 @@ type AssignmentDrawerProps = {
   assignment: Assignment;
   /** Where to go when the drawer closes, e.g. "/dashboard" */
   closeHref: string;
-  /** true for editors from the organization that posted it */
+  /** true for the editor who posted it */
   canEdit?: boolean;
   /** shows which organization posted it, on desks that need it */
   showOrganization?: boolean;
+  /** shows the report flag; defaults to everyone who cannot edit it */
+  canReport?: boolean;
 };
 
 /** The expanded view of one assignment, slid in from the right over the page that listed it */
@@ -23,6 +25,7 @@ export default function AssignmentDrawer({
   closeHref,
   canEdit = false,
   showOrganization = false,
+  canReport,
 }: AssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -89,6 +92,7 @@ export default function AssignmentDrawer({
             key={assignment.id}
             assignment={assignment}
             canEdit={canEdit}
+            canReport={canReport}
             showOrganization={showOrganization}
             onDeleted={() => router.push(closeHref, { scroll: false })}
           />

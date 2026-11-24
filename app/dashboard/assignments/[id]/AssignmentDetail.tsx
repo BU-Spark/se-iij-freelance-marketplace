@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import ReportButton from '../../../components/ReportButton/ReportButton';
 import type { Assignment } from '../../../types/assignments.types';
 import { formatCompensation } from '../../../utils/assignment.utils';
 import { categoryColor } from '../../../utils/category.utils';
@@ -12,8 +13,10 @@ import DeleteAssignmentButton from './DeleteAssignmentButton';
 
 type AssignmentDetailProps = {
   assignment: Assignment;
-  /** true for editors from the organization that posted it */
+  /** true for the editor who posted it */
   canEdit?: boolean;
+  /** shows the report flag; defaults to everyone who cannot edit it, so an author never reports their own post */
+  canReport?: boolean;
   /** shows which organization posted it; the editor desk asks for it, the freelance browser does not yet */
   showOrganization?: boolean;
   /** called after the assignment was deleted, e.g. to close the drawer it was shown in */
@@ -45,6 +48,7 @@ const formatDate = (date: Date) =>
 export default function AssignmentDetail({
   assignment: a,
   canEdit = false,
+  canReport = !canEdit,
   showOrganization = false,
   onDeleted,
 }: AssignmentDetailProps) {
@@ -63,14 +67,19 @@ export default function AssignmentDetail({
           {a.category}
         </span>
         <span className={`${cardStyles.pill} ${cardStyles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
-        {canEdit && (
-          <span className={styles.cardActions}>
-            <DeleteAssignmentButton assignmentId={a.id} onDeleted={onDeleted} />
-            <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
-              Edit
-            </button>
-          </span>
-        )}
+        <span className={styles.cardActions}>
+          {!canEdit && canReport && (
+            <ReportButton targetType="assignment" targetId={a.id} targetLabel={a.title} compact />
+          )}
+          {canEdit && (
+            <>
+              <DeleteAssignmentButton assignmentId={a.id} onDeleted={onDeleted} />
+              <button type="button" className={styles.editButton} onClick={() => setEditing(true)}>
+                Edit
+              </button>
+            </>
+          )}
+        </span>
       </div>
 
       <div>

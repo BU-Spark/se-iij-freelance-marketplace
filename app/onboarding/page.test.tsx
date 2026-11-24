@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import OnboardingPage from './page';
+import { loadProfile } from '../hooks';
 
 // This suite exercises the full multi-step flow and can exceed Jest's 5s
 // per-test default when it runs alongside the rest of the suite.
@@ -34,6 +35,10 @@ jest.mock('@clerk/nextjs', () => ({
   useUser: () => ({ user: mockClerkUser, isLoaded: true }),
 }));
 
+// The page refreshes the shared profile store after a save; that is exercised by the store's own
+// tests, so here it only needs to be observable and must not become a second HTTP request.
+jest.mock('../hooks', () => ({ loadProfile: jest.fn() }));
+
 // jsdom doesn't implement scrollTo, and the page calls it when changing steps
 beforeAll(() => {
   window.scrollTo = jest.fn();
@@ -53,6 +58,8 @@ beforeEach(() => {
     ok: true,
     json: async () => ({ saved: true, roles: ['editor'] }),
   });
+
+  (loadProfile as jest.Mock).mockClear();
 });
 
 const chip = (label: string) => screen.getByRole('button', { name: new RegExp(`^[+✓]\\s*${label}$`, 'i') });
@@ -370,6 +377,28 @@ describe('Onboarding page', () => {
       expect(screen.getByText(/link should start with http:\/\/ or https:\/\//i)).toBeInTheDocument();
     });
 
+    it('offers the beats the team manages, with "Other" always available', async () => {
+      (global.fetch as jest.Mock).mockImplementation(async (url: string) =>
+        url === '/api/beats'
+          ? { ok: true, json: async () => ({ beats: ['Housing', 'Water rights'] }) }
+          : { ok: true, json: async () => ({ saved: true, roles: ['freelancer'] }) }
+      );
+
+      cleanup();
+      render(<OnboardingPage />);
+      startAs(/i'm a freelancer/i);
+
+      const input = screen.getByLabelText(/search beats/i);
+
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: 'water' } });
+      expect(await screen.findByRole('option', { name: 'Water rights' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Climate/Environment' })).not.toBeInTheDocument();
+
+      fireEvent.change(input, { target: { value: 'other' } });
+      expect(screen.getByRole('option', { name: 'Other/Not listed here' })).toBeInTheDocument();
+    });
+
     it('requires at least one beat and one medium', () => {
       next();
       expect(screen.getByText(/pick at least one beat/i)).toBeInTheDocument();
@@ -463,7 +492,7 @@ describe('Onboarding page', () => {
       uploadPhoto(new File(['hello'], 'notes.txt', { type: 'text/plain' }));
 
       expect(await screen.findByRole('alert')).toHaveTextContent(/jpeg, png or webp/i);
-      expect(global.fetch).not.toHaveBeenCalled();
+      expect(global.fetch).not.toHaveBeenCalledWith(expect.stringContaining('/api/uploads/photo'), expect.anything());
     });
   });
 
@@ -549,7 +578,7 @@ describe('Onboarding page', () => {
         type(/ends at/i, '08:00');
         submit();
         expect(screen.getByText(/end time must be after the start time/i)).toBeInTheDocument();
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(global.fetch).not.toHaveBeenCalledWith(expect.stringContaining('/api/onboarding'), expect.anything());
       });
 
       it('sends the rate, communities and availability with the profile', async () => {
@@ -607,8 +636,9 @@ describe('Onboarding page', () => {
 
       await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
 
-      // the onboarding save is the only request now that Clerk sends the codes
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      // the beat list and the onboarding save are the only requests now that Clerk sends the codes
+      const saves = fetchMock.mock.calls.filter(([url]) => url === '/api/onboarding');
+      expect(saves).toHaveLength(1);
       const body = postedPayload();
       expect(body.roles).toEqual(['editor', 'freelancer']);
       expect(body.user.roles).toEqual(['EDITOR', 'FREELANCER']);
@@ -664,6 +694,36 @@ describe('adding the other role from the profile panel', () => {
 
     expect(screen.getByLabelText(/first name/i)).toHaveValue('Sarah');
     expect(screen.getByLabelText(/work email/i)).toHaveValue('sarah@newsroom.example');
+  });
+
+  it('does not offer the role they already have when changing roles', async () => {
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+
+    fireEvent.click(screen.getByRole('button', { name: /change role/i }));
+
+    expect(screen.getByRole('button', { name: /i'm an editor/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /i'm a freelancer/i })).not.toBeInTheDocument();
+  });
+
+  it('skips the steps for the role they already have and keeps it in the save', async () => {
+    await screen.findByRole('heading', { level: 1, name: /your newsroom/i });
+
+    await fillEditorStep();
+    next();
+
+    // the flow runs this role's profile and preferences only; the saved freelancer role is skipped
+    expect(screen.getByText(/step 3 of 3 — how you work/i)).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /your reporting/i })).not.toBeInTheDocument();
+
+    submit();
+    await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
+
+    const body = postedPayload();
+    // the saved role is sent back unchanged, so the server keeps it on the account
+    expect(body.roles).toEqual(['editor', 'freelancer']);
+    expect(body.freelancer.reportingBeats).toEqual(['Housing']);
+    // the shared profile store is refreshed, so the new role shows without a page reload
+    expect(loadProfile).toHaveBeenCalled();
   });
 
   it('accepts an address Clerk already verified without sending a new code', async () => {

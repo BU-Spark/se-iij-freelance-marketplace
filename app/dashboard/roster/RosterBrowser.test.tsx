@@ -41,7 +41,7 @@ const fetchMock = jest.fn();
 
 beforeEach(() => {
   fetchMock.mockReset();
-  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ invited: [] }) });
+  fetchMock.mockResolvedValue({ ok: true, json: async () => ({ saved: [] }) });
   global.fetch = fetchMock as unknown as typeof fetch;
 });
 
@@ -57,7 +57,7 @@ describe('RosterBrowser', () => {
 
     expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
     expect(screen.queryByText('Jonah Park')).not.toBeInTheDocument();
-    expect(screen.getByText(/added nov 1, 2026/i)).toBeInTheDocument();
+    expect(screen.getByText(/saved nov 1, 2026/i)).toBeInTheDocument();
     expect(screen.getByText('Showing 2 of 2 freelancers')).toBeInTheDocument();
   });
 
@@ -125,62 +125,75 @@ describe('RosterBrowser', () => {
     expect(cardNames()).toEqual(['Sarah Jenkins', 'Amara Diallo']);
   });
 
-  it('invites people who are off today too, and adds them to the roster', async () => {
+  it('saves people who are off today too, straight onto the roster', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ invited: [{ freelancerId: 'user-3', invitedAt: '2026-11-11T09:00:00.000Z' }] }),
+      json: async () => ({
+        saved: [{ freelancerId: 'user-3', invitedAt: '2026-11-11T09:00:00.000Z', status: 'accepted', notified: false }],
+      }),
     });
     renderPage(<RosterBrowser members={members} invitable={[outsider]} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /invite freelancers/i }));
+    fireEvent.click(screen.getByRole('button', { name: /add freelancers/i }));
     const dialog = within(screen.getByRole('dialog'));
     fireEvent.click(dialog.getByRole('checkbox', { name: /jonah park/i }));
     expect(dialog.getByText('1 selected')).toBeInTheDocument();
     fireEvent.click(dialog.getByRole('button', { name: 'Add 1 to roster' }));
 
-    expect(await screen.findByText(/invited jonah park — they will appear once they accept/i)).toBeInTheDocument();
+    expect(await screen.findByText('Saved Jonah Park to your roster')).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    // an invitation is not on the roster until the freelancer accepts
-    expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
-    expect(screen.getByRole('heading', { name: /waiting on a response/i })).toBeInTheDocument();
-    expect(screen.getByText('Jonah Park')).toBeInTheDocument();
-    expect(screen.getByText('Pending response')).toBeInTheDocument();
+    // saving is immediate: nobody has to accept before they are on the roster
+    expect(cardNames()).toEqual(['Amara Diallo', 'Jonah Park', 'Sarah Jenkins']);
+    expect(screen.queryByRole('heading', { name: /waiting on a response/i })).not.toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ freelancerIds: ['user-3'] }),
+      body: JSON.stringify({ freelancerIds: ['user-3'], notify: false }),
     });
-    // nobody is left to invite
-    expect(screen.getByRole('button', { name: /invite freelancers/i })).toBeDisabled();
+    // nobody is left to add
+    expect(screen.getByRole('button', { name: /add freelancers/i })).toBeDisabled();
   });
 
-  it('shows who has not answered yet, and can cancel the invitation', async () => {
-    const waiting = member({ id: 'user-5', name: 'Rosa Vega', inviteStatus: 'pending' });
-    renderPage(<RosterBrowser members={members} pending={[waiting]} invitable={[]} />);
+  it('can optionally notify the freelancer, and shows the notification state', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        saved: [{ freelancerId: 'user-3', invitedAt: '2026-11-11T09:00:00.000Z', status: 'pending', notified: true }],
+      }),
+    });
+    renderPage(<RosterBrowser members={members} invitable={[outsider]} />);
 
-    expect(screen.getByText('Pending response')).toBeInTheDocument();
-    expect(cardNames()).not.toContain('Rosa Vega');
+    fireEvent.click(screen.getByRole('button', { name: /add freelancers/i }));
+    const dialog = within(screen.getByRole('dialog'));
+    fireEvent.click(dialog.getByRole('checkbox', { name: /jonah park/i }));
+    fireEvent.click(dialog.getByRole('checkbox', { name: /notify them/i }));
+    fireEvent.click(dialog.getByRole('button', { name: 'Add 1 to roster' }));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel invite' }));
-
-    expect(await screen.findByText('Cancelled the invitation to Rosa Vega')).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { name: /waiting on a response/i })).not.toBeInTheDocument();
-    expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites/user-5', { method: 'DELETE' });
+    expect(await screen.findByText('Saved Jonah Park and let them know')).toBeInTheDocument();
+    expect(screen.getByText('Notified')).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ freelancerIds: ['user-3'], notify: true }),
+    });
   });
 
-  it('marks an invitation the freelancer turned down', () => {
-    const declined = member({ id: 'user-6', name: 'Tomás Reyes', inviteStatus: 'declined' });
-    renderPage(<RosterBrowser members={members} pending={[declined]} invitable={[]} />);
+  it('records what a saved freelancer answered without removing them', () => {
+    const answered = member({ id: 'user-6', name: 'Tomás Reyes', inviteStatus: 'accepted', notified: true });
+    const declined = member({ id: 'user-7', name: 'Rosa Vega', inviteStatus: 'declined', notified: true });
+    renderPage(<RosterBrowser members={[...members, answered, declined]} invitable={[]} />);
 
+    expect(screen.getByText('Accepted')).toBeInTheDocument();
     expect(screen.getByText('Declined')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove' })).toBeInTheDocument();
+    // a decline is informational: the editor still has them on the roster until they remove them
+    expect(screen.getByRole('button', { name: 'Remove Rosa Vega from your roster' })).toBeInTheDocument();
   });
 
-  it('keeps the invite list open when the roster API refuses', async () => {
+  it('keeps the add dialog open when the roster API refuses', async () => {
     fetchMock.mockResolvedValue({ ok: false, json: async () => ({ error: 'Only editors have a roster.' }) });
     renderPage(<RosterBrowser members={members} invitable={[outsider]} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /invite freelancers/i }));
+    fireEvent.click(screen.getByRole('button', { name: /add freelancers/i }));
     const dialog = within(screen.getByRole('dialog'));
     fireEvent.click(dialog.getByRole('checkbox', { name: /jonah park/i }));
     fireEvent.click(dialog.getByRole('button', { name: 'Add 1 to roster' }));
@@ -190,7 +203,7 @@ describe('RosterBrowser', () => {
     expect(cardNames()).toEqual(['Amara Diallo', 'Sarah Jenkins']);
   });
 
-  it('asks before removing someone, then offers them in the invite list again', async () => {
+  it('asks before removing someone, then offers them in the directory again', async () => {
     renderPage(<RosterBrowser members={members} invitable={[]} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Sarah Jenkins from your roster' }));
@@ -202,7 +215,7 @@ describe('RosterBrowser', () => {
     await waitFor(() => expect(cardNames()).toEqual(['Amara Diallo']));
     expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites/user-1', { method: 'DELETE' });
 
-    fireEvent.click(screen.getByRole('button', { name: /invite freelancers/i }));
+    fireEvent.click(screen.getByRole('button', { name: /add freelancers/i }));
     const dialog = within(screen.getByRole('dialog'));
     expect(dialog.getByRole('checkbox', { name: /sarah jenkins/i })).not.toBeChecked();
 
@@ -213,7 +226,7 @@ describe('RosterBrowser', () => {
   it('tells an empty roster apart from an empty directory and a failed load', () => {
     const first = renderPage(<RosterBrowser members={[]} invitable={[outsider]} />);
     expect(screen.getByText(/no one on your roster yet/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /invite freelancers/i })[0]).toBeEnabled();
+    expect(screen.getAllByRole('button', { name: /add freelancers/i })[0]).toBeEnabled();
     first.unmount();
 
     const second = renderPage(<RosterBrowser members={[]} invitable={[]} />);

@@ -98,6 +98,15 @@ describe('POST /api/assignments/[id]/assign', () => {
     expect(assignMock).not.toHaveBeenCalled();
   });
 
+  it('will not let a colleague in the same organization assign someone to it', async () => {
+    loadViewerMock.mockResolvedValue({ userId: 'user-2', roles: ['editor'], organizationId: 'org-1' });
+
+    const response = await post({ memberId: MEMBER });
+
+    expect(response.status).toBe(404);
+    expect(assignMock).not.toHaveBeenCalled();
+  });
+
   it('needs a signed-in editor', async () => {
     authMock.mockResolvedValue({ userId: null });
 

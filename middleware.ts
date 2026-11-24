@@ -44,8 +44,9 @@ export default clerkMiddleware(async (auth, request) => {
     return NextResponse.redirect(new URL(await landingPath(userId), request.url));
   }
 
-  if (isProtectedRoute(request)) {
-    await auth.protect();
+  // Signed-out people go to our own login page, not Clerk's hosted sign-in
+  if (isProtectedRoute(request) && !userId) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Admins never onboard: their basic row is filled in from Clerk on the first admin visit

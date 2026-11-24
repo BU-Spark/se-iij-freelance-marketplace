@@ -1,18 +1,21 @@
 import { ORGANIZATIONS } from './constants';
 import OrganizationGrid from './OrganizationGrid';
-import pageStyles from '../freelancer.module.css';
 import styles from './organizations.module.css';
 
 export default function OrganizationsPage() {
   return (
-    <main className={pageStyles.main}>
-      <div className={styles.intro}>
-        <p className={pageStyles.eyebrow}>Freelancer workspace</p>
-        <h1>Organizations</h1>
-        <p>Newsrooms on the desk, what they cover, what they pay and whether their work is local, US only or global.</p>
-      </div>
+    <div className={styles.shell}>
+      <main className={styles.page}>
+        <header className={styles.intro}>
+          <p className={styles.eyebrow}>Freelancer workspace</p>
+          <h1 className={styles.title}>Organizations</h1>
+          <p className={styles.lede}>
+            Newsrooms on the desk, what they cover, what they pay and whether their work is local, US only or global.
+          </p>
+        </header>
 
-      <OrganizationGrid orgs={ORGANIZATIONS} />
-    </main>
+        <OrganizationGrid orgs={ORGANIZATIONS} />
+      </main>
+    </div>
   );
 }
