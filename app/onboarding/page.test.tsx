@@ -377,6 +377,28 @@ describe('Onboarding page', () => {
       expect(screen.getByText(/link should start with http:\/\/ or https:\/\//i)).toBeInTheDocument();
     });
 
+    it('offers the beats the team manages, with "Other" always available', async () => {
+      (global.fetch as jest.Mock).mockImplementation(async (url: string) =>
+        url === '/api/beats'
+          ? { ok: true, json: async () => ({ beats: ['Housing', 'Water rights'] }) }
+          : { ok: true, json: async () => ({ saved: true, roles: ['freelancer'] }) }
+      );
+
+      cleanup();
+      render(<OnboardingPage />);
+      startAs(/i'm a freelancer/i);
+
+      const input = screen.getByLabelText(/search beats/i);
+
+      fireEvent.focus(input);
+      fireEvent.change(input, { target: { value: 'water' } });
+      expect(await screen.findByRole('option', { name: 'Water rights' })).toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Climate/Environment' })).not.toBeInTheDocument();
+
+      fireEvent.change(input, { target: { value: 'other' } });
+      expect(screen.getByRole('option', { name: 'Other/Not listed here' })).toBeInTheDocument();
+    });
+
     it('requires at least one beat and one medium', () => {
       next();
       expect(screen.getByText(/pick at least one beat/i)).toBeInTheDocument();
@@ -470,7 +492,7 @@ describe('Onboarding page', () => {
       uploadPhoto(new File(['hello'], 'notes.txt', { type: 'text/plain' }));
 
       expect(await screen.findByRole('alert')).toHaveTextContent(/jpeg, png or webp/i);
-      expect(global.fetch).not.toHaveBeenCalled();
+      expect(global.fetch).not.toHaveBeenCalledWith(expect.stringContaining('/api/uploads/photo'), expect.anything());
     });
   });
 
@@ -556,7 +578,7 @@ describe('Onboarding page', () => {
         type(/ends at/i, '08:00');
         submit();
         expect(screen.getByText(/end time must be after the start time/i)).toBeInTheDocument();
-        expect(global.fetch).not.toHaveBeenCalled();
+        expect(global.fetch).not.toHaveBeenCalledWith(expect.stringContaining('/api/onboarding'), expect.anything());
       });
 
       it('sends the rate, communities and availability with the profile', async () => {
@@ -614,8 +636,9 @@ describe('Onboarding page', () => {
 
       await screen.findByRole('heading', { level: 1, name: /you're all set, sarah/i }, { timeout: 2000 });
 
-      // the onboarding save is the only request now that Clerk sends the codes
-      expect(fetchMock).toHaveBeenCalledTimes(1);
+      // the beat list and the onboarding save are the only requests now that Clerk sends the codes
+      const saves = fetchMock.mock.calls.filter(([url]) => url === '/api/onboarding');
+      expect(saves).toHaveLength(1);
       const body = postedPayload();
       expect(body.roles).toEqual(['editor', 'freelancer']);
       expect(body.user.roles).toEqual(['EDITOR', 'FREELANCER']);

@@ -171,6 +171,21 @@ Set the app service's `DATABASE_URL` to the PostgreSQL service reference
 name). The private hostname is available from Railway services, not from a local
 computer.
 
+## Beats
+
+Freelancers pick the beats they cover during onboarding. That list is data, not a constant: the
+Story Match team adds and removes beats from the **Beats** tab in the admin area, and the onboarding
+picker reads [`GET /api/beats`](./app/api/beats/route.ts) when it opens, so a change is live on the
+next visit.
+
+Removing a beat only stops it being offered. Profiles store the names people picked directly, so
+anyone who already chose it keeps it; nothing is rewritten. `Other/Not listed here` is not part of
+the managed list — it is the chip that reveals the free-text field, and it is always offered.
+
+`npm run db:migrate` creates the `beats` table and seeds it once from the built-in list in
+[`app/onboarding/constants.ts`](./app/onboarding/constants.ts). The seed is skipped when the table
+already has rows, so a beat the team removes is not brought back by the next migration.
+
 ## Work (business) email verification
 
 An editor's work email is proven through Clerk instead of being taken at face value, and Clerk
