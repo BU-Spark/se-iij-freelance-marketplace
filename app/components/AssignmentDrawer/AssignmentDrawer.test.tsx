@@ -46,7 +46,7 @@ describe('AssignmentDrawer', () => {
     expect(push).toHaveBeenCalledTimes(2);
   });
 
-  it('lets editors from the posting organization switch to the edit form', async () => {
+  it('lets the editor who posted it switch to the edit form', async () => {
     render(<AssignmentDrawer assignment={assignment} closeHref="/dashboard" canEdit />);
 
     await userEvent.click(screen.getByRole('button', { name: 'Edit' }));

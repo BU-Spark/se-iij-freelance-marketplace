@@ -13,7 +13,7 @@ export const runtime = 'nodejs';
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-/** Deletes an assignment. Only editors from the organization that posted it may do this. */
+/** Deletes an assignment. Only the editor who posted it may do this; a freelancer never may. */
 export async function DELETE(_request: Request, { params }: RouteContext) {
   const { userId } = await auth();
 
@@ -42,7 +42,7 @@ export async function DELETE(_request: Request, { params }: RouteContext) {
   }
 }
 
-/** Updates an assignment. Only editors from the organization that posted it may do this. */
+/** Updates an assignment. Only the editor who posted it may do this; a freelancer never may. */
 export async function PATCH(request: Request, { params }: RouteContext) {
   const { userId } = await auth();
 

@@ -221,9 +221,14 @@ describe('assignment permissions', () => {
     ...overrides,
   });
 
-  it('lets editors from the posting organization view and edit', () => {
+  it('lets the editor who posted it view and edit', () => {
+    expect(canViewAssignment(editor({ userId: 'user-1' }), assignment)).toBe(true);
+    expect(canEditAssignment(editor({ userId: 'user-1' }), assignment)).toBe(true);
+  });
+
+  it('lets a colleague in the same organization read the post but never edit or delete it', () => {
     expect(canViewAssignment(editor(), assignment)).toBe(true);
-    expect(canEditAssignment(editor(), assignment)).toBe(true);
+    expect(canEditAssignment(editor(), assignment)).toBe(false);
   });
 
   it('hides assignments from editors at other organizations', () => {
