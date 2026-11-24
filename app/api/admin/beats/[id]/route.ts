@@ -1,6 +1,6 @@
 import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
-import { removeBeat } from '../../../../../lib/beats';
+import { isMoveDirection, moveBeat, removeBeat } from '../../../../../lib/beats';
 import { isSignedInUserAdmin } from '../../../../../lib/auth';
 
 export const runtime = 'nodejs';
@@ -30,6 +30,41 @@ async function teamOnly(): Promise<NextResponse | null> {
   }
 
   return null;
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+/** Moves a beat one place earlier or later in the onboarding picker and returns the new order */
+export async function PATCH(request: Request, { params }: RouteContext) {
+  const denied = await teamOnly();
+  if (denied) return denied;
+
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return refuse('The beat update is not valid JSON.', 400);
+  }
+
+  if (!isRecord(body) || !isMoveDirection(body.direction)) {
+    return refuse('Choose whether to move the beat up or down.', 400);
+  }
+
+  const { id } = await params;
+
+  try {
+    const result = await moveBeat(id, body.direction);
+
+    if (result.status === 'not-found') {
+      return refuse('Beat not found.', 404);
+    }
+
+    return NextResponse.json({ beats: result.beats });
+  } catch (error) {
+    console.error('Failed to move a beat.', error);
+    return refuse('Unable to move this beat right now.', 500);
+  }
 }
 
 /**
