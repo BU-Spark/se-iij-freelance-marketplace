@@ -148,6 +148,97 @@ BEGIN
   END IF;
 END $$;
 
+-- The beats onboarding offers. The Story Match team adds and removes them from the Beats tab, so
+-- the list is data rather than a constant. Removing a beat only stops it being offered: people who
+-- already picked it keep the name in their profile.
+CREATE TABLE IF NOT EXISTS beats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  -- Where the beat sits in the picker; new beats are appended
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Names are unique regardless of case, so "Local" and "local" cannot both be offered
+CREATE UNIQUE INDEX IF NOT EXISTS beats_name_key ON beats (LOWER(name));
+
+-- Seed the original list once, on the first migration that creates the table. Guarding on an empty
+-- table means a beat the team removes is not brought back by a later migration run.
+INSERT INTO beats (name, sort_order)
+SELECT seeded.name, seeded.sort_order
+  FROM (VALUES
+    ('Politics', 0),
+    ('Government Accountability', 1),
+    ('Law/Legal Issues', 2),
+    ('Foreign Policy', 3),
+    ('National Security', 4),
+    ('Military', 5),
+    ('Policy', 6),
+    ('Finance/Economics', 7),
+    ('Tech', 8),
+    ('Business', 9),
+    ('Personal Finance', 10),
+    ('Real Estate', 11),
+    ('Careers', 12),
+    ('Labor/Workers Rights', 13),
+    ('Culture', 14),
+    ('Internet Culture', 15),
+    ('Media/Power', 16),
+    ('Entertainment/Hollywood', 17),
+    ('Music', 18),
+    ('Film/Movies', 19),
+    ('Books/Writing', 20),
+    ('Art', 21),
+    ('History', 22),
+    ('Comedy', 23),
+    ('Design', 24),
+    ('Photography', 25),
+    ('Games/Gaming', 26),
+    ('Architecture', 27),
+    ('Museums', 28),
+    ('Climate/Environment', 29),
+    ('Health/Wellness', 30),
+    ('Science', 31),
+    ('Energy', 32),
+    ('Mental Health', 33),
+    ('Cancer', 34),
+    ('Weather', 35),
+    ('Food', 36),
+    ('Travel', 37),
+    ('Lifestyle', 38),
+    ('Fashion', 39),
+    ('Fitness', 40),
+    ('Parenting', 41),
+    ('Home', 42),
+    ('Restaurants and bars', 43),
+    ('Recipes', 44),
+    ('Sports', 45),
+    ('Outdoors', 46),
+    ('Dating/Romance', 47),
+    ('Things to do', 48),
+    ('Self-Help', 49),
+    ('Beauty', 50),
+    ('Local', 51),
+    ('Education', 52),
+    ('Housing', 53),
+    ('Urban Planning', 54),
+    ('Transportation', 55),
+    ('Crime', 56),
+    ('Construction', 57),
+    ('Agriculture', 58),
+    ('LGBTQIA', 59),
+    ('Identity/Belonging', 60),
+    ('Gender', 61),
+    ('Immigration', 62),
+    ('Human Rights', 63),
+    ('Criminal Justice', 64),
+    ('Faith/Religion', 65),
+    ('Activism', 66),
+    ('Inequality', 67),
+    ('General News', 68)
+  ) AS seeded(name, sort_order)
+ WHERE NOT EXISTS (SELECT 1 FROM beats);
+
 -- A suspended person can ask the team to look again. The form is public because a ban blocks sign-in,
 -- so the account is matched by email rather than by whoever is calling.
 CREATE TABLE IF NOT EXISTS account_appeals (
