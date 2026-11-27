@@ -255,7 +255,8 @@ describe('RosterBrowser', () => {
   it('tells an empty roster apart from an empty directory and a failed load', () => {
     const first = renderPage(<RosterBrowser members={[]} invitable={[outsider]} />);
     expect(screen.getByText(/no one on your roster yet/i)).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /add freelancers/i })[0]).toBeEnabled();
+    // getByRole fails if there is ever a second button
+    expect(screen.getByRole('button', { name: /add freelancers/i })).toBeEnabled();
     first.unmount();
 
     const second = renderPage(<RosterBrowser members={[]} invitable={[]} />);

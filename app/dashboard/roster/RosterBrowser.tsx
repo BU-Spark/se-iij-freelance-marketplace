@@ -208,7 +208,8 @@ export default function RosterBrowser({ editorId = '', members, invitable, loadF
           </h1>
           <p className={styles.description}>Freelancers you&apos;ve saved to work with.</p>
         </div>
-        <div className={styles.headingSide}>{inviteButton}</div>
+        {/* an empty roster has its own button below, so only one shows at a time */}
+        {roster.length > 0 && <div className={styles.headingSide}>{inviteButton}</div>}
       </div>
 
       {roster.length === 0 ? (
