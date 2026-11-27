@@ -1,9 +1,8 @@
-import Link from 'next/link';
 import type { AssignmentStatus, DeskAssignment } from '../../types/dashboard.types';
 import { formatCompensation } from '../../utils/assignment.utils';
-import { formatDeadline, formatRate } from '../../utils/dashboard.utils';
-import { categoryColor } from '../../utils/category.utils';
+import { formatRate } from '../../utils/dashboard.utils';
 import { organizationName } from '../../utils/organization.utils';
+import AssignmentCardLayout from './AssignmentCardLayout';
 import styles from './AssignmentCard.module.css';
 
 const STATUS_LABEL: Record<AssignmentStatus, string> = {
@@ -35,70 +34,35 @@ export default function AssignmentCard({ assignment: a, assignedName, onReview }
   const contactLine = [a.contact.name, a.contact.desk].filter(Boolean).join(', ');
   const organization = organizationName(a.organizationId);
 
+  const details = [
+    { label: 'Location', value: a.location || 'Not specified' },
+    { label: 'Length', value: a.length || 'Not specified' },
+  ];
+  if (a.type) details.push({ label: 'Type', value: a.type });
+  if (a.rate) details.push({ label: 'Rate', value: formatRate(a.rate) });
+  else if (a.compensation) details.push({ label: 'Compensation', value: formatCompensation(a.compensation) });
+
   return (
-    <article className={`${styles.card} ${a.href ? styles.clickable : ''}`}>
-      <div className={styles.top}>
-        <span className={styles.category}>
-          <span className={styles.dot} style={{ background: categoryColor(a.category) }} aria-hidden="true" />
-          {a.category}
-        </span>
-        {a.urgent && <span className={`${styles.pill} ${styles.urgent}`}>Urgent</span>}
-        <span className={`${styles.pill} ${styles[a.status]}`}>{STATUS_LABEL[a.status]}</span>
-        {a.deadline && <span className={styles.deadline}>Due {formatDeadline(a.deadline)}</span>}
-      </div>
-
-      <div>
-        <h3 className={styles.title}>
-          {a.href ? (
-            <Link href={a.href} className={styles.cardLink} scroll={false}>
-              {a.title}
-            </Link>
-          ) : (
-            a.title
+    <AssignmentCardLayout
+      title={a.title}
+      category={a.category}
+      status={{ tone: a.status, label: STATUS_LABEL[a.status] }}
+      urgent={a.urgent}
+      deadline={a.deadline}
+      href={a.href}
+      organization={organization ?? undefined}
+      contact={contactLine && `Point of contact: ${contactLine}`}
+      details={details}
+      footer={
+        <div className={styles.footer}>
+          <p className={styles.interest}>{interestText(a, assignedName)}</p>
+          {canReview && (
+            <button type="button" className={styles.review} onClick={onReview}>
+              Review candidates →
+            </button>
           )}
-        </h3>
-        {organization && <p className={styles.organization}>{organization}</p>}
-        {contactLine && <p className={styles.contact}>Point of contact: {contactLine}</p>}
-      </div>
-
-      <dl className={styles.details}>
-        <div>
-          <dt>Location</dt>
-          <dd>{a.location || 'Not specified'}</dd>
         </div>
-        <div>
-          <dt>Length</dt>
-          <dd>{a.length || 'Not specified'}</dd>
-        </div>
-        {a.type && (
-          <div>
-            <dt>Type</dt>
-            <dd>{a.type}</dd>
-          </div>
-        )}
-        {a.rate ? (
-          <div>
-            <dt>Rate</dt>
-            <dd>{formatRate(a.rate)}</dd>
-          </div>
-        ) : (
-          a.compensation && (
-            <div>
-              <dt>Compensation</dt>
-              <dd>{formatCompensation(a.compensation)}</dd>
-            </div>
-          )
-        )}
-      </dl>
-
-      <div className={styles.footer}>
-        <p className={styles.interest}>{interestText(a, assignedName)}</p>
-        {canReview && (
-          <button type="button" className={styles.review} onClick={onReview}>
-            Review candidates →
-          </button>
-        )}
-      </div>
-    </article>
+      }
+    />
   );
 }
