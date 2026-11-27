@@ -1,0 +1,68 @@
+.findLink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 8px;
+  background: #111a31;
+  color: var(--white);
+  font-size: var(--control-font-size);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.findLink:hover {
+  background: #1b2a4d;
+}
+
+.findLink:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.list {
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--white);
+  box-shadow: var(--shadow-sm);
+  list-style: none;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--line);
+}
+
+.who {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.name {
+  margin: 0;
+  color: var(--navy-deep);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.meta {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
