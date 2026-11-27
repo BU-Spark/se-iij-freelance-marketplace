@@ -40,3 +40,18 @@ export type NewAssignment = {
   deadline: string;
   compensation: string;
 };
+
+/** How a freelancer answered an assignment; `at` is when the server saved it (ISO 8601) */
+export type AssignmentResponse =
+  | { kind: 'interested'; at: string }
+  | { kind: 'declined'; reasons: string[]; note: string; at: string }
+  | { kind: 'negotiating'; proposal: string; at: string };
+
+/** Everything one freelancer has answered, keyed by assignment id */
+export type AssignmentResponses = Record<string, AssignmentResponse>;
+
+/** What the freelancer sends; the server stamps the time */
+export type AssignmentResponseInput =
+  | { kind: 'interested' }
+  | { kind: 'declined'; reasons: string[]; note?: string }
+  | { kind: 'negotiating'; proposal: string };
