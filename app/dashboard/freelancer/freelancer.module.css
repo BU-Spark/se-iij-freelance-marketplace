@@ -37,7 +37,7 @@
 .eyebrow {
   color: var(--c-blue);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   font-size: 12px;
   font-weight: 700;
 }
@@ -95,7 +95,7 @@
   border-radius: 999px;
   background: var(--navy);
   color: #fff;
-  font-family: var(--font-sans, inherit);
+  font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 700;
 }

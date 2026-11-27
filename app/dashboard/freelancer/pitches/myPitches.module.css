@@ -22,19 +22,20 @@
   justify-content: space-between;
   gap: 16px 24px;
 }
+/* eyebrow and title match the heading on Organizations, Editors and the editor roster */
 .eyebrow {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--c-blue);
 }
 .title {
   margin: 0;
   font-family: var(--font-serif);
-  font-size: 30px;
-  font-weight: 600;
+  font-size: clamp(30px, 4vw, 42px);
+  font-weight: 400;
   color: var(--navy-deep);
 }
 .lede {
@@ -210,7 +211,7 @@
   margin: 0;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--muted);
 }
