@@ -17,8 +17,8 @@ jest.mock('../../../lib/assignments', () => ({
 jest.mock('../assignments/loadAssignmentView', () => ({ loadAssignmentView: jest.fn(async () => null) }));
 jest.mock('../../components/AssignmentDrawer/AssignmentDrawer', () => ({
   __esModule: true,
-  default: ({ assignment, closeHref }: { assignment: Assignment; closeHref: string }) => (
-    <div role="dialog" aria-label={assignment.title} data-close-href={closeHref} />
+  default: ({ assignment, closeHref, canEdit }: { assignment: Assignment; closeHref: string; canEdit?: boolean }) => (
+    <div role="dialog" aria-label={assignment.title} data-close-href={closeHref} data-can-edit={String(!!canEdit)} />
   ),
 }));
 
@@ -46,5 +46,12 @@ describe('Freelancer dashboard page', () => {
       'data-close-href',
       '/dashboard/freelancer'
     );
+  });
+
+  it('never offers edit or delete, even when the viewer could edit the assignment elsewhere', async () => {
+    viewMock.mockResolvedValue({ assignment: { id: 'a-1', title: 'City hall budget' }, canEdit: true });
+    await visit({ assignment: 'a-1' });
+
+    expect(screen.getByRole('dialog', { name: 'City hall budget' })).toHaveAttribute('data-can-edit', 'false');
   });
 });
