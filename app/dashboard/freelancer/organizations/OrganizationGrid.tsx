@@ -1,6 +1,8 @@
 'use client';
 
 import { useCallback, useState } from 'react';
+import rosterStyles from '../../roster/roster.module.css';
+import talentStyles from '../../talent/talent.module.css';
 import type { OrgProfile } from './constants';
 import OrganizationCard from './OrganizationCard';
 import OrganizationPanel from './OrganizationPanel';
@@ -14,19 +16,24 @@ export default function OrganizationGrid({ orgs }: { orgs: OrgProfile[] }) {
 
   return (
     <>
-      <ul className={styles.grid}>
+      <ul className={rosterStyles.grid}>
         {orgs.map((org) => (
-          <li key={org.id} className={`${styles.card} ${styles.clickable}`}>
-            <OrganizationCard org={org} />
-            {/* its click area stretches over the whole card */}
-            <button
-              type="button"
-              className={styles.viewButton}
-              onClick={() => setOpenId(org.id)}
-              aria-label={`View ${org.name}`}
-            >
-              View organization →
-            </button>
+          <li key={org.id}>
+            <OrganizationCard
+              org={org}
+              className={styles.clickable}
+              footer={
+                // its click area stretches over the whole card
+                <button
+                  type="button"
+                  className={`${talentStyles.toggle} ${styles.viewButton}`}
+                  onClick={() => setOpenId(org.id)}
+                  aria-label={`View ${org.name}`}
+                >
+                  View organization →
+                </button>
+              }
+            />
           </li>
         ))}
       </ul>

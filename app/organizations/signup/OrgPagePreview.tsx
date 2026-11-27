@@ -1,5 +1,4 @@
 import OrganizationCard, { type OrgCardDetails } from '../../dashboard/freelancer/organizations/OrganizationCard';
-import cardStyles from '../../dashboard/freelancer/organizations/organizations.module.css';
 import type { OrgDetails } from './orgSignup';
 
 /** Blank answers show a placeholder, so the card keeps its shape while the form is being filled in */
@@ -17,9 +16,7 @@ const toCard = (data: OrgDetails): OrgCardDetails => ({
 export default function OrgPagePreview({ data }: { data: OrgDetails }) {
   return (
     <section aria-label="Preview of your organization card">
-      <div className={cardStyles.card}>
-        <OrganizationCard org={toCard(data)} />
-      </div>
+      <OrganizationCard org={toCard(data)} />
     </section>
   );
 }

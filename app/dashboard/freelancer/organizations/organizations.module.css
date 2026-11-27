@@ -1,142 +1,7 @@
-/* Matches the editor desk and My pitches: grey page, centred column, white rounded cards */
-.shell {
-  min-height: 100%;
-  background: #f5f6f8;
-}
-.page {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 28px clamp(16px, 4vw, 64px) 80px;
-  color: var(--ink);
-}
-
-/* title block */
-.intro {
-  display: flex;
-  flex-direction: column;
-}
-.eyebrow {
-  margin: 0 0 6px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--c-blue);
-}
-.title {
-  margin: 0;
-  font-family: var(--font-serif);
-  font-size: 30px;
-  font-weight: 600;
-  color: var(--navy-deep);
-}
-.lede {
-  margin: 6px 0 0;
-  color: var(--muted);
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
-  gap: 16px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-/* same card as the editor desk's AssignmentCard and the My pitches list */
+/* cards in a row share one height, so their footers line up */
 .card {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 20px 22px;
-  background: var(--white);
-  border: 1px solid #eceef2;
-  border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  height: 100%;
   overflow-wrap: anywhere;
-}
-
-.nameRow {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.name {
-  margin: 0;
-  color: var(--navy-deep);
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-.tagline {
-  margin: 0;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 1.5;
-}
-
-/* where its opportunities are open: local, US only or global */
-.reach {
-  flex-shrink: 0;
-  margin-top: 3px;
-  padding: 2px 9px;
-  border: 1px solid currentColor;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-.local {
-  color: var(--c-green-d);
-}
-.us {
-  color: var(--navy);
-}
-.global {
-  color: var(--c-purple);
-}
-
-/* beats use the "Open" pill colours from the assignment cards */
-.beats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 0;
-  margin: 0;
-  list-style: none;
-}
-.beat {
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: #eef2fd;
-  color: #1e3a9e;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* grey details box, like Location / Compensation / Deadline on the assignment cards */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 12px;
-  margin: 0;
-  padding: 12px 14px;
-  background: #f7f8fa;
-  border-radius: 12px;
-}
-.stats dt {
-  color: var(--muted);
-  font-size: 12px;
-}
-.stats dd {
-  margin: 0;
-  color: var(--ink);
-  font-weight: 500;
 }
 
 .clickable {
@@ -146,21 +11,10 @@
     box-shadow 0.15s;
 }
 .clickable:hover {
-  border-color: #d5dae3;
+  border-color: #c9d3f2;
   box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -16px rgba(15, 23, 42, 0.18);
-}
-.viewButton {
-  align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--c-blue);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
+    0 1px 2px rgba(15, 23, 42, 0.06),
+    0 12px 28px -16px rgba(15, 23, 42, 0.28);
 }
 .viewButton::after {
   content: '';
@@ -168,13 +22,20 @@
   inset: 0;
   border-radius: inherit;
 }
-.viewButton:focus-visible {
+/* the focus ring goes round the whole card instead of the button */
+.clickable .viewButton:focus-visible {
   outline: none;
 }
-/* same focus ring as the My pitches cards */
 .clickable:has(.viewButton:focus-visible) {
-  border-color: var(--c-blue);
-  box-shadow: 0 0 0 3px rgba(47, 85, 212, 0.12);
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.tagline {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .panelBody {
