@@ -19,7 +19,14 @@ describe('Organization signup, step 1', () => {
     expect(screen.getByRole('link', { name: /log in/i })).toHaveAttribute('href', '/login');
   });
 
-  it('moves on to the organization details', () => {
+  it('stays on the page and focuses the first problem', () => {
+    fireEvent.click(screen.getByRole('button', { name: /continue/i }));
+
+    expect(screen.getByLabelText(/^your name/i)).toHaveFocus();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('moves to the organization details once the account is complete', () => {
     type(/^your name/i, 'Sam Rivera');
     type(/^work email/i, 'sam@signalroom.org');
     type(/^password$/i, 'correct-horse-battery');
