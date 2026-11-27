@@ -6,6 +6,7 @@ import { hasProfile, loadProfileRoles } from '../../lib/profile';
 import { EditorHeader } from '../components/header/EditorHeader';
 import type { ProfileRole } from '../types/profile.types';
 import ProfileUnavailable from './ProfileUnavailable';
+import { loadInboxSources } from './loadInboxSources';
 import styles from './layout.module.css';
 
 /**
@@ -58,9 +59,11 @@ export default async function DashboardLayout({ children }: { children: ReactNod
     console.error('Could not read the roles for the dashboard header.', error);
   }
 
+  const inboxSources = await loadInboxSources(userId, roles);
+
   return (
     <div className={styles.workspace}>
-      <EditorHeader initialRoles={roles} />
+      <EditorHeader initialRoles={roles} inboxSources={inboxSources} />
       <div className={styles.page}>{children}</div>
     </div>
   );
