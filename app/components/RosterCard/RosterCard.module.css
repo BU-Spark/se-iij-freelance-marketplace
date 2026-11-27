@@ -60,6 +60,19 @@
   background: #f0f2f5;
   color: #4a5468;
 }
+/* where a newsroom takes work from */
+.local {
+  background: #e8f6ee;
+  color: #17663a;
+}
+.us {
+  background: #eef2fd;
+  color: #1e3a9e;
+}
+.global {
+  background: #f1e8fd;
+  color: #6236b0;
+}
 
 /* six time boxes */
 .slots {
