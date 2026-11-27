@@ -5,6 +5,8 @@ import { Field, TagInput } from '../../../components';
 import { REACH_DETAIL, REACH_LABEL, type OrgReach } from '../../../dashboard/freelancer/organizations/constants';
 import { EMPTY_DETAILS, ORG_BEATS, type OrgDetails } from '../orgSignup';
 import OrgSignupShell from '../OrgSignupShell';
+import auth from '../../../login/login.module.css';
+import styles from '../organizationSignup.module.css';
 
 const REACHES = Object.keys(REACH_LABEL) as OrgReach[];
 
@@ -31,23 +33,25 @@ export default function OrgDetailsForm() {
       title="Create your organization page"
       intro="Tell freelancers who you are, what you cover and how to work with you."
     >
-      <form onSubmit={submit} noValidate>
-        <fieldset>
-          <legend>Your newsroom</legend>
+      <form className={auth.form} onSubmit={submit} noValidate>
+        <fieldset className={styles.section}>
+          <legend className={styles.legend}>Your newsroom</legend>
           <Field label="Organization name">
             <input type="text" autoComplete="organization" placeholder="The Meridian Post" {...bind('name')} />
           </Field>
-          <Field label="Website">
-            <input type="url" autoComplete="url" placeholder="meridianpost.com" {...bind('website')} />
-          </Field>
-          <Field label="City">
-            <input type="text" placeholder="New York, or Remote" {...bind('city')} />
-          </Field>
+          <div className={styles.row}>
+            <Field label="Website">
+              <input type="url" autoComplete="url" placeholder="meridianpost.com" {...bind('website')} />
+            </Field>
+            <Field label="City">
+              <input type="text" placeholder="New York, or Remote" {...bind('city')} />
+            </Field>
+          </div>
 
-          <fieldset>
+          <fieldset className={styles.reach}>
             <legend>Who can pitch you</legend>
             {REACHES.map((reach) => (
-              <label key={reach}>
+              <label key={reach} className={styles.option}>
                 <input
                   type="radio"
                   name="reach"
@@ -61,8 +65,8 @@ export default function OrgDetailsForm() {
           </fieldset>
         </fieldset>
 
-        <fieldset>
-          <legend>What freelancers see</legend>
+        <fieldset className={styles.section}>
+          <legend className={styles.legend}>What freelancers see</legend>
           <Field label="Tagline">
             <input type="text" placeholder="One line on what you publish" {...bind('tagline')} />
           </Field>
@@ -84,7 +88,7 @@ export default function OrgDetailsForm() {
           </Field>
         </fieldset>
 
-        <button type="submit">
+        <button type="submit" className={auth.submit}>
           Create organization page <span aria-hidden="true">→</span>
         </button>
       </form>

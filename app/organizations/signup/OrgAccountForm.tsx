@@ -6,6 +6,7 @@ import { FormEvent, useState } from 'react';
 import { Field, PasswordField } from '../../components';
 import { DETAILS_PATH, EMPTY_ACCOUNT, type OrgAccount } from './orgSignup';
 import OrgSignupShell from './OrgSignupShell';
+import auth from '../../login/login.module.css';
 
 /** Step 1 of registering a newsroom. Nothing is sent anywhere until there is a backend for it */
 export default function OrgAccountForm() {
@@ -32,7 +33,7 @@ export default function OrgAccountForm() {
       title="Sign up your newsroom"
       intro="Start with your login. Next you will build the page freelancers see."
     >
-      <form onSubmit={submit} noValidate>
+      <form className={auth.form} onSubmit={submit} noValidate>
         <Field label="Your name">
           <input type="text" autoComplete="name" {...bind('contactName')} />
         </Field>
@@ -52,12 +53,12 @@ export default function OrgAccountForm() {
           onChange={(value) => update('confirmPassword', value)}
         />
 
-        <button type="submit">
+        <button type="submit" className={auth.submit}>
           Continue <span aria-hidden="true">→</span>
         </button>
       </form>
 
-      <p>
+      <p className={auth.signupPrompt}>
         Already have an account? <Link href="/login">Log in</Link>
       </p>
     </OrgSignupShell>
