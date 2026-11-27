@@ -3,6 +3,7 @@ import type { TalentClip, TalentFilterOptions, TalentFilters, TalentMember } fro
 import { toRosterMember, type RosterRow } from '../app/utils/roster.utils';
 import { TALENT_PAGE_SIZE } from '../app/utils/talent.utils';
 import { isFreeNow } from '../app/utils/availability.utils';
+import { PREFIX_BONUS, RELEVANCE_WEIGHTS } from '../app/utils/relevance.utils';
 
 type TalentRow = RosterRow & {
   available_now: boolean | null;
@@ -65,6 +66,41 @@ function toTalentMember(row: TalentRow, now: Date): TalentMember {
 /** `%` and `_` are wildcards in LIKE; a search for "50%" should mean the literal text */
 const escapeLike = (value: string) => value.replace(/[\\%_]/g, (match) => `\\${match}`);
 
+/**
+ * One search word's contribution to a freelancer's relevance, summed over every field it can be
+ * found in. The weights are the shared ones, so the same search ranks the same here and on the desk.
+ */
+function wordScoreSql(wordsParam: string): string {
+  const contains = (field: string) => `strpos(lower(${field}), w.word) > 0`;
+  const anyContains = (array: string) =>
+    `EXISTS (SELECT 1 FROM unnest(${array}) AS entry(name) WHERE strpos(lower(entry.name), w.word) > 0)`;
+  const anyStarts = (array: string) =>
+    `EXISTS (SELECT 1 FROM unnest(${array}) AS entry(name) WHERE starts_with(lower(entry.name), w.word))`;
+
+  const terms: [string, number][] = [
+    [contains(`concat_ws(' ', u.first_name, u.last_name)`), RELEVANCE_WEIGHTS.name],
+    [anyContains('f.beats'), RELEVANCE_WEIGHTS.beat],
+    [anyContains('f.beat_tags'), RELEVANCE_WEIGHTS.tag],
+    [anyContains('f.work_mediums'), RELEVANCE_WEIGHTS.medium],
+    [contains(`coalesce(f.location, '')`), RELEVANCE_WEIGHTS.location],
+    [contains(`coalesce(f.community_covered, '')`), RELEVANCE_WEIGHTS.community],
+    [contains(`concat_ws(' ', u.short_bio, u.long_bio)`), RELEVANCE_WEIGHTS.bio],
+    // a word that starts a value says more than one buried in the middle of it
+    [`starts_with(lower(concat_ws(' ', u.first_name, u.last_name)), w.word)`, PREFIX_BONUS],
+    [anyStarts('f.beats'), PREFIX_BONUS],
+    [anyStarts('f.beat_tags'), PREFIX_BONUS],
+    [anyStarts('f.work_mediums'), PREFIX_BONUS],
+    [`starts_with(lower(coalesce(f.location, '')), w.word)`, PREFIX_BONUS],
+  ];
+
+  const sum = terms
+    .map(([condition, weight]) => `CASE WHEN ${condition} THEN ${weight} ELSE 0 END`)
+    .join('\n             + ');
+
+  return `SELECT COALESCE(SUM(${sum}), 0) AS text_score
+              FROM unnest(${wordsParam}::text[]) AS w(word)`;
+}
+
 export function buildTalentQuery(filters: TalentFilters): { sql: string; params: unknown[] } {
   const where = ["'freelancer' = ANY(u.roles)"];
   const params: unknown[] = [];
@@ -85,9 +121,10 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
     )`);
   }
 
+  let beatParam: string | null = null;
   if (filters.beat) {
-    const p = param(filters.beat);
-    where.push(`(${p} = ANY(f.beats) OR ${p} = ANY(f.beat_tags))`);
+    beatParam = param(filters.beat);
+    where.push(`(${beatParam} = ANY(f.beats) OR ${beatParam} = ANY(f.beat_tags))`);
   }
 
   if (filters.medium) where.push(`${param(filters.medium)} = ANY(f.work_mediums)`);
@@ -96,6 +133,20 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
   if (filters.availableNow) {
     where.push('u.available_now = true AND (u.available_until IS NULL OR u.available_until > NOW())');
   }
+
+  // Scored in SQL rather than after the fact, so the row cap keeps the best matches, not the first
+  const wordsParam = q ? param(q.toLowerCase().split(/\s+/).filter(Boolean)) : null;
+  const score = [
+    wordsParam ? 'COALESCE(relevance.text_score, 0)' : '',
+    // a headline beat is a stronger match than a beat the person only tagged
+    beatParam
+      ? `CASE WHEN ${beatParam} = ANY(f.beats) THEN ${RELEVANCE_WEIGHTS.filterBeat}
+              WHEN ${beatParam} = ANY(f.beat_tags) THEN ${RELEVANCE_WEIGHTS.filterBeatTag}
+              ELSE 0 END`
+      : '',
+  ]
+    .filter(Boolean)
+    .join(' + ');
 
   const sql = `
     SELECT
@@ -117,8 +168,9 @@ export function buildTalentQuery(filters: TalentFilters): { sql: string; params:
       f.availability
     FROM users u
     JOIN freelancers f ON f.user_id = u.id
+    ${wordsParam ? `LEFT JOIN LATERAL (${wordScoreSql(wordsParam)}) relevance ON TRUE` : ''}
     WHERE ${where.join('\n      AND ')}
-    ORDER BY (u.available_now AND (u.available_until IS NULL OR u.available_until > NOW())) DESC NULLS LAST,
+    ORDER BY ${score ? `(${score}) DESC,\n             ` : ''}(u.available_now AND (u.available_until IS NULL OR u.available_until > NOW())) DESC NULLS LAST,
              u.first_name,
              u.last_name
     LIMIT ${param(TALENT_PAGE_SIZE)}

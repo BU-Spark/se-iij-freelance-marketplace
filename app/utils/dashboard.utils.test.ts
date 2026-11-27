@@ -12,11 +12,14 @@ import {
   slotLabel,
   candidatesFor,
   assignmentMatches,
+  assignmentRelevanceFields,
   matchesQuery,
   memberMatches,
+  memberRelevanceFields,
   timeAgo,
   toDeskAssignment,
 } from './dashboard.utils';
+import { relevanceScore } from './relevance.utils';
 
 describe('dashboard utils', () => {
   describe('hourSlots', () => {
@@ -180,6 +183,40 @@ describe('desk search matching', () => {
     expect(assignmentMatches(assignment, 'meridian post')).toBe(true);
     expect(assignmentMatches(assignment, 'election district')).toBe(true);
     expect(assignmentMatches(assignment, 'port authority')).toBe(false);
+  });
+});
+
+describe('desk search ranking', () => {
+  it('puts a title match ahead of the same word found in the contact', () => {
+    const inTitle = { ...SAMPLE_ASSIGNMENTS[0], title: 'Harbor Commission vote' };
+    const inContact = { ...SAMPLE_ASSIGNMENTS[0], title: 'Daily briefing', contact: { name: 'Harbor' } };
+
+    expect(relevanceScore('harbor', assignmentRelevanceFields(inTitle))).toBeGreaterThan(
+      relevanceScore('harbor', assignmentRelevanceFields(inContact))
+    );
+  });
+
+  it('puts a person’s name ahead of the same word found in their city', () => {
+    const inName = { ...ROSTER[0], name: 'Harbor Lee', city: 'London' };
+    const inCity = { ...ROSTER[0], name: 'Marcus Thorne', city: 'Harbor' };
+
+    expect(relevanceScore('harbor', memberRelevanceFields(inName))).toBeGreaterThan(
+      relevanceScore('harbor', memberRelevanceFields(inCity))
+    );
+  });
+
+  it('puts a title match ahead of a category plus description match', () => {
+    const inTitle = { ...SAMPLE_ASSIGNMENTS[0], title: 'Harbor Commission vote', category: 'Transit' };
+    const inBody = {
+      ...SAMPLE_ASSIGNMENTS[0],
+      title: 'Daily briefing',
+      category: 'Harbor',
+      description: 'Covers the harbor vote.',
+    };
+
+    expect(relevanceScore('harbor', assignmentRelevanceFields(inTitle))).toBeGreaterThan(
+      relevanceScore('harbor', assignmentRelevanceFields(inBody))
+    );
   });
 });
 describe('timeAgo', () => {

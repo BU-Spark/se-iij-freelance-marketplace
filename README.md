@@ -212,6 +212,24 @@ cannot leave the order in an odd state.
 [`app/onboarding/constants.ts`](./app/onboarding/constants.ts). The seed is skipped when the table
 already has rows, so a beat the team removes is not brought back by the next migration.
 
+## Search ranking
+
+Searches return the closest match first, then fall back to the order the list already had:
+
+- **Find talent** scores each freelancer against the search words and the Beat filter in
+  [`buildTalentQuery`](./lib/talent.ts), so a name or headline beat outranks a mention buried in a
+  bio, and a headline beat outranks a beat that is only tagged. Free right now, then name, still
+  settle ties — and because the score is part of the query, the 60-row cap keeps the best matches
+  rather than the first 60.
+- **Assignments** (the freelancer directory, the task feed and the editor desk) rank the list they
+  already filtered with [`rankBy`](./app/utils/relevance.utils.ts), with recency or deadline as the
+  tie-break. The desk's roster column ranks people the same way.
+
+The weights live in `RELEVANCE_WEIGHTS` in
+[`app/utils/relevance.utils.ts`](./app/utils/relevance.utils.ts) and are interpolated into the SQL,
+so a search ranks the same on both sides. Filters decide *which* rows match exactly as before; only
+the order changes, and with no search text every list keeps its existing order.
+
 ## Work (business) email verification
 
 An editor's work email is proven through Clerk instead of being taken at face value, and Clerk
