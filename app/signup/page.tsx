@@ -182,7 +182,7 @@ function SignupForm() {
         <p className={styles.signupPrompt}>
           Already have an account? <Link href="/login">Log in</Link>
         </p>
-        <p className={styles.signupPrompt}>
+        <p className={`${styles.signupPrompt} ${styles.altPrompt}`}>
           Registering a newsroom? <Link href="/organizations/signup">Create an organization page</Link>
         </p>
       </section>
