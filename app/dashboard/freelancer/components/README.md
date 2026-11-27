@@ -3,7 +3,7 @@
 Import components and Props types as named exports from `./components`.
 Internal component imports use direct sibling paths to avoid barrel cycles.
 
-- `TaskCard` / `TaskCardProps`: assignment content and freelancer-relative status.
+- `TaskCard` / `TaskCardProps`: assignment content and freelancer-relative status, drawn with the shared `AssignmentCardLayout`.
 - `TaskSummary` / `TaskSummaryProps`: counts and links that select a task status.
 - `ActiveAssignments` / `ActiveAssignmentsProps`: ongoing work, independent of feed filters.
 - `TaskFilters` / `TaskFiltersProps`: controlled search, status, category and location inputs.

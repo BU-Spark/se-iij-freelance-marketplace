@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import type { DeskAssignment } from '../../../types/dashboard.types';
 import { assignmentDrawerHref, formatDeadline, formatRate } from '../../../utils/dashboard.utils';
 import { formatCompensation } from '../../../utils/assignment.utils';
+import AssignmentCardLayout from '../../../components/AssignmentCard/AssignmentCardLayout';
 import { taskStatus, FILTERS } from '../freelancer.utils';
 import styles from '../freelancer.module.css';
 
@@ -10,45 +10,27 @@ export type TaskCardProps = { task: DeskAssignment; freelancerId: string };
 export function TaskCard({ task, freelancerId }: TaskCardProps) {
   const status = taskStatus(task, freelancerId);
   return (
-    <article className={styles.card}>
-      <div className={styles.tags}>
-        <span className={styles[status]}>{FILTERS.find((item) => item.value === status)?.label}</span>
-        {task.urgent && <span className={styles.urgent}>Urgent</span>}
-        <span>{task.category}</span>
-      </div>
-      <h3>
-        {/* only open work can be read in full; invitations and assigned work stay summary-only for now */}
-        {task.status === 'open' ? (
-          <Link href={assignmentDrawerHref('/dashboard/freelancer', task.id)} scroll={false}>
-            {task.title}
-          </Link>
-        ) : (
-          task.title
-        )}
-      </h3>
-      <p>
-        {task.contact.name} · {task.contact.desk}
-      </p>
-      <dl className={styles.details}>
-        <div>
-          <dt>Location</dt>
-          <dd>{task.location}</dd>
-        </div>
-        <div>
-          <dt>Compensation</dt>
-          <dd>{task.rate ? formatRate(task.rate) : task.compensation ? formatCompensation(task.compensation) : '—'}</dd>
-        </div>
-        <div>
-          <dt>Deadline</dt>
-          <dd>{task.deadline ? formatDeadline(task.deadline) : '—'}</dd>
-        </div>
-        <div>
-          <dt>Type / length</dt>
-          <dd>
-            {task.type} · {task.length}
-          </dd>
-        </div>
-      </dl>
-    </article>
+    <AssignmentCardLayout
+      className={styles.taskCard}
+      title={task.title}
+      category={task.category}
+      status={{
+        tone: status === 'in-progress' ? 'assigned' : status,
+        label: FILTERS.find((item) => item.value === status)!.label,
+      }}
+      urgent={task.urgent}
+      // only open work can be read in full; invitations and assigned work stay summary-only for now
+      href={task.status === 'open' ? assignmentDrawerHref('/dashboard/freelancer', task.id) : undefined}
+      contact={[task.contact.name, task.contact.desk].filter(Boolean).join(' · ')}
+      details={[
+        { label: 'Location', value: task.location },
+        {
+          label: 'Compensation',
+          value: task.rate ? formatRate(task.rate) : task.compensation ? formatCompensation(task.compensation) : '—',
+        },
+        { label: 'Deadline', value: task.deadline ? formatDeadline(task.deadline) : '—' },
+        { label: 'Type / length', value: [task.type, task.length].filter(Boolean).join(' · ') },
+      ]}
+    />
   );
 }

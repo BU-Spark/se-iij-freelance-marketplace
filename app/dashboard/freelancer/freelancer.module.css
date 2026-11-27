@@ -19,7 +19,7 @@
   min-width: 0;
 }
 /* cards are narrower here, so the details sit two per row */
-.side .details {
+.side dl {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 .feed {
@@ -33,13 +33,6 @@
   background: #fff;
   color: var(--muted);
   font-size: 14px;
-}
-/* matches the editor desk's AssignmentCard so both sides of the dashboard read the same */
-.card {
-  padding: 20px 22px;
-  background: var(--white);
-  border: 1px solid #eceef2;
-  border-radius: 16px;
 }
 .eyebrow {
   color: var(--c-blue);
@@ -56,92 +49,17 @@
   padding: 0;
   list-style: none;
 }
-.card {
+.taskCard {
   height: 100%;
   box-sizing: border-box;
   overflow-wrap: anywhere;
-  box-shadow:
-    0 1px 2px rgba(15, 23, 42, 0.04),
-    0 8px 24px -16px rgba(15, 23, 42, 0.18);
 }
-.card h3 {
-  margin: 14px 0 0;
-  color: var(--navy-deep);
-  font-family: var(--font-serif);
-  font-size: 22px;
-  font-weight: 600;
-  line-height: 1.25;
-}
-.card p,
-.details dt {
-  color: var(--muted);
-}
-.card > p {
-  margin: 2px 0 0;
-  font-size: 14px;
-}
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-/* the status pill (first in the markup) follows Urgent, as on the editor card */
-.tags > span:first-child {
-  order: 1;
-}
-/* the category (last span in the markup) leads the row, as on the editor card */
-.tags > span:last-child {
-  order: -1;
-  font-size: 13px;
-  font-weight: 600;
-  color: #4a5468;
-}
-.open,
-.invited,
-.in-progress,
-.urgent {
-  padding: 3px 10px;
-  border-radius: 999px;
-  font-weight: 600;
-}
-/* same pill colours as the editor's AssignmentCard */
-.open {
-  background: #eef2fd;
-  color: #1e3a9e;
-}
-.invited {
-  background: #fff4e5;
-  color: #8a4b00;
-}
-.in-progress {
-  background: #e8f6ee;
-  color: #17663a;
-}
-.urgent {
-  background: #fdecec;
-  color: #a8231a;
-}
-/* grey box with Location / Compensation / Deadline / Type, like the editor cards */
-.details {
-  display: grid;
+/* task cards show four details, all the same width */
+.feed dl {
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin: 14px 0 0;
-  padding: 12px 14px;
-  background: #f7f8fa;
-  border-radius: 12px;
-}
-.details dt {
-  font-size: 12px;
-}
-.details dd {
-  margin: 0;
-  font-weight: 500;
 }
 @media (max-width: 720px) {
-  .details {
+  .feed dl {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
