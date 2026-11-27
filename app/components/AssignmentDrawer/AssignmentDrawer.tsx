@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Assignment } from '../../types/assignments.types';
@@ -17,6 +17,8 @@ type AssignmentDrawerProps = {
   showOrganization?: boolean;
   /** shows the report flag; defaults to everyone who cannot edit it */
   canReport?: boolean;
+  /** shown under the details, e.g. the freelancer's application controls */
+  children?: ReactNode;
 };
 
 /** The expanded view of one assignment, slid in from the right over the page that listed it */
@@ -26,6 +28,7 @@ export default function AssignmentDrawer({
   canEdit = false,
   showOrganization = false,
   canReport,
+  children,
 }: AssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -96,6 +99,7 @@ export default function AssignmentDrawer({
             showOrganization={showOrganization}
             onDeleted={() => router.push(closeHref, { scroll: false })}
           />
+          {children}
         </div>
       </div>
     </>

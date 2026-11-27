@@ -1,4 +1,5 @@
 import type {
+  Applicant,
   AssignmentStatus,
   DeskAssignment,
   DeskFilter,
@@ -76,10 +77,10 @@ export function countByStatus(assignments: DeskAssignment[]): Record<AssignmentS
 
 /**
  * Adapts an assignment posted to the database to the desk card shape.
- * Invites, interest and a structured rate only exist in the sample desk data,
- * so those fields are left empty and the raw compensation text is shown instead.
+ * Invites and a structured rate only exist in the sample desk data, so those fields are left
+ * empty; the applicants are the real rows freelancers created by applying.
  */
-export function toDeskAssignment(a: Assignment): DeskAssignment {
+export function toDeskAssignment(a: Assignment, applicants: Applicant[] = []): DeskAssignment {
   return {
     id: a.id,
     title: a.title,
@@ -92,7 +93,8 @@ export function toDeskAssignment(a: Assignment): DeskAssignment {
     compensation: a.compensation,
     organizationId: a.organizationId,
     createdByName: a.createdByName,
-    interestedIds: [],
+    interestedIds: applicants.map((applicant) => applicant.id),
+    ...(applicants.length > 0 ? { applicants } : {}),
     assignedToId: a.assignedToUserId ?? undefined,
     href: assignmentDrawerHref('/dashboard', a.id),
   };
@@ -135,23 +137,40 @@ export function assignmentMatches(assignment: DeskAssignment, query: string): bo
     organizationName(assignment.organizationId) ?? undefined
   );
 }
+/** The parts of a person the Review candidates list shows; roster members and applicants both fit */
+export type CandidatePerson = {
+  id: string;
+  name: string;
+  city: string;
+  /** the headline beat, when the person has one */
+  specialty?: string;
+};
+
 /** One person in the Review candidates list */
 export type Candidate = {
-  member: RosterMember;
+  member: CandidatePerson;
   /** true = said they're interested; false = invited but hasn't answered yet */
   interested: boolean;
 };
 
-/** Everyone invited to or interested in an assignment, interested people first */
+/**
+ * Everyone invited to or interested in an assignment, interested people first. Applicants who
+ * are not on the editor's roster still appear, because the assignment records enough of their
+ * profile to list and assign them.
+ */
 export function candidatesFor(assignment: DeskAssignment, roster: RosterMember[]): Candidate[] {
   // join both id lists; Set removes people who are in both
   const ids = Array.from(new Set([...assignment.interestedIds, ...(assignment.invitedIds ?? [])]));
+  const people: CandidatePerson[] = [...roster];
+  for (const applicant of assignment.applicants ?? []) {
+    if (!people.some((person) => person.id === applicant.id)) people.push(applicant);
+  }
 
   return (
     ids
-      // turn each id into the full roster person (skip ids that aren't on the roster)
-      .map((id) => roster.find((m) => m.id === id))
-      .filter((m): m is RosterMember => m !== undefined)
+      // turn each id into a person (skip ids nobody here knows about)
+      .map((id) => people.find((person) => person.id === id))
+      .filter((person): person is CandidatePerson => person !== undefined)
       .map((member) => ({ member, interested: assignment.interestedIds.includes(member.id) }))
       // interested (true) before waiting (false)
       .sort((a, b) => Number(b.interested) - Number(a.interested))

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import type { DeskAssignment } from '../../../types/dashboard.types';
 import { assignmentDrawerHref, formatDeadline, formatRate } from '../../../utils/dashboard.utils';
 import { formatCompensation } from '../../../utils/assignment.utils';
@@ -5,9 +6,10 @@ import AssignmentCardLayout from '../../../components/AssignmentCard/AssignmentC
 import { taskStatus, FILTERS } from '../freelancer.utils';
 import styles from '../freelancer.module.css';
 
-export type TaskCardProps = { task: DeskAssignment; freelancerId: string };
+/** `footer` holds controls under the details, e.g. the freelancer's application to the task */
+export type TaskCardProps = { task: DeskAssignment; freelancerId: string; footer?: ReactNode };
 
-export function TaskCard({ task, freelancerId }: TaskCardProps) {
+export function TaskCard({ task, freelancerId, footer }: TaskCardProps) {
   const status = taskStatus(task, freelancerId);
   return (
     <AssignmentCardLayout
@@ -31,6 +33,7 @@ export function TaskCard({ task, freelancerId }: TaskCardProps) {
         { label: 'Deadline', value: task.deadline ? formatDeadline(task.deadline) : '—' },
         { label: 'Type / length', value: [task.type, task.length].filter(Boolean).join(' · ') },
       ]}
+      footer={footer}
     />
   );
 }

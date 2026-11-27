@@ -87,6 +87,17 @@ CREATE INDEX IF NOT EXISTS assignments_created_by_idx ON assignments (created_by
 ALTER TABLE assignments ADD COLUMN IF NOT EXISTS assigned_to_user_id UUID REFERENCES users(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS assignments_status_deadline_idx ON assignments (status, deadline);
 
+-- A freelancer's application to an open assignment. The row *is* the interest, so applying again
+-- is a no-op and withdrawing deletes it. Editors read these rows to see who applied.
+CREATE TABLE IF NOT EXISTS assignment_responses (
+  assignment_id UUID NOT NULL REFERENCES assignments(id) ON DELETE CASCADE,
+  freelancer_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (assignment_id, freelancer_user_id)
+);
+CREATE INDEX IF NOT EXISTS assignment_responses_freelancer_idx ON assignment_responses (freelancer_user_id);
+
 -- Columns added after the initial release; CREATE TABLE IF NOT EXISTS skips existing tables
 ALTER TABLE users ADD COLUMN IF NOT EXISTS long_bio TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS photo_key TEXT;

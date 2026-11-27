@@ -193,6 +193,21 @@ Set the app service's `DATABASE_URL` to the PostgreSQL service reference
 name). The private hostname is available from Railway services, not from a local
 computer.
 
+## Applying to assignments
+
+Freelancers signal interest in an open assignment with **I'm interested** on a task card or in
+the assignment drawer. The answer is saved in `assignment_responses`, one row per freelancer and
+assignment, so applying twice is harmless and the card stays marked as applied across visits.
+Withdrawing an application deletes the row.
+
+Only people who hold the `freelancer` role may apply, and only assignments that are still `open`
+accept an application — both checks live in the API and the SQL, not just the buttons. Applying
+never changes the assignment's status: an editor still decides who gets the work.
+
+The editor desk reads the same rows. The card shows how many people applied, and **Review
+candidates** lists everyone who applied — including freelancers who are not on the editor's
+roster — next to the people the editor invited, with a button to assign any of them.
+
 ## Beats
 
 Freelancers pick the beats they cover during onboarding. That list is data, not a constant: the

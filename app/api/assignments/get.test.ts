@@ -13,6 +13,7 @@ jest.mock('../../../lib/assignments', () => ({
   loadAssignmentViewer: jest.fn(),
   listDeskAssignments: jest.fn(),
 }));
+jest.mock('../../../lib/assignmentResponses', () => ({ listApplicantsFor: jest.fn(async () => ({})) }));
 
 const authMock = auth as unknown as jest.Mock;
 const listMock = listDeskAssignments as jest.Mock;

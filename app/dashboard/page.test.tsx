@@ -22,6 +22,7 @@ jest.mock('../../lib/assignments', () => ({
   loadAssignmentViewer: jest.fn(async () => viewer),
 }));
 jest.mock('../../lib/roster', () => ({ loadEditorRoster: jest.fn() }));
+jest.mock('../../lib/assignmentResponses', () => ({ listApplicantsFor: jest.fn(async () => ({})) }));
 
 const viewer = { userId: 'user-1', roles: ['editor'], organizationId: 'org-1' };
 

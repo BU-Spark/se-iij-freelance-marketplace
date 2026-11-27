@@ -36,7 +36,7 @@ export default function ReviewCandidates({ assignment, roster, onAssign, onClose
               <div className={styles.who}>
                 <p className={styles.name}>{member.name}</p>
                 <p className={styles.meta}>
-                  {member.city} ·{' '}
+                  {member.city && <>{member.city} · </>}
                   {isInterested ? (
                     <span className={styles.interested}>
                       <span className={styles.dot} aria-hidden="true" />

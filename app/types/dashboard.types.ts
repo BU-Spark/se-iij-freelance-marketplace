@@ -85,10 +85,19 @@ export type DeskAssignment = {
   /** the editor who posted it; only the organization view shows it, since the desk is your own posts */
   createdByName?: string;
   interestedIds: string[];
+  /** who applied from the database, with enough of their profile to list them */
+  applicants?: Applicant[];
   invitedIds?: string[];
   /** expanded view of the assignment; only assignments saved in the database have one */
   href?: string;
   assignedToId?: string;
+};
+
+/** Someone who applied to an assignment, as the editor desk lists them in Review candidates */
+export type Applicant = {
+  id: string;
+  name: string;
+  city: string;
 };
 
 /** Where a pitch is in the editor's review */

@@ -3,7 +3,10 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import { taskStatus, FILTERS, type FeedFilter } from './freelancer.utils';
-import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters } from './components';
+import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters, ApplyControl } from './components';
+import { useAssignmentResponses } from '../../hooks/useAssignmentResponses';
+import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
+import type { AssignmentView } from '../assignments/loadAssignmentView';
 import PageSearch from '../components/PageSearch';
 import SegmentedControl from '../components/SegmentedControl';
 import { formatDeskDate } from '../../utils/dashboard.utils';
@@ -15,6 +18,10 @@ export type FreelancerDashboardProps = {
   freelancerId: string;
   dateLabel?: string;
   children?: ReactNode;
+  /** the assignment opened in the drawer, when the URL has ?assignment=<id> */
+  opened?: AssignmentView | null;
+  /** only freelancers may apply; an editor who also freelances sees the feed without the control */
+  canApply?: boolean;
 };
 
 const byDeadline = (a: DeskAssignment, b: DeskAssignment) =>
@@ -25,11 +32,15 @@ export default function FreelancerDashboard({
   freelancerId,
   dateLabel = formatDeskDate(new Date()),
   children,
+  opened = null,
+  canApply = false,
 }: FreelancerDashboardProps) {
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
+  // one source of truth, so applying from the drawer marks the card behind it too
+  const { responses, loading, error, respond, withdraw } = useAssignmentResponses();
   // An invitation or assignment for another freelancer must not become a personal task.
   const relevant = assignments.filter(
     (task) =>
@@ -123,15 +134,52 @@ export default function FreelancerDashboard({
             }}
             onClear={() => showStatus('all')}
           />
+          {error && (
+            <p role="alert" className={styles.emptyState}>
+              {error}
+            </p>
+          )}
           <ul className={styles.grid}>
             {matching.map((task) => (
               <li key={task.id}>
-                <TaskCard task={task} freelancerId={freelancerId} />
+                <TaskCard
+                  task={task}
+                  freelancerId={freelancerId}
+                  footer={
+                    // only open work can be applied to; in-progress and invited cards need no answer
+                    canApply && !loading && taskStatus(task, freelancerId) === 'open' ? (
+                      <ApplyControl
+                        title={task.title}
+                        response={responses[task.id]}
+                        apply={() => respond(task.id, { kind: 'interested' })}
+                        withdraw={() => withdraw(task.id)}
+                      />
+                    ) : undefined
+                  }
+                />
               </li>
             ))}
           </ul>
         </section>
       </div>
+      {opened && (
+        <AssignmentDrawer
+          assignment={opened.assignment}
+          canEdit={opened.canEdit}
+          showOrganization
+          closeHref="/dashboard/freelancer"
+        >
+          {canApply && !loading && opened.assignment.status === 'open' && (
+            <ApplyControl
+              className={styles.drawerApply}
+              title={opened.assignment.title}
+              response={responses[opened.assignment.id]}
+              apply={() => respond(opened.assignment.id, { kind: 'interested' })}
+              withdraw={() => withdraw(opened.assignment.id)}
+            />
+          )}
+        </AssignmentDrawer>
+      )}
     </>
   );
 }

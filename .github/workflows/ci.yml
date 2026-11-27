@@ -85,7 +85,7 @@ jobs:
             SELECT string_agg(name, ', ')
               INTO missing
               FROM unnest(ARRAY[
-                'users', 'editors', 'freelancers', 'assignments',
+                'users', 'editors', 'freelancers', 'assignments', 'assignment_responses',
                 'account_appeals', 'content_flags', 'roster_invites', 'pitches'
               ]) AS name
              WHERE to_regclass('public.' || name) IS NULL;

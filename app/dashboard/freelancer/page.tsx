@@ -3,7 +3,6 @@ import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import { formatDeskDate, toDeskAssignment } from '../../utils/dashboard.utils';
-import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
 import { loadAssignmentView, type AssignmentView } from '../assignments/loadAssignmentView';
 import FreelancerDashboard from './FreelancerDashboard';
 import RosterInvites from './RosterInvites';
@@ -27,10 +26,12 @@ export default async function FreelancerPage({ searchParams }: FreelancerPagePro
   // The feed is the open assignments editors have actually posted, not a demo list
   let assignments: DeskAssignment[] = [];
   let freelancerId = '';
+  let canApply = false;
   try {
     const viewer = userId ? await loadAssignmentViewer(userId) : null;
     freelancerId = viewer?.userId ?? '';
-    assignments = (await listOpenAssignments(viewer)).map(toDeskAssignment);
+    canApply = viewer?.roles.includes('freelancer') ?? false;
+    assignments = (await listOpenAssignments(viewer)).map((assignment) => toDeskAssignment(assignment));
   } catch (error) {
     console.error('Failed to load assignments for the freelancer.', error);
   }
@@ -48,17 +49,15 @@ export default async function FreelancerPage({ searchParams }: FreelancerPagePro
     // Same frame as the editor desk: status bar under the header, then two columns (see FreelancerDashboard)
     <main className={styles.main}>
       {/* declined notifications are left out: the editor sees the answer on their roster */}
-      <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} dateLabel={formatDeskDate(new Date())}>
+      <FreelancerDashboard
+        assignments={assignments}
+        freelancerId={freelancerId}
+        dateLabel={formatDeskDate(new Date())}
+        opened={opened}
+        canApply={canApply}
+      >
         <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
       </FreelancerDashboard>
-      {opened && (
-        <AssignmentDrawer
-          assignment={opened.assignment}
-          canEdit={opened.canEdit}
-          showOrganization
-          closeHref="/dashboard/freelancer"
-        />
-      )}
     </main>
   );
 }

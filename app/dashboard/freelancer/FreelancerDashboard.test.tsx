@@ -3,6 +3,17 @@ import FreelancerDashboard from './FreelancerDashboard';
 import { SAMPLE_ASSIGNMENTS } from '../../../test/fixtures/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
 
+// the feed's controls talk to the answers API; these tests are about layout and filtering
+jest.mock('../../hooks/useAssignmentResponses', () => ({
+  useAssignmentResponses: () => ({
+    responses: {},
+    loading: false,
+    error: null,
+    respond: jest.fn(),
+    withdraw: jest.fn(),
+  }),
+}));
+
 const tasks: DeskAssignment[] = [
   ...Array.from({ length: 6 }, (_, index) => ({
     ...SAMPLE_ASSIGNMENTS[0],

@@ -8,6 +8,7 @@ import styles from './dashboard.module.css';
 import { NewAssignmentFromUrl } from '../components';
 import type { AssignmentStatus, RosterMember } from '../types/dashboard.types';
 import { countAssignmentsByStatus, listDeskAssignments, loadAssignmentViewer } from '../../lib/assignments';
+import { listApplicantsFor } from '../../lib/assignmentResponses';
 import { loadEditorRoster } from '../../lib/roster';
 import { requireWorkspace } from '../../lib/workspace';
 import { formatDeskDate, toDeskAssignment } from '../utils/dashboard.utils';
@@ -45,6 +46,14 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
     console.error('Failed to load assignments.', error);
   }
 
+  // Who applied to the page of posts, so the cards can count them and Review candidates can name them
+  let applicants: Awaited<ReturnType<typeof listApplicantsFor>> = {};
+  try {
+    applicants = await listApplicantsFor(posted.map((post) => post.id));
+  } catch (error) {
+    console.error('Failed to load applicants for the desk.', error);
+  }
+
   // The availability column is this editor's own roster, not the whole directory
   let roster: RosterMember[] = [];
   let rosterFailed = false;
@@ -69,7 +78,7 @@ export default async function Dashboard({ searchParams }: DashboardProps) {
   }
 
   // Everything in the desk comes from the database: no sample cards sit under the real posts
-  const assignments = posted.map(toDeskAssignment);
+  const assignments = posted.map((post) => toDeskAssignment(post, applicants[post.id]));
 
   return (
     <DeskQueryProvider>

@@ -15,6 +15,15 @@ jest.mock('../../../lib/assignments', () => ({
   loadAssignmentViewer: jest.fn(async () => ({ userId: 'user-1', roles: ['freelancer'], organizationId: null })),
 }));
 jest.mock('../assignments/loadAssignmentView', () => ({ loadAssignmentView: jest.fn(async () => null) }));
+jest.mock('../../hooks/useAssignmentResponses', () => ({
+  useAssignmentResponses: () => ({
+    responses: {},
+    loading: false,
+    error: null,
+    respond: jest.fn(),
+    withdraw: jest.fn(),
+  }),
+}));
 jest.mock('../../components/AssignmentDrawer/AssignmentDrawer', () => ({
   __esModule: true,
   default: ({ assignment, closeHref }: { assignment: Assignment; closeHref: string }) => (

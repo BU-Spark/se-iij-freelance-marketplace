@@ -54,6 +54,10 @@
   box-sizing: border-box;
   overflow-wrap: anywhere;
 }
+/* the drawer body has no gap of its own, so the application box needs its own space */
+.drawerApply {
+  margin-top: 24px;
+}
 /* task cards show four details, all the same width */
 .feed dl {
   grid-template-columns: repeat(4, minmax(0, 1fr));

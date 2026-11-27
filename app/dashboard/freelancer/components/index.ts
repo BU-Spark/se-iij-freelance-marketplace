@@ -6,3 +6,5 @@ export { TaskSummary } from './TaskSummary';
 export type { TaskSummaryProps } from './TaskSummary';
 export { TaskFilters } from './TaskFilters';
 export type { TaskFiltersProps } from './TaskFilters';
+export { ApplyControl } from './ApplyControl';
+export type { ApplyControlProps } from './ApplyControl';

@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import { db } from '../../../lib/db';
 import { listDeskAssignments, loadAssignmentViewer } from '../../../lib/assignments';
+import { listApplicantsFor } from '../../../lib/assignmentResponses';
 import { combineLengthAndTime, isRecord, parseAssignmentBody, validateAssignment } from '../../utils/assignment.utils';
 import { toDeskAssignment } from '../../utils/dashboard.utils';
 import type { PoolClient } from 'pg';
@@ -20,8 +21,12 @@ export async function GET(request: Request) {
     const viewer = await loadAssignmentViewer(userId);
     const after = new URL(request.url).searchParams.get('after');
     const page = await listDeskAssignments(viewer, { after });
+    const applicants = await listApplicantsFor(page.items.map((item) => item.id));
 
-    return NextResponse.json({ items: page.items.map(toDeskAssignment), nextCursor: page.nextCursor });
+    return NextResponse.json({
+      items: page.items.map((item) => toDeskAssignment(item, applicants[item.id])),
+      nextCursor: page.nextCursor,
+    });
   } catch (error) {
     console.error('Failed to load the next page of assignments.', error);
     return NextResponse.json({ error: 'Unable to load assignments right now.' }, { status: 500 });

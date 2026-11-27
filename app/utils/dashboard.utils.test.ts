@@ -123,6 +123,32 @@ describe('dashboard utils', () => {
         href: '/dashboard?assignment=a1',
       });
     });
+
+    it('carries the applicants who applied through the database', () => {
+      const posted = {
+        id: 'a1',
+        organizationId: 'org-1',
+        createdByUserId: 'u1',
+        title: 'Election night',
+        description: '',
+        category: 'Reporting/Writing',
+        slug: 'election-night',
+        contact: 'Sam Desk',
+        location: 'Remote',
+        length: '800 words',
+        deadline: null,
+        compensation: '750',
+        status: 'open' as const,
+        createdAt: new Date(2030, 0, 1),
+        updatedAt: new Date(2030, 0, 1),
+      };
+      const applicants = [{ id: 'user-1', name: 'Amara Okafor', city: 'Lagos' }];
+
+      expect(toDeskAssignment(posted, applicants)).toMatchObject({
+        interestedIds: ['user-1'],
+        applicants,
+      });
+    });
   });
 
   it('counts everyone not marked off as on the roster', () => {
@@ -150,6 +176,18 @@ describe('dashboard utils', () => {
     it('skips ids that are not on the roster', () => {
       const list = candidatesFor({ ...byId('port-oped'), invitedIds: ['nobody'] }, ROSTER);
       expect(list).toEqual([]);
+    });
+
+    it('lists an applicant who is not on the roster', () => {
+      const applicant = { id: 'new-applicant', name: 'Amara Okafor', city: 'Lagos' };
+      const assignment = {
+        ...byId('port-oped'),
+        interestedIds: [applicant.id],
+        invitedIds: [],
+        applicants: [applicant],
+      };
+
+      expect(candidatesFor(assignment, ROSTER)).toEqual([{ member: applicant, interested: true }]);
     });
   });
 });
