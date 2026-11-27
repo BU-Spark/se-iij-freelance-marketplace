@@ -1,0 +1,197 @@
+/* sits under the drawer's scrolling body, so Apply is always in reach */
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 32px;
+  border-top: 1px solid var(--line);
+  background: var(--white);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.text p {
+  margin: 0;
+}
+
+.status {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.applied {
+  font-weight: 600;
+  color: #17623a;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.primary,
+.secondary,
+.danger {
+  min-height: 44px;
+  padding: 10px 22px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  border: 1px solid var(--c-blue);
+  background: var(--c-blue);
+  color: var(--white);
+}
+
+.secondary {
+  border: 1px solid var(--line);
+  background: var(--white);
+  color: var(--ink);
+}
+
+.danger {
+  border: 1px solid #a8231a;
+  background: #a8231a;
+  color: var(--white);
+}
+
+.primary:hover,
+.danger:hover {
+  filter: brightness(0.9);
+}
+
+.secondary:hover {
+  background: #eef2fd;
+}
+
+.link {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 8px 4px;
+  border: 0;
+  background: transparent;
+  color: var(--c-blue);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.primary:focus-visible,
+.secondary:focus-visible,
+.danger:focus-visible,
+.link:focus-visible,
+.input:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}
+
+.hint,
+.previewNote,
+.count {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* application dialog: the modal body scrolls but supplies no padding of its own */
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 22px 28px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.label {
+  margin: 0;
+  padding: 0;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* legends ignore the fieldset's flex gap */
+legend.label {
+  margin-bottom: 8px;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--ink);
+  resize: vertical;
+}
+
+.input[aria-invalid='true'] {
+  border-color: #a8231a;
+}
+
+.count {
+  align-self: flex-end;
+}
+
+.sample {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.error {
+  margin: 0;
+  font-size: 14px;
+  color: #a8231a;
+}
+
+.dialogFoot {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.dialogFoot .previewNote {
+  margin-right: auto;
+}
