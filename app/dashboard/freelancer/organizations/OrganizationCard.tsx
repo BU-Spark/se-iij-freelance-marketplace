@@ -1,8 +1,14 @@
 import { REACH_LABEL, type OrgProfile } from './constants';
 import styles from './organizations.module.css';
 
+/** Only what the card draws, so a newsroom that is still signing up can preview it */
+export type OrgCardDetails = Pick<
+  OrgProfile,
+  'name' | 'tagline' | 'reach' | 'beats' | 'city' | 'openAssignments' | 'rate'
+>;
+
 /** One newsroom in the Organizations grid: name, tagline, beats and the numbers a freelancer scans for */
-export default function OrganizationCard({ org }: { org: OrgProfile }) {
+export default function OrganizationCard({ org }: { org: OrgCardDetails }) {
   return (
     <>
       <div className={styles.nameRow}>
