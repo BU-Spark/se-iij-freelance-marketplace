@@ -1,0 +1,52 @@
+/* sits above the card's stretched title link so the buttons stay clickable */
+.actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.primary,
+.secondary {
+  min-height: 36px;
+  padding: 6px 14px;
+  border: 1px solid var(--c-blue);
+  border-radius: 8px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary {
+  background: var(--c-blue);
+  color: var(--white);
+}
+
+.secondary {
+  background: var(--white);
+  color: var(--c-blue);
+}
+
+.primary:disabled,
+.secondary:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+
+.summary {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.error {
+  flex-basis: 100%;
+  margin: 0;
+  color: #a32020;
+  font-size: 14px;
+}

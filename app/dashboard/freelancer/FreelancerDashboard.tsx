@@ -3,7 +3,8 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import { taskStatus, FILTERS, type FeedFilter } from './freelancer.utils';
-import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters } from './components';
+import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters, TaskResponse } from './components';
+import { useAssignmentResponses } from '../../hooks/useAssignmentResponses';
 import PageSearch from '../components/PageSearch';
 import SegmentedControl from '../components/SegmentedControl';
 import { formatDeskDate } from '../../utils/dashboard.utils';
@@ -30,6 +31,7 @@ export default function FreelancerDashboard({
   const [filter, setFilter] = useState<FeedFilter>('all');
   const [category, setCategory] = useState('');
   const [location, setLocation] = useState('');
+  const { responses, loading, error, respond, withdraw } = useAssignmentResponses();
   // An invitation or assignment for another freelancer must not become a personal task.
   const relevant = assignments.filter(
     (task) =>
@@ -123,10 +125,29 @@ export default function FreelancerDashboard({
             }}
             onClear={() => showStatus('all')}
           />
+          {error && (
+            <p role="alert" className={styles.emptyState}>
+              {error}
+            </p>
+          )}
           <ul className={styles.grid}>
             {matching.map((task) => (
               <li key={task.id}>
-                <TaskCard task={task} freelancerId={freelancerId} />
+                <TaskCard
+                  task={task}
+                  freelancerId={freelancerId}
+                  footer={
+                    // work already assigned to this freelancer needs no answer
+                    !loading && taskStatus(task, freelancerId) !== 'in-progress' ? (
+                      <TaskResponse
+                        title={task.title}
+                        response={responses[task.id]}
+                        respond={(input) => respond(task.id, input)}
+                        withdraw={() => withdraw(task.id)}
+                      />
+                    ) : undefined
+                  }
+                />
               </li>
             ))}
           </ul>
