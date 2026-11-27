@@ -8,7 +8,7 @@ type SavedRow = { freelancerId: string; invitedAt: string };
 type ApiBody = { saved?: SavedRow[]; error?: string } | null;
 
 /*
- * Roster changes, kept in one place for the pages that use them. The list only changes once the roster
+ * Roster changes, shared by the roster and favorites pages. The list only changes once the roster
  * API confirms, so a failed request shows an error instead of a change that never happened.
  */
 export function useRoster(initial: RosterMember[]) {
