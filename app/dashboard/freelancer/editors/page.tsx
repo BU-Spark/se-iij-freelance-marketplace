@@ -1,22 +1,24 @@
+import rosterStyles from '../../roster/roster.module.css';
 import { EDITORS } from './constants';
 import EditorCard from './EditorCard';
-import styles from './editors.module.css';
 
 export default function EditorsPage() {
   return (
-    <div className={styles.shell}>
-      <main className={styles.page}>
-        <header className={styles.intro}>
-          <p className={styles.eyebrow}>Freelancer workspace</p>
-          <h1 className={styles.title}>Editors</h1>
-          <p className={styles.lede}>
-            The editors on the desk, the newsroom they work for and the beats they commission.
-          </p>
+    <div className={rosterStyles.shell}>
+      <main className={rosterStyles.main}>
+        <header className={rosterStyles.heading}>
+          <div>
+            <p className={rosterStyles.eyebrow}>Freelancer workspace</p>
+            <h1 className={rosterStyles.title}>Editors</h1>
+            <p className={rosterStyles.description}>
+              The editors on the desk, the newsroom they work for and the beats they commission.
+            </p>
+          </div>
         </header>
 
-        <ul className={styles.grid}>
+        <ul className={rosterStyles.grid}>
           {EDITORS.map((editor) => (
-            <li key={editor.id} className={styles.card}>
+            <li key={editor.id}>
               <EditorCard editor={editor} />
             </li>
           ))}

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import Avatar from '../Avatar/Avatar';
 import type { AvailabilityStatus, RosterMember, RosterView } from '../../types/dashboard.types';
 import { DayStrip, MonthGrid, WeekStrip } from './AvailabilityStrips';
+import RosterCardLayout from './RosterCardLayout';
 import styles from './RosterCard.module.css';
 
 const STATUS_LABEL: Record<AvailabilityStatus, string> = {
@@ -20,24 +20,19 @@ type RosterCardProps = {
 
 export default function RosterCard({ member, view = 'day', footer }: RosterCardProps) {
   return (
-    <article className={`${styles.card} ${member.status === 'off' ? styles.dimmed : ''}`}>
-      <div className={styles.top}>
-        <Avatar name={member.name} />
-        <div className={styles.who}>
-          <h3 className={styles.name}>{member.name}</h3>
-          <p className={styles.meta}>{[member.specialty, member.city].filter(Boolean).join(' · ')}</p>
-        </div>
-        <span className={`${styles.pill} ${styles[member.status]}`}>{STATUS_LABEL[member.status]}</span>
-      </div>
-
+    <RosterCardLayout
+      name={member.name}
+      meta={[member.specialty, member.city].filter(Boolean).join(' · ')}
+      status={{ tone: member.status, label: STATUS_LABEL[member.status] }}
+      className={member.status === 'off' ? styles.dimmed : undefined}
+      footer={footer}
+    >
       {view === 'day' && <DayStrip member={member} />}
       {view === 'week' && <WeekStrip member={member} />}
       {view === 'month' && <MonthGrid member={member} />}
 
       {/* the note talks about today, so only show it in the day view */}
       {view === 'day' && <p className={styles.note}>{member.note}</p>}
-
-      {footer && <div className={styles.footer}>{footer}</div>}
-    </article>
+    </RosterCardLayout>
   );
 }
