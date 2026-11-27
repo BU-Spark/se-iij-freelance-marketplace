@@ -56,7 +56,8 @@ export default function TagInput({
 
     setValue('');
     setHighlighted(-1);
-    setOpen(false);
+    // a fixed list is browsed to pick several, so it stays open for the next one
+    setOpen(!allowCustom);
   };
 
   const onKey = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -96,6 +97,8 @@ export default function TagInput({
             setHighlighted(-1);
           }}
           onKeyDown={onKey}
+          // the box may already have focus, so a click has to be able to reopen the list too
+          onClick={() => setOpen(true)}
           onFocus={() => setOpen(true)}
           onBlur={() => {
             setOpen(false);
