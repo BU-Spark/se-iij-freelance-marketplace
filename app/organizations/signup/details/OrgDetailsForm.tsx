@@ -5,6 +5,8 @@ import { Field, TagInput } from '../../../components';
 import { REACH_DETAIL, REACH_LABEL, type OrgReach } from '../../../dashboard/freelancer/organizations/constants';
 import { EMPTY_DETAILS, ORG_BEATS, type OrgDetails } from '../orgSignup';
 import { validateOrgDetails, type OrgDetailsErrors } from '../orgSignup.validation';
+import OrgPagePreview from '../OrgPagePreview';
+import OrgSignupDone from '../OrgSignupDone';
 import OrgSignupShell from '../OrgSignupShell';
 import auth from '../../../login/login.module.css';
 import styles from '../organizationSignup.module.css';
@@ -15,6 +17,7 @@ const REACHES = Object.keys(REACH_LABEL) as OrgReach[];
 export default function OrgDetailsForm() {
   const [data, setData] = useState<OrgDetails>(EMPTY_DETAILS);
   const [errors, setErrors] = useState<OrgDetailsErrors>({});
+  const [done, setDone] = useState(false);
 
   /** Typing in a field clears its error; it is checked again on the next submit */
   const update = <K extends keyof OrgDetails>(key: K, value: OrgDetails[K]) => {
@@ -36,10 +39,24 @@ export default function OrgDetailsForm() {
     const found = validateOrgDetails(data);
     setErrors(found);
 
+    if (Object.keys(found).length === 0) {
+      setDone(true);
+      window.scrollTo({ top: 0 });
+      return;
+    }
+
     // take the person to the first problem; the beats box has no named input to focus
     const first = Object.keys(found).find((key) => key !== 'beats');
     if (first) (event.currentTarget.elements.namedItem(first) as HTMLElement | null)?.focus();
   };
+
+  if (done) {
+    return (
+      <OrgSignupShell eyebrow="All done" title="Your page is ready">
+        <OrgSignupDone data={data} onEdit={() => setDone(false)} />
+      </OrgSignupShell>
+    );
+  }
 
   return (
     <OrgSignupShell
@@ -101,6 +118,8 @@ export default function OrgDetailsForm() {
             <input type="text" placeholder="$1.00 / word" {...bind('rate')} />
           </Field>
         </fieldset>
+
+        <OrgPagePreview data={data} />
 
         {Object.values(errors).some(Boolean) && (
           <p role="alert" className={styles.formError}>
