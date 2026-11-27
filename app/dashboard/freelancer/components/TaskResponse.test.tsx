@@ -3,12 +3,16 @@ import userEvent from '@testing-library/user-event';
 import { TaskResponse } from './TaskResponse';
 
 const ok = async () => ({ ok: true as const });
+const at = '2026-11-27T00:00:00Z';
 
-it('marks interest straight away', async () => {
-  const respond = jest.fn(ok);
-  render(<TaskResponse title="Budget vote" respond={respond} withdraw={jest.fn(ok)} />);
-  await userEvent.click(screen.getByRole('button', { name: "I'm interested" }));
-  expect(respond).toHaveBeenCalledWith({ kind: 'interested' });
+it('takes interest back when "Interested ✓" is clicked again', async () => {
+  const withdraw = jest.fn(ok);
+  render(
+    <TaskResponse title="Budget vote" response={{ kind: 'interested', at }} respond={jest.fn(ok)} withdraw={withdraw} />
+  );
+  expect(screen.getByText("You've signaled interest. The editor will follow up.")).toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: 'Interested ✓' }));
+  expect(withdraw).toHaveBeenCalled();
 });
 
 it('sends a decline with the reasons chosen in the dialog', async () => {
@@ -21,33 +25,48 @@ it('sends a decline with the reasons chosen in the dialog', async () => {
   expect(screen.queryByRole('button', { name: 'Send decline' })).not.toBeInTheDocument();
 });
 
-it('sends a proposal from the negotiate dialog', async () => {
+it('shows why the freelancer passed', () => {
+  render(
+    <TaskResponse
+      title="Budget vote"
+      response={{ kind: 'declined', reasons: ["Timing doesn't work"], note: 'Booked until May', at }}
+      respond={jest.fn(ok)}
+      withdraw={jest.fn(ok)}
+    />
+  );
+  expect(screen.getByText('You passed on this assignment.')).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Declined' })).toBeInTheDocument();
+  expect(screen.getByText('Why you passed')).toBeInTheDocument();
+  expect(screen.getByText("Timing doesn't work")).toBeInTheDocument();
+  expect(screen.getByText('Booked until May')).toBeInTheDocument();
+});
+
+it('sends a proposal and shows it as sent', async () => {
   const respond = jest.fn(ok);
-  render(<TaskResponse title="Budget vote" respond={respond} withdraw={jest.fn(ok)} />);
+  const { rerender } = render(<TaskResponse title="Budget vote" respond={respond} withdraw={jest.fn(ok)} />);
   await userEvent.click(screen.getByRole('button', { name: 'Negotiate' }));
   await userEvent.type(screen.getByLabelText('Proposed changes'), '$900');
   await userEvent.click(screen.getByRole('button', { name: 'Send proposal' }));
   expect(respond).toHaveBeenCalledWith({ kind: 'negotiating', proposal: '$900' });
-});
 
-it('shows an existing answer and lets the freelancer take it back', async () => {
-  const withdraw = jest.fn(ok);
-  render(
+  rerender(
     <TaskResponse
       title="Budget vote"
-      response={{ kind: 'negotiating', proposal: '$900', at: '2026-11-27T00:00:00Z' }}
-      respond={jest.fn(ok)}
-      withdraw={withdraw}
+      response={{ kind: 'negotiating', proposal: '$900', at }}
+      respond={respond}
+      withdraw={jest.fn(ok)}
     />
   );
-  expect(screen.getByRole('status')).toHaveTextContent('You proposed changes: $900');
-  await userEvent.click(screen.getByRole('button', { name: 'Undo' }));
-  expect(withdraw).toHaveBeenCalled();
+  expect(screen.getByRole('button', { name: 'Negotiating…' })).toBeInTheDocument();
+  expect(screen.getByText('Proposed changes sent')).toBeInTheDocument();
+  expect(screen.getByText('$900')).toBeInTheDocument();
 });
 
-it("shows the server's error when saving fails", async () => {
+it('signals interest and shows the error when saving fails', async () => {
   const respond = jest.fn(async () => ({ ok: false as const, error: 'Unable to save your answer right now.' }));
   render(<TaskResponse title="Budget vote" respond={respond} withdraw={jest.fn(ok)} />);
+  expect(screen.getByText('Signal interest to be considered.')).toBeInTheDocument();
   await userEvent.click(screen.getByRole('button', { name: "I'm interested" }));
+  expect(respond).toHaveBeenCalledWith({ kind: 'interested' });
   expect(await screen.findByRole('alert')).toHaveTextContent('Unable to save your answer right now.');
 });
