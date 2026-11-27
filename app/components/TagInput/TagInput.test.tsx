@@ -104,4 +104,24 @@ describe('TagInput', () => {
 
     expect(onChange).toHaveBeenCalledWith(['Health/Wellness']);
   });
+
+  it('keeps a fixed list open after a pick, so the next one can be chosen', () => {
+    render(<TagInput tags={[]} onChange={jest.fn()} suggestions={SUGGESTIONS} allowCustom={false} />);
+    fireEvent.focus(screen.getByRole('combobox'));
+
+    fireEvent.click(screen.getByRole('option', { name: 'Politics' }));
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
+
+  it('reopens the list when the focused box is clicked again', () => {
+    render(<TagInput tags={[]} onChange={jest.fn()} suggestions={SUGGESTIONS} />);
+    const input = screen.getByRole('combobox');
+    fireEvent.focus(input);
+    fireEvent.keyDown(input, { key: 'Escape' });
+
+    fireEvent.click(input);
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+  });
 });
