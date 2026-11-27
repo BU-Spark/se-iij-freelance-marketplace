@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server';
 import type { Assignment } from '../../types/assignments.types';
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import { requireWorkspace } from '../../../lib/workspace';
+import ApplyPanel from '../../components/ApplyPanel/ApplyPanel';
 import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
 import AssignmentsBrowser from './AssignmentsBrowser';
 import { loadAssignmentView, type AssignmentView } from './loadAssignmentView';
@@ -44,7 +45,17 @@ export default async function AssignmentsPage({ searchParams }: AssignmentsPageP
         <AssignmentsBrowser assignments={assignments} loadFailed={loadFailed} />
       </div>
       {opened && (
-        <AssignmentDrawer assignment={opened.assignment} canEdit={opened.canEdit} closeHref="/dashboard/assignments" />
+        <AssignmentDrawer
+          assignment={opened.assignment}
+          canEdit={opened.canEdit}
+          closeHref="/dashboard/assignments"
+          footer={
+            !opened.canEdit &&
+            opened.assignment.status === 'open' && (
+              <ApplyPanel key={opened.assignment.id} assignment={opened.assignment} />
+            )
+          }
+        />
       )}
     </>
   );

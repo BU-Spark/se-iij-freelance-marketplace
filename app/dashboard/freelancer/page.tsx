@@ -3,6 +3,7 @@ import { listInvitesForFreelancer, type RosterInvite } from '../../../lib/roster
 import { listOpenAssignments, loadAssignmentViewer } from '../../../lib/assignments';
 import type { DeskAssignment } from '../../types/dashboard.types';
 import { formatDeskDate, toDeskAssignment } from '../../utils/dashboard.utils';
+import ApplyPanel from '../../components/ApplyPanel/ApplyPanel';
 import AssignmentDrawer from '../../components/AssignmentDrawer/AssignmentDrawer';
 import { loadAssignmentView, type AssignmentView } from '../assignments/loadAssignmentView';
 import FreelancerDashboard from './FreelancerDashboard';
@@ -57,6 +58,12 @@ export default async function FreelancerPage({ searchParams }: FreelancerPagePro
           canEdit={opened.canEdit}
           showOrganization
           closeHref="/dashboard/freelancer"
+          footer={
+            !opened.canEdit &&
+            opened.assignment.status === 'open' && (
+              <ApplyPanel key={opened.assignment.id} assignment={opened.assignment} />
+            )
+          }
         />
       )}
     </main>
