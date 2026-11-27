@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { RosterCard, ReportButton, useToast } from '../../components';
 import Modal from '../../components/Modal/Modal';
+import PreInvite from '../../components/PreInvite/PreInvite';
+import { useRoster } from '../../hooks/useRoster';
 import InvitePicker from './InvitePicker';
 import type { AvailabilityStatus, RosterInviteStatus, RosterMember } from '../../types/dashboard.types';
 import { US_STATE_NAMES, matchesLocation, usStateOf } from '../../utils/location.utils';
@@ -65,12 +67,12 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
 
   const [inviting, setInviting] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
-  /** tell the freelancers they were saved; off by default so favorites stay private */
+  /** pre-invite the people being added; off by default so saves stay private */
   const [notify, setNotify] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
-  const [roster, setRoster] = useState(members);
+  const { people: roster, setPeople: setRoster, busyId, preInvite, remove } = useRoster(members);
   const [others, setOthers] = useState(invitable);
-  /** true while a save or a removal is in flight */
+  /** true while the add dialog's save is in flight */
   const [saving, setSaving] = useState(false);
 
   const beats = options(roster.flatMap(beatsOf));
@@ -143,10 +145,10 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
       showToast(
         added.length === 1
           ? notify
-            ? `Saved ${added[0].name} and let them know`
+            ? `Saved ${added[0].name} and sent a pre-invitation`
             : `Saved ${added[0].name} to your roster`
           : notify
-            ? `Saved ${added.length} freelancers and let them know`
+            ? `Saved ${added.length} freelancers and sent pre-invitations`
             : `Saved ${added.length} freelancers to your roster`
       );
       setInviting(false);
@@ -158,33 +160,16 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
     }
   };
 
-  const remove = async (member: RosterMember) => {
+  const removeFromRoster = async (member: RosterMember) => {
     setConfirmingId(null);
-    setSaving(true);
+    if (!(await remove(member))) return;
 
-    try {
-      const response = await fetch(`/api/roster/invites/${member.id}`, { method: 'DELETE' });
-
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null;
-        showToast(body?.error ?? 'Could not remove them from your roster right now.', 'error');
-        return;
-      }
-
-      setRoster((list) => list.filter((m) => m.id !== member.id));
-      // they go back to the directory, so the editor can save them again
-      setOthers((list) =>
-        [...list, { ...member, invitedAt: undefined, inviteStatus: undefined, notified: undefined }].sort((a, b) =>
-          a.name.localeCompare(b.name)
-        )
-      );
-      showToast(`Removed ${member.name} from your roster`);
-    } catch (error) {
-      console.error('Could not remove the freelancer from the roster.', error);
-      showToast('Could not remove them from your roster right now.', 'error');
-    } finally {
-      setSaving(false);
-    }
+    // they go back to the directory, so the editor can save them again
+    setOthers((list) =>
+      [...list, { ...member, invitedAt: undefined, inviteStatus: undefined, notified: undefined }].sort((a, b) =>
+        a.name.localeCompare(b.name)
+      )
+    );
   };
 
   if (loadFailed) {
@@ -333,29 +318,15 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
                         {member.invitedAt ? `Saved ${formatAdded(member.invitedAt)}` : 'On your roster'}
                       </span>
                       <span className={styles.footerActions}>
-                        {member.notified && member.inviteStatus && (
-                          <span
-                            className={
-                              member.inviteStatus === 'declined'
-                                ? `${styles.pendingStatus} ${styles.pendingDeclined}`
-                                : styles.pendingStatus
-                            }
-                          >
-                            {member.inviteStatus === 'pending'
-                              ? 'Notified'
-                              : member.inviteStatus === 'accepted'
-                                ? 'Accepted'
-                                : 'Declined'}
-                          </span>
-                        )}
+                        <PreInvite member={member} busy={busyId === member.id} onPreInvite={preInvite} />
                         {confirmingId === member.id ? (
                           <span className={styles.confirm}>
                             Remove?
                             <button
                               type="button"
                               className={styles.dangerLink}
-                              disabled={saving}
-                              onClick={() => void remove(member)}
+                              disabled={busyId === member.id}
+                              onClick={() => void removeFromRoster(member)}
                             >
                               Yes, remove
                             </button>
@@ -414,8 +385,8 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
           <label className={styles.notifyRow}>
             <input type="checkbox" checked={notify} onChange={(event) => setNotify(event.target.checked)} />
             <span>
-              <strong>Notify them</strong>
-              <small>Optional. They are on your roster either way; this just lets them know.</small>
+              <strong>Send a pre-invitation</strong>
+              <small>Optional. They are saved either way; this lets them know and asks if they are interested.</small>
             </span>
           </label>
         </Modal>
