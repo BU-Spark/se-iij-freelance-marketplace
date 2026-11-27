@@ -19,6 +19,18 @@
   text-transform: uppercase;
   color: var(--muted);
 }
+/* a required group left empty: red label, red chip outlines and a message */
+.fieldset[data-error='true'] .legend {
+  color: var(--c-red);
+}
+.fieldset[data-error='true'] button {
+  border-color: var(--c-red);
+}
+.error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--c-red);
+}
 
 /* two inputs side by side; one per row on phones */
 .row {

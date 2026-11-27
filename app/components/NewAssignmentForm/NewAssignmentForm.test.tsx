@@ -42,6 +42,34 @@ describe('NewAssignmentForm', () => {
     expect(screen.getByText('Give the assignment a title.')).toBeInTheDocument();
     expect(screen.getByText('Pick a project type.')).toBeInTheDocument();
   });
+  it('highlights a missing project type and moves focus to it', () => {
+    render(
+      <NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={jest.fn()} errors={{ category: 'Pick a project type.' }} />
+    );
+    const group = screen.getByRole('group', { name: 'Project type' });
+    expect(group).toHaveAttribute('data-error', 'true');
+    expect(group.querySelector('button')).toHaveFocus();
+  });
+
+  it('does not move focus when an error is cleared', () => {
+    const { rerender } = render(
+      <NewAssignmentForm
+        draft={EMPTY_ASSIGNMENT}
+        onChange={jest.fn()}
+        errors={{ category: 'Pick a project type.', title: 'Give the assignment a title.' }}
+      />
+    );
+    screen.getByLabelText('Location').focus();
+    rerender(
+      <NewAssignmentForm
+        draft={EMPTY_ASSIGNMENT}
+        onChange={jest.fn()}
+        errors={{ title: 'Give the assignment a title.' }}
+      />
+    );
+    expect(screen.getByLabelText('Location')).toHaveFocus();
+  });
+
   it('only lets numbers into compensation', () => {
     const onChange = jest.fn();
     render(<NewAssignmentForm draft={EMPTY_ASSIGNMENT} onChange={onChange} />);
