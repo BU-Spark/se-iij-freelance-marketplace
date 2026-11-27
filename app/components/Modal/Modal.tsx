@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useId, useRef, type ReactNode } from 'react';
+import { lockScroll } from '../../utils/scrollLock.utils';
 import styles from './Modal.module.css';
 
 type ModalProps = {
@@ -35,11 +36,11 @@ export default function Modal({ title, onClose, eyebrow, subtitle, footer, child
       if (e.key === 'Escape') closeRef.current();
     };
     document.addEventListener('keydown', onKey);
-    document.body.style.overflow = 'hidden';
+    const unlockScroll = lockScroll();
 
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      unlockScroll();
       opener?.focus();
     };
   }, []);
