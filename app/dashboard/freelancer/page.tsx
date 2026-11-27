@@ -51,10 +51,11 @@ export default async function FreelancerPage({ searchParams }: FreelancerPagePro
       <FreelancerDashboard assignments={assignments} freelancerId={freelancerId} dateLabel={formatDeskDate(new Date())}>
         <RosterInvites invites={invites.filter((invite) => invite.status !== 'declined')} />
       </FreelancerDashboard>
+      {/* freelancers only read and report here: editing and deleting stay on the editor desk */}
       {opened && (
         <AssignmentDrawer
           assignment={opened.assignment}
-          canEdit={opened.canEdit}
+          canEdit={false}
           showOrganization
           closeHref="/dashboard/freelancer"
         />
