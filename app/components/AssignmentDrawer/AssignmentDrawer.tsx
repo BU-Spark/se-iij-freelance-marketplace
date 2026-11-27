@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { Assignment } from '../../types/assignments.types';
+import { lockScroll } from '../../utils/scrollLock.utils';
 import AssignmentDetail from '../../dashboard/assignments/[id]/AssignmentDetail';
 import styles from '../NewAssignmentDrawer/NewAssignmentDrawer.module.css';
 
@@ -17,6 +18,8 @@ type AssignmentDrawerProps = {
   showOrganization?: boolean;
   /** shows the report flag; defaults to everyone who cannot edit it */
   canReport?: boolean;
+  /** bar pinned under the scrolling assignment, e.g. the freelancer's apply button */
+  footer?: ReactNode;
 };
 
 /** The expanded view of one assignment, slid in from the right over the page that listed it */
@@ -26,6 +29,7 @@ export default function AssignmentDrawer({
   canEdit = false,
   showOrganization = false,
   canReport,
+  footer,
 }: AssignmentDrawerProps) {
   const router = useRouter();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -36,16 +40,19 @@ export default function AssignmentDrawer({
 
     // Escape closes the drawer
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') router.push(closeHref, { scroll: false });
+      // a popup open inside the drawer takes Escape for itself
+      if (e.key === 'Escape' && !panelRef.current?.querySelector('[role="dialog"]')) {
+        router.push(closeHref, { scroll: false });
+      }
     };
     document.addEventListener('keydown', onKey);
 
     // stop the page behind from scrolling while the drawer is open
-    document.body.style.overflow = 'hidden';
+    const unlockScroll = lockScroll();
 
     return () => {
       document.removeEventListener('keydown', onKey);
-      document.body.style.overflow = '';
+      unlockScroll();
     };
   }, [router, closeHref]);
 
@@ -97,6 +104,7 @@ export default function AssignmentDrawer({
             onDeleted={() => router.push(closeHref, { scroll: false })}
           />
         </div>
+        {footer}
       </div>
     </>
   );

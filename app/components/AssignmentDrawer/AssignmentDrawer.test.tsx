@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import AssignmentDrawer from './AssignmentDrawer';
+import Modal from '../Modal/Modal';
 import type { Assignment } from '../../types/assignments.types';
 
 const push = jest.fn();
@@ -51,5 +52,43 @@ describe('AssignmentDrawer', () => {
 
     await userEvent.click(screen.getByRole('button', { name: 'Edit' }));
     expect(screen.getByRole('heading', { name: 'Edit assignment' })).toBeInTheDocument();
+  });
+
+  it('leaves Escape to a popup opened from the footer', async () => {
+    const onClose = jest.fn();
+    render(
+      <AssignmentDrawer
+        assignment={assignment}
+        closeHref="/dashboard"
+        footer={
+          <Modal title="Apply" onClose={onClose}>
+            Form
+          </Modal>
+        }
+      />
+    );
+
+    await userEvent.keyboard('{Escape}');
+
+    expect(onClose).toHaveBeenCalled();
+    expect(push).not.toHaveBeenCalled();
+  });
+
+  it('keeps the page locked until the drawer and its popup are both gone', () => {
+    const popup = (
+      <Modal title="Apply" onClose={jest.fn()}>
+        Form
+      </Modal>
+    );
+    const view = render(<AssignmentDrawer assignment={assignment} closeHref="/dashboard" footer={popup} />);
+
+    // closing only the popup leaves the drawer's lock in place
+    view.rerender(<AssignmentDrawer assignment={assignment} closeHref="/dashboard" />);
+    expect(document.body.style.overflow).toBe('hidden');
+
+    // closing both at once, as the browser's Back button does, frees the page
+    view.rerender(<AssignmentDrawer assignment={assignment} closeHref="/dashboard" footer={popup} />);
+    view.unmount();
+    expect(document.body.style.overflow).toBe('');
   });
 });
