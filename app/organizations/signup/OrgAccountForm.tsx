@@ -1,13 +1,15 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FormEvent, useState } from 'react';
 import { Field, PasswordField } from '../../components';
-import { EMPTY_ACCOUNT, type OrgAccount } from './orgSignup';
+import { DETAILS_PATH, EMPTY_ACCOUNT, type OrgAccount } from './orgSignup';
 import OrgSignupShell from './OrgSignupShell';
 
 /** Step 1 of registering a newsroom. Nothing is sent anywhere until there is a backend for it */
 export default function OrgAccountForm() {
+  const router = useRouter();
   const [account, setAccount] = useState<OrgAccount>(EMPTY_ACCOUNT);
   const update = (key: keyof OrgAccount, value: string) => setAccount((current) => ({ ...current, [key]: value }));
 
@@ -20,6 +22,8 @@ export default function OrgAccountForm() {
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    router.push(DETAILS_PATH);
   };
 
   return (
