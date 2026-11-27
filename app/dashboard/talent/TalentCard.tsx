@@ -2,6 +2,7 @@
 
 import { useId, useState } from 'react';
 import { RosterCard, ReportButton } from '../../components';
+import FavoriteButton from '../../components/FavoriteButton/FavoriteButton';
 import type { TalentMember } from '../../types/talent.types';
 import styles from './talent.module.css';
 
@@ -9,11 +10,13 @@ type TalentCardProps = {
   member: TalentMember;
   saved: boolean;
   onSave: (member: TalentMember) => void;
+  favorite: boolean;
+  onToggleFavorite: (member: TalentMember) => void;
 };
 
 const CLIP_LABEL: Record<string, string> = { article: 'Article', social: 'Social', broadcast: 'Broadcast' };
 
-export default function TalentCard({ member, saved, onSave }: TalentCardProps) {
+export default function TalentCard({ member, saved, onSave, favorite, onToggleFavorite }: TalentCardProps) {
   const [open, setOpen] = useState(false);
   const detailsId = useId();
   const { profile } = member;
@@ -56,19 +59,22 @@ export default function TalentCard({ member, saved, onSave }: TalentCardProps) {
                 <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.5" fill="none" strokeLinecap="round" />
               </svg>
             </button>
-            {saved ? (
-              <span className={styles.invited}>Saved</span>
-            ) : (
-              <button
-                type="button"
-                className={styles.inviteSmall}
-                aria-label={`Save ${member.name} to your roster`}
-                onClick={() => onSave(member)}
-              >
-                Save
-              </button>
-            )}
-            <ReportButton targetType="account" targetId={member.id} targetLabel={member.name} compact />
+            <span className={styles.footerEnd}>
+              <FavoriteButton name={member.name} favorite={favorite} onToggle={() => onToggleFavorite(member)} />
+              {saved ? (
+                <span className={styles.invited}>Saved</span>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.inviteSmall}
+                  aria-label={`Save ${member.name} to your roster`}
+                  onClick={() => onSave(member)}
+                >
+                  Save
+                </button>
+              )}
+              <ReportButton targetType="account" targetId={member.id} targetLabel={member.name} compact />
+            </span>
           </div>
 
           {open && (

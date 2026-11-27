@@ -2,8 +2,10 @@
 
 import { useState } from 'react';
 import { RosterCard, ReportButton, useToast } from '../../components';
+import FavoriteButton from '../../components/FavoriteButton/FavoriteButton';
 import Modal from '../../components/Modal/Modal';
 import PreInvite from '../../components/PreInvite/PreInvite';
+import { useFavorites } from '../../hooks/useFavorites';
 import { useRoster } from '../../hooks/useRoster';
 import InvitePicker from './InvitePicker';
 import type { AvailabilityStatus, RosterInviteStatus, RosterMember } from '../../types/dashboard.types';
@@ -11,6 +13,8 @@ import { US_STATE_NAMES, matchesLocation, usStateOf } from '../../utils/location
 import styles from './roster.module.css';
 
 type RosterBrowserProps = {
+  /** whose favorites the hearts show */
+  editorId?: string;
   /** freelancers saved to the roster, including anyone notified who has not answered */
   members: RosterMember[];
   /** everyone else, who can still be saved */
@@ -56,7 +60,7 @@ function compare(sort: SortKey) {
  * Saves and removals go through the roster API; the list only changes once the server confirms them,
  * so a failed request shows an error instead of a roster that is not really there.
  */
-export default function RosterBrowser({ members, invitable, loadFailed = false }: RosterBrowserProps) {
+export default function RosterBrowser({ editorId = '', members, invitable, loadFailed = false }: RosterBrowserProps) {
   const { showToast } = useToast();
 
   const [query, setQuery] = useState('');
@@ -71,6 +75,7 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
   const [notify, setNotify] = useState(false);
   const [confirmingId, setConfirmingId] = useState<string | null>(null);
   const { people: roster, setPeople: setRoster, busyId, preInvite, remove } = useRoster(members);
+  const favorites = useFavorites(editorId);
   const [others, setOthers] = useState(invitable);
   /** true while the add dialog's save is in flight */
   const [saving, setSaving] = useState(false);
@@ -319,6 +324,11 @@ export default function RosterBrowser({ members, invitable, loadFailed = false }
                       </span>
                       <span className={styles.footerActions}>
                         <PreInvite member={member} busy={busyId === member.id} onPreInvite={preInvite} />
+                        <FavoriteButton
+                          name={member.name}
+                          favorite={favorites.ids.includes(member.id)}
+                          onToggle={() => favorites.toggle(member)}
+                        />
                         {confirmingId === member.id ? (
                           <span className={styles.confirm}>
                             Remove?

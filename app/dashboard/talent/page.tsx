@@ -17,6 +17,7 @@ export default async function TalentPage({ searchParams }: TalentPageProps) {
   let options: TalentFilterOptions = { beats: [], mediums: [], locations: [] };
   let savedIds: string[] = [];
   let loadFailed = false;
+  let editorId = '';
 
   try {
     [results, options] = await Promise.all([searchTalent(filters), listTalentFilterOptions()]);
@@ -28,6 +29,7 @@ export default async function TalentPage({ searchParams }: TalentPageProps) {
   // Which of these people are already on the editor's roster; a failure only loses the "Saved" mark
   try {
     const { userId } = await auth();
+    editorId = userId ?? '';
     if (userId) savedIds = await listSavedIds(userId);
   } catch (error) {
     console.error('Failed to load the editor\u2019s saved freelancers.', error);
@@ -35,7 +37,14 @@ export default async function TalentPage({ searchParams }: TalentPageProps) {
 
   return (
     <div className={styles.shell}>
-      <TalentSearch filters={filters} options={options} results={results} savedIds={savedIds} loadFailed={loadFailed} />
+      <TalentSearch
+        editorId={editorId}
+        filters={filters}
+        options={options}
+        results={results}
+        savedIds={savedIds}
+        loadFailed={loadFailed}
+      />
     </div>
   );
 }
