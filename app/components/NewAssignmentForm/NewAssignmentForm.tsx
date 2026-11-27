@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import ChipGroup from '../ChipGroup/ChipGroup';
 import Field from '../Field/Field';
 import type { NewAssignment } from '../../types/assignments.types';
@@ -13,9 +14,25 @@ type NewAssignmentFormProps = {
 };
 
 export default function NewAssignmentForm({ draft, onChange, errors }: NewAssignmentFormProps) {
+  const formRef = useRef<HTMLDivElement>(null);
+  const errorCount = useRef(0);
+
+  // after a failed submit, bring the first highlighted field into view
+  useEffect(() => {
+    const count = Object.keys(errors ?? {}).length;
+    // fewer errors means a field was just fixed, so leave the editor where they are
+    const failedSubmit = count > 0 && count >= errorCount.current;
+    errorCount.current = count;
+    if (!failedSubmit) return;
+
+    const field = formRef.current?.querySelector('[data-error="true"]');
+    field?.querySelector<HTMLElement>('input, textarea, button')?.focus({ preventScroll: true });
+    field?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
+  }, [errors]);
+
   return (
-    <div className={styles.form}>
-      <fieldset className={styles.fieldset}>
+    <div ref={formRef} className={styles.form}>
+      <fieldset className={styles.fieldset} data-error={!!errors?.category}>
         <legend className={styles.legend}>Project type</legend>
         {/* ChipGroup allows many; we keep only the one just clicked */}
         <ChipGroup
