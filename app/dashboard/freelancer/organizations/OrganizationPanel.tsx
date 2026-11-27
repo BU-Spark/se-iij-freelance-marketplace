@@ -2,6 +2,7 @@
 
 import SidePanel from '../../../components/SidePanel/SidePanel';
 import DetailList from '../../../components/DetailList/DetailList';
+import talentStyles from '../../talent/talent.module.css';
 import { REACH_DETAIL, type OrgProfile } from './constants';
 import styles from './organizations.module.css';
 
@@ -20,9 +21,9 @@ export default function OrganizationPanel({ org, onClose }: OrganizationPanelPro
           {org.city} · {org.website}
         </p>
 
-        <ul className={styles.beats} aria-label="Beats">
+        <ul className={talentStyles.chipList} aria-label="Beats">
           {org.beats.map((beat) => (
-            <li key={beat} className={styles.beat}>
+            <li key={beat} className={talentStyles.medium}>
               {beat}
             </li>
           ))}

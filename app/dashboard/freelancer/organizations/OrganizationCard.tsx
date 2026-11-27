@@ -1,3 +1,6 @@
+import type { ReactNode } from 'react';
+import RosterCardLayout from '../../../components/RosterCard/RosterCardLayout';
+import talentStyles from '../../talent/talent.module.css';
 import { REACH_LABEL, type OrgProfile } from './constants';
 import styles from './organizations.module.css';
 
@@ -7,29 +10,26 @@ export type OrgCardDetails = Pick<
   'name' | 'tagline' | 'reach' | 'beats' | 'city' | 'openAssignments' | 'rate'
 >;
 
+type OrganizationCardProps = {
+  org: OrgCardDetails;
+  /** bottom row, e.g. the grid's "View organization" button */
+  footer?: ReactNode;
+  className?: string;
+};
+
 /** One newsroom in the Organizations grid: name, tagline, beats and the numbers a freelancer scans for */
-export default function OrganizationCard({ org }: { org: OrgCardDetails }) {
+export default function OrganizationCard({ org, footer, className }: OrganizationCardProps) {
   return (
-    <>
-      <div className={styles.nameRow}>
-        <h2 className={styles.name}>{org.name}</h2>
-        <span className={`${styles.reach} ${styles[org.reach]}`}>{REACH_LABEL[org.reach]}</span>
-      </div>
-      <p className={styles.tagline}>{org.tagline}</p>
+    <RosterCardLayout
+      name={org.name}
+      meta={org.city}
+      status={{ tone: org.reach, label: REACH_LABEL[org.reach] }}
+      className={[styles.card, className].filter(Boolean).join(' ')}
+      footer={footer}
+    >
+      <p className={talentStyles.muted}>{org.tagline}</p>
 
-      <ul className={styles.beats} aria-label="Beats">
-        {org.beats.map((beat) => (
-          <li key={beat} className={styles.beat}>
-            {beat}
-          </li>
-        ))}
-      </ul>
-
-      <dl className={styles.stats}>
-        <div>
-          <dt>Location</dt>
-          <dd>{org.city}</dd>
-        </div>
+      <dl className={talentStyles.facts}>
         <div>
           <dt>Open work</dt>
           <dd>{org.openAssignments}</dd>
@@ -39,6 +39,14 @@ export default function OrganizationCard({ org }: { org: OrgCardDetails }) {
           <dd>{org.rate}</dd>
         </div>
       </dl>
-    </>
+
+      <ul className={talentStyles.chipList} aria-label="Beats">
+        {org.beats.map((beat) => (
+          <li key={beat} className={talentStyles.medium}>
+            {beat}
+          </li>
+        ))}
+      </ul>
+    </RosterCardLayout>
   );
 }
