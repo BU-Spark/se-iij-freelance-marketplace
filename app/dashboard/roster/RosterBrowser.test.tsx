@@ -166,11 +166,11 @@ describe('RosterBrowser', () => {
     fireEvent.click(screen.getByRole('button', { name: /add freelancers/i }));
     const dialog = within(screen.getByRole('dialog'));
     fireEvent.click(dialog.getByRole('checkbox', { name: /jonah park/i }));
-    fireEvent.click(dialog.getByRole('checkbox', { name: /notify them/i }));
+    fireEvent.click(dialog.getByRole('checkbox', { name: /send a pre-invitation/i }));
     fireEvent.click(dialog.getByRole('button', { name: 'Add 1 to roster' }));
 
-    expect(await screen.findByText('Saved Jonah Park and let them know')).toBeInTheDocument();
-    expect(screen.getByText('Notified')).toBeInTheDocument();
+    expect(await screen.findByText('Saved Jonah Park and sent a pre-invitation')).toBeInTheDocument();
+    expect(screen.getByText('Pre-invited')).toBeInTheDocument();
     expect(fetchMock).toHaveBeenCalledWith('/api/roster/invites', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -187,6 +187,19 @@ describe('RosterBrowser', () => {
     expect(screen.getByText('Declined')).toBeInTheDocument();
     // a decline is informational: the editor still has them on the roster until they remove them
     expect(screen.getByRole('button', { name: 'Remove Rosa Vega from your roster' })).toBeInTheDocument();
+  });
+
+  it('pre-invites someone already saved', async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ saved: [{ freelancerId: 'user-1', invitedAt: '2026-11-27T09:00:00.000Z' }] }),
+    });
+    renderPage(<RosterBrowser members={members} invitable={[]} />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pre-invite Sarah Jenkins' }));
+
+    expect(await screen.findByText('Pre-invitation sent to Sarah Jenkins')).toBeInTheDocument();
+    expect(screen.getByText('Pre-invited')).toBeInTheDocument();
   });
 
   it('keeps the add dialog open when the roster API refuses', async () => {
