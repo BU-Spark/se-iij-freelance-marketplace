@@ -12,6 +12,7 @@ export const NAV_ITEMS: Record<ProfileRole, NavItem[]> = {
   editor: [
     { key: 'desk', label: 'Desk', href: '/dashboard', exact: true },
     { key: 'roster', label: 'Roster', href: '/dashboard/roster' },
+    { key: 'favorites', label: 'Favorites', href: '/dashboard/favorites' },
     { key: 'talent', label: 'Find talent', href: '/dashboard/talent' },
     { key: 'pitches', label: 'Pitches', href: '/dashboard/pitches' },
     { key: 'organization', label: 'Organization', href: '/dashboard/organization' },

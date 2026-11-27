@@ -25,6 +25,11 @@ describe('NavMenu', () => {
     expect(screen.getByRole('link', { name: /pitches/i })).toBeInTheDocument();
   });
 
+  it('gives editors a favorites list', () => {
+    setup();
+    expect(screen.getByRole('link', { name: 'Favorites' })).toHaveAttribute('href', '/dashboard/favorites');
+  });
+
   it('shows the freelancer links when working as freelancer', () => {
     setup({ activeRole: 'freelancer' });
     expect(screen.getByRole('link', { name: /available assignments/i })).toBeInTheDocument();
