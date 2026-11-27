@@ -1,0 +1,28 @@
+.heart {
+  display: inline-grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.heart:hover {
+  border-color: #e7b7c1;
+  color: #b4233f;
+}
+
+.on {
+  border-color: #f2d3da;
+  background: #fdf0f3;
+  color: #b4233f;
+}
+
+.heart:focus-visible {
+  outline: 2px solid var(--c-blue);
+  outline-offset: 2px;
+}

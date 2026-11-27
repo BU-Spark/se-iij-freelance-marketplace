@@ -41,6 +41,7 @@ const fetchMock = jest.fn();
 
 beforeEach(() => {
   fetchMock.mockReset();
+  window.localStorage.clear();
   fetchMock.mockResolvedValue({ ok: true, json: async () => ({ saved: [] }) });
   global.fetch = fetchMock as unknown as typeof fetch;
 });
@@ -187,6 +188,21 @@ describe('RosterBrowser', () => {
     expect(screen.getByText('Declined')).toBeInTheDocument();
     // a decline is informational: the editor still has them on the roster until they remove them
     expect(screen.getByRole('button', { name: 'Remove Rosa Vega from your roster' })).toBeInTheDocument();
+  });
+
+  it('makes nobody a favorite until their heart is clicked', () => {
+    renderPage(<RosterBrowser editorId="editor-1" members={members} invitable={[]} />);
+    const heart = screen.getByRole('button', { name: 'Add Sarah Jenkins to favorites' });
+    expect(heart).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(heart);
+
+    expect(screen.getByRole('button', { name: 'Remove Sarah Jenkins from favorites' })).toHaveAttribute(
+      'aria-pressed',
+      'true'
+    );
+    expect(window.localStorage.getItem('favorite-freelancers:editor-1')).toBe('["user-1"]');
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it('pre-invites someone already saved', async () => {

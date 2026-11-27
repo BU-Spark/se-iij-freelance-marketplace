@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useToast } from '../../components';
+import { useFavorites } from '../../hooks/useFavorites';
 import TalentCard from './TalentCard';
 import type { TalentFilterOptions, TalentFilters, TalentMember } from '../../types/talent.types';
 import { TALENT_PAGE_SIZE, talentQueryString } from '../../utils/talent.utils';
@@ -12,6 +13,8 @@ import talentStyles from './talent.module.css';
 const styles = { ...rosterStyles, ...talentStyles };
 
 type TalentSearchProps = {
+  /** whose favorites the hearts show */
+  editorId?: string;
   filters: TalentFilters;
   options: TalentFilterOptions;
   results: TalentMember[];
@@ -27,6 +30,7 @@ const TYPING_DELAY_MS = 300;
  * Saving is immediate; the freelancer is not asked to accept first.
  */
 export default function TalentSearch({
+  editorId = '',
   filters,
   options,
   results,
@@ -40,6 +44,7 @@ export default function TalentSearch({
 
   const [query, setQuery] = useState(filters.q ?? '');
   const [saved, setSaved] = useState<string[]>(savedIds);
+  const favorites = useFavorites(editorId);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(typingTimer.current), []);
@@ -180,7 +185,13 @@ export default function TalentSearch({
         <ul className={`${styles.grid} ${styles.talentGrid} ${isPending ? styles.stale : ''}`}>
           {results.map((member) => (
             <li key={member.id}>
-              <TalentCard member={member} saved={saved.includes(member.id)} onSave={save} />
+              <TalentCard
+                member={member}
+                saved={saved.includes(member.id)}
+                onSave={save}
+                favorite={favorites.ids.includes(member.id)}
+                onToggleFavorite={favorites.toggle}
+              />
             </li>
           ))}
         </ul>

@@ -26,14 +26,16 @@ const member = (overrides: Partial<TalentMember> = {}): TalentMember => ({
   ...overrides,
 });
 
+const heart = { favorite: false, onToggleFavorite: jest.fn() };
+
 describe('TalentCard', () => {
   it('offers a small flag to report the freelancer', () => {
-    render(<TalentCard member={member()} invited={false} onInvite={jest.fn()} />);
+    render(<TalentCard member={member()} saved={false} onSave={jest.fn()} {...heart} />);
     expect(screen.getByRole('button', { name: 'Report Sarah Jenkins' })).toBeInTheDocument();
   });
 
   it('starts collapsed and opens into the full profile', () => {
-    render(<TalentCard member={member()} saved={false} onSave={jest.fn()} />);
+    render(<TalentCard member={member()} saved={false} onSave={jest.fn()} {...heart} />);
 
     const toggle = screen.getByRole('button', { name: 'View profile' });
     expect(toggle).toHaveAttribute('aria-expanded', 'false');
@@ -71,6 +73,7 @@ describe('TalentCard', () => {
         })}
         saved={false}
         onSave={jest.fn()}
+        {...heart}
       />
     );
 
@@ -80,13 +83,26 @@ describe('TalentCard', () => {
 
   it('saves, and shows Saved once done', () => {
     const onSave = jest.fn();
-    const { rerender } = render(<TalentCard member={member()} saved={false} onSave={onSave} />);
+    const { rerender } = render(<TalentCard member={member()} saved={false} onSave={onSave} {...heart} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Sarah Jenkins to your roster' }));
     expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-1' }));
 
-    rerender(<TalentCard member={member()} saved onSave={onSave} />);
+    rerender(<TalentCard member={member()} saved onSave={onSave} {...heart} />);
     expect(screen.getByText('Saved')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /save sarah/i })).not.toBeInTheDocument();
+  });
+
+  it('leaves the heart empty for a saved person until it is clicked', () => {
+    const onToggleFavorite = jest.fn();
+    render(
+      <TalentCard member={member()} saved onSave={jest.fn()} favorite={false} onToggleFavorite={onToggleFavorite} />
+    );
+
+    const button = screen.getByRole('button', { name: 'Add Sarah Jenkins to favorites' });
+    expect(button).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(button);
+    expect(onToggleFavorite).toHaveBeenCalledWith(expect.objectContaining({ id: 'user-1' }));
   });
 });

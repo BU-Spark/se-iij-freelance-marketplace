@@ -48,6 +48,12 @@
   transform: rotate(180deg);
 }
 
+.footerEnd {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .invited {
   color: var(--muted);
   font-size: 13px;

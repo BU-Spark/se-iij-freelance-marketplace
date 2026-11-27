@@ -15,9 +15,11 @@ export default async function RosterPage() {
   let members: RosterMember[] = [];
   let invitable: RosterMember[] = [];
   let loadFailed = false;
+  let editorId = '';
 
   try {
     const { userId } = await auth();
+    editorId = userId ?? '';
     if (userId) ({ members, invitable } = await loadEditorRoster(userId));
   } catch (error) {
     console.error('Failed to load the roster.', error);
@@ -26,7 +28,7 @@ export default async function RosterPage() {
 
   return (
     <div className={styles.shell}>
-      <RosterBrowser members={members} invitable={invitable} loadFailed={loadFailed} />
+      <RosterBrowser editorId={editorId} members={members} invitable={invitable} loadFailed={loadFailed} />
     </div>
   );
 }
