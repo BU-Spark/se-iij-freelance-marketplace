@@ -160,7 +160,29 @@ profile step. `users.roles` holds the set, with one row per role in `editors` an
 idempotent, so re-running `npm run db:migrate` migrates a `users.role` column into
 `users.roles` on an existing database.
 
-From a Railway service shell, run:
+### Migrations in CI
+
+[`db/schema.sql`](./db/schema.sql) is applied by the pipeline in
+[`.github/workflows/ci.yml`](./.github/workflows/ci.yml):
+
+- **`Database schema (fresh Postgres)`** runs on every push and pull request. It starts an
+  empty `postgres:16`, applies the schema, applies it again to prove it is idempotent, and
+  then checks that the expected tables and `users` columns exist. A schema change that
+  cannot apply to an empty database, or cannot be re-run, fails the pull request.
+- **`Database migration (production)`** runs only for commits on `main`, after lint, tests,
+  the build and the fresh-database job have passed, and applies the same file to the
+  deployed database. Two migrations never run at once. It reads a `DATABASE_URL` secret
+  (repository secret, or a secret on the `production` environment) and fails loudly when
+  one is missing, so a green `main` means the schema was applied. Give the `production`
+  environment a required reviewer if migrations should wait for a person.
+
+The secret must hold the Railway Postgres **public** URL: hosted runners cannot resolve
+the private `*.railway.internal` hostname. Turn on _Wait for CI_ for the Railway service
+so a new app build is not released before the columns it reads exist; the schema stays
+additive and idempotent, so a deploy that lands first still works against the previous
+schema.
+
+To apply the schema by hand — a local database, a service shell, or a branch build — run:
 
 ```bash
 npm run db:migrate
