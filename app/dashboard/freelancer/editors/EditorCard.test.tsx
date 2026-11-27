@@ -1,4 +1,5 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { NAV_ITEMS } from '../../../components/NavMenu/config/navConfig';
 import { ORGANIZATIONS } from '../organizations/constants';
 import { EDITORS } from './constants';
@@ -21,6 +22,14 @@ describe('EditorCard', () => {
 
     expect(screen.getByText(org.name, { exact: false })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: editor.email })).toHaveAttribute('href', `mailto:${editor.email}`);
+  });
+
+  it('offers a flag that opens the report form for that editor', async () => {
+    render(<EditorCard editor={editor} />);
+
+    await userEvent.click(screen.getByRole('button', { name: `Report ${editor.name}` }));
+
+    expect(screen.getByRole('dialog', { name: 'Report this account' })).toBeInTheDocument();
   });
 
   it('only lists editors from newsrooms on the Organizations page', () => {
