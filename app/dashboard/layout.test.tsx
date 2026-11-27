@@ -12,6 +12,7 @@ import DashboardLayout from './layout';
 jest.mock('@clerk/nextjs/server', () => ({ auth: jest.fn() }));
 jest.mock('../../lib/auth', () => ({ isSignedInUserAdmin: jest.fn() }));
 jest.mock('../../lib/profile', () => ({ hasProfile: jest.fn(), loadProfileRoles: jest.fn() }));
+jest.mock('./loadInboxSources', () => ({ loadInboxSources: jest.fn() }));
 jest.mock('../components/header/EditorHeader', () => ({ EditorHeader: () => null }));
 jest.mock('next/navigation', () => ({
   redirect: jest.fn((url: string) => {

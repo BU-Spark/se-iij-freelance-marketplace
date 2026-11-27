@@ -4,8 +4,11 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ProfileRole } from '../../types';
+import type { InboxSources } from '../../types/inbox.types';
 import HamburgerMenu from '../NavMenu/HamburgerMenu';
 import ProfileButton from '../Profile/ProfileButton';
+import InboxButton from '../Inbox/InboxButton';
+import { useInbox } from '../../hooks/useInbox';
 import { useProfile } from '../../hooks/useProfile';
 import { fullName } from '../../utils/profile.utils';
 import { workspaceForPath, workspaceHome } from '../../utils/workspace.utils';
@@ -14,10 +17,12 @@ import styles from './editorHeader.module.css';
 type EditorHeaderProps = {
   /** The roles the server already read for this person, used until the profile loads */
   initialRoles?: ProfileRole[];
+  /** roster updates the server read, shown in the inbox beside the pitch updates */
+  inboxSources?: InboxSources;
 };
 
 /** The one header for every dashboard page; the dashboard layout mounts it above each page */
-export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
+export function EditorHeader({ initialRoles = [], inboxSources }: EditorHeaderProps = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const { profile } = useProfile();
@@ -35,6 +40,9 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
   const roles: ProfileRole[] = heldRoles.length > 0 ? heldRoles : [viewingAs];
   // The header stays mounted across pages, so the side always follows the URL (back button included)
   const role = roles.includes(viewingAs) ? viewingAs : roles[0];
+
+  const inbox = useInbox(role, profile?.id, inboxSources);
+  const unreadPitches = inbox.items.filter((item) => item.unread && item.kind === 'pitch').length;
 
   // A deep link into a workspace they do not hold sends them home instead
   useEffect(() => {
@@ -55,6 +63,7 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
         onRoleChange={(nextRole) => router.push(nextRole === 'freelancer' ? '/dashboard/freelancer' : '/dashboard')}
         currentPath={pathname}
         settingsHref="/dashboard/settings"
+        badges={{ pitches: unreadPitches }}
       />
 
       <div className={styles.actions}>
@@ -70,6 +79,8 @@ export function EditorHeader({ initialRoles = [] }: EditorHeaderProps = {}) {
             Make a Pitch
           </Link>
         )}
+
+        <InboxButton inbox={inbox} />
 
         {/* avatar that opens My profile (?panel=profile) */}
         <ProfileButton name={myName} />
