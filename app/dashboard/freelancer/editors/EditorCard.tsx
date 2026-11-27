@@ -1,3 +1,4 @@
+import ReportButton from '../../../components/ReportButton/ReportButton';
 import RosterCardLayout from '../../../components/RosterCard/RosterCardLayout';
 import talentStyles from '../../talent/talent.module.css';
 import { ORGANIZATIONS } from '../organizations/constants';
@@ -14,9 +15,13 @@ export default function EditorCard({ editor }: { editor: EditorProfile }) {
       meta={editor.role}
       className={styles.card}
       footer={
-        <a className={talentStyles.toggle} href={`mailto:${editor.email}`}>
-          {editor.email}
-        </a>
+        <>
+          <a className={talentStyles.toggle} href={`mailto:${editor.email}`}>
+            {editor.email}
+          </a>
+          {/* TODO: reports are rejected until these sample editors are replaced by real accounts */}
+          <ReportButton targetType="account" targetId={editor.id} targetLabel={editor.name} compact />
+        </>
       }
     >
       {org && (
