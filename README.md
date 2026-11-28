@@ -218,6 +218,11 @@ Searches return the closest match first, then fall back to the order the list al
 is scored against the words typed and any filters applied, so a name or headline beat outranks a
 mention buried in a bio, and a word that starts a value outranks one found in the middle of it.
 
+- **Find talent** scores each freelancer against the search words and the Beat filter in
+  [`buildTalentQuery`](./lib/talent.ts). The score is part of the query, so the 60-row cap keeps the
+  best matches rather than the first 60, and a Beat-filter hit on a headline beat (+6) outranks one
+  where the beat is only tagged (+3). Free right now, then name, still settle ties.
+
 The weights live in `RELEVANCE_WEIGHTS` in
 [`app/utils/relevance.utils.ts`](./app/utils/relevance.utils.ts) and are interpolated into the SQL
 where ranking runs in the database, so the two cannot drift apart. Filters decide *which* rows match
