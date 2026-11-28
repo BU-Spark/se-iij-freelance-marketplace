@@ -137,6 +137,19 @@ export function assignmentMatches(assignment: DeskAssignment, query: string): bo
   );
 }
 
+/** Where the desk search can find a roster member, strongest match first */
+export function memberRelevanceFields(member: RosterMember): RelevanceField[] {
+  // the headline beat is scored as the specialty, so it is dropped from the list to avoid counting twice
+  const otherBeats = (member.beats ?? []).filter((beat) => beat !== member.specialty);
+
+  return [
+    { text: member.name, weight: RELEVANCE_WEIGHTS.name },
+    { text: member.specialty, weight: RELEVANCE_WEIGHTS.beat },
+    { values: otherBeats, weight: RELEVANCE_WEIGHTS.tag },
+    { text: member.city, weight: RELEVANCE_WEIGHTS.location },
+  ];
+}
+
 /** Where the desk search can find an assignment the desk already loaded */
 export function assignmentRelevanceFields(assignment: DeskAssignment): RelevanceField[] {
   return [
