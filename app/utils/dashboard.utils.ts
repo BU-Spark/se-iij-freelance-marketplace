@@ -8,6 +8,7 @@ import type {
 } from '../types/dashboard.types';
 import type { Assignment } from '../types/assignments.types';
 import { organizationName } from './organization.utils';
+import { RELEVANCE_WEIGHTS, type RelevanceField } from './relevance.utils';
 /** The availability bar shows six 2-hour slots: 8a, 10a, 12p, 2p, 4p, 6p */
 export const SLOT_STARTS = [8, 10, 12, 14, 16, 18];
 
@@ -135,6 +136,32 @@ export function assignmentMatches(assignment: DeskAssignment, query: string): bo
     organizationName(assignment.organizationId) ?? undefined
   );
 }
+
+/** Where the desk search can find an assignment the desk already loaded */
+export function assignmentRelevanceFields(assignment: DeskAssignment): RelevanceField[] {
+  return [
+    { text: assignment.title, weight: RELEVANCE_WEIGHTS.title },
+    { text: assignment.category, weight: RELEVANCE_WEIGHTS.category },
+    { text: assignment.type, weight: RELEVANCE_WEIGHTS.type },
+    { text: assignment.contact.name, weight: RELEVANCE_WEIGHTS.contact },
+    { text: assignment.contact.desk, weight: RELEVANCE_WEIGHTS.type },
+    { text: organizationName(assignment.organizationId), weight: RELEVANCE_WEIGHTS.organization },
+    { text: assignment.location, weight: RELEVANCE_WEIGHTS.location },
+  ];
+}
+
+/** The same search fields for a posted assignment, as the freelancer directory lists it */
+export function postedAssignmentRelevanceFields(assignment: Assignment): RelevanceField[] {
+  return [
+    { text: assignment.title, weight: RELEVANCE_WEIGHTS.title },
+    { text: assignment.category, weight: RELEVANCE_WEIGHTS.category },
+    { text: assignment.contact, weight: RELEVANCE_WEIGHTS.contact },
+    { text: organizationName(assignment.organizationId), weight: RELEVANCE_WEIGHTS.organization },
+    { text: assignment.location, weight: RELEVANCE_WEIGHTS.location },
+    { text: assignment.description, weight: RELEVANCE_WEIGHTS.description },
+  ];
+}
+
 /** One person in the Review candidates list */
 export type Candidate = {
   member: RosterMember;

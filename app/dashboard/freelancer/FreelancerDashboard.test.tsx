@@ -48,6 +48,30 @@ it('lists every matching task without paging, and narrows by search and status',
   expect(feed().getAllByRole('article')).toHaveLength(8);
 });
 
+it('lists the closest match first when searching the feed', () => {
+  const ranked: DeskAssignment[] = [
+    { ...SAMPLE_ASSIGNMENTS[0], id: 'category-match', title: 'Daily briefing', category: 'Harbor', invitedIds: [] },
+    { ...SAMPLE_ASSIGNMENTS[0], id: 'title-match', title: 'Harbor Commission vote', invitedIds: [] },
+  ];
+  render(<FreelancerDashboard assignments={ranked} freelancerId="me" />);
+
+  fireEvent.change(screen.getByRole('searchbox', { name: 'Search' }), { target: { value: 'harbor' } });
+
+  const [first] = feed().getAllByRole('article');
+  expect(within(first).getByText('Harbor Commission vote')).toBeInTheDocument();
+});
+
+it('keeps the feed in deadline order until someone searches', () => {
+  const ranked: DeskAssignment[] = [
+    { ...SAMPLE_ASSIGNMENTS[0], id: 'later', title: 'Later brief', deadline: new Date(2030, 0, 5), invitedIds: [] },
+    { ...SAMPLE_ASSIGNMENTS[0], id: 'sooner', title: 'Sooner brief', deadline: new Date(2030, 0, 2), invitedIds: [] },
+  ];
+  render(<FreelancerDashboard assignments={ranked} freelancerId="me" />);
+
+  const [first] = feed().getAllByRole('article');
+  expect(within(first).getByText('Sooner brief')).toBeInTheDocument();
+});
+
 it('handles an empty feed', () => {
   render(<FreelancerDashboard assignments={[]} freelancerId="me" />);
   expect(screen.getByText('No assignments in progress.')).toBeInTheDocument();

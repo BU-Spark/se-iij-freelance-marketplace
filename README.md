@@ -222,6 +222,9 @@ mention buried in a bio, and a word that starts a value outranks one found in th
   [`buildTalentQuery`](./lib/talent.ts). The score is part of the query, so the 60-row cap keeps the
   best matches rather than the first 60, and a Beat-filter hit on a headline beat (+6) outranks one
   where the beat is only tagged (+3). Free right now, then name, still settle ties.
+- **Assignments** (the freelancer directory, the task feed and the editor desk's assignment column)
+  rank the list they already filtered with [`rankBy`](./app/utils/relevance.utils.ts), with recency
+  or deadline as the tie-break.
 
 The weights live in `RELEVANCE_WEIGHTS` in
 [`app/utils/relevance.utils.ts`](./app/utils/relevance.utils.ts) and are interpolated into the SQL
