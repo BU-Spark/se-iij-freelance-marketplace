@@ -9,7 +9,8 @@ import useLocalStorage from '../../hooks/useLocalStorage';
 import { useDeskQuery } from './deskQuery';
 import { useToast } from '../../components/Toast/ToastProvider';
 import type { DeskAssignment, DeskFilter, RosterMember } from '../../types/dashboard.types';
-import { assignmentMatches, filterAssignments } from '../../utils/dashboard.utils';
+import { assignmentMatches, assignmentRelevanceFields, filterAssignments } from '../../utils/dashboard.utils';
+import { rankBy } from '../../utils/relevance.utils';
 import styles from '../dashboard.module.css';
 
 const FILTERS: SegmentOption<DeskFilter>[] = [
@@ -55,7 +56,11 @@ export default function AssignmentsColumn({ assignments, roster, nextCursor = nu
   // which assignment's "Review candidates" popup is open (none = undefined)
   const [reviewingId, setReviewingId] = useState<string | undefined>();
 
-  const visible = filterAssignments(items, filter).filter((a) => assignmentMatches(a, query));
+  const visible = rankBy(
+    filterAssignments(items, filter).filter((a) => assignmentMatches(a, query)),
+    query,
+    assignmentRelevanceFields
+  );
   const searching = query.trim().length > 0;
   const filterLabel = FILTERS.find((f) => f.value === filter)?.label.toLowerCase();
   const reviewing = items.find((a) => a.id === reviewingId);

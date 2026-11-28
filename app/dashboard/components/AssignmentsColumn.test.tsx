@@ -196,4 +196,25 @@ describe('AssignmentsColumn', () => {
     });
     expect(screen.getByText(/no assignments match/i)).toBeInTheDocument();
   });
+
+  it('lists the closest match first when the desk searches', () => {
+    const assignments = [
+      { ...SAMPLE_ASSIGNMENTS[0], id: 'in-category', title: 'Daily briefing', category: 'Transit' },
+      { ...SAMPLE_ASSIGNMENTS[0], id: 'in-title', title: 'Transit Hub vote', category: 'Reporting/Writing' },
+    ];
+
+    render(
+      <DeskQueryProvider>
+        <DeskSearch />
+        <AssignmentsColumn assignments={assignments} roster={ROSTER} />
+      </DeskQueryProvider>
+    );
+
+    fireEvent.change(screen.getByRole('searchbox', { name: /search assignments and roster/i }), {
+      target: { value: 'transit' },
+    });
+
+    const [first] = screen.getAllByRole('article');
+    expect(within(first).getByRole('heading', { level: 3, name: /transit hub vote/i })).toBeInTheDocument();
+  });
 });

@@ -4,7 +4,8 @@ import { useState } from 'react';
 import Link from 'next/link';
 import OpenAssignmentCard from '../../components/AssignmentCard/OpenAssignmentCard';
 import type { Assignment } from '../../types/assignments.types';
-import { assignmentDrawerHref } from '../../utils/dashboard.utils';
+import { assignmentDrawerHref, postedAssignmentRelevanceFields } from '../../utils/dashboard.utils';
+import { rankBy } from '../../utils/relevance.utils';
 import styles from './assignments.module.css';
 
 type AssignmentsBrowserProps = {
@@ -21,13 +22,18 @@ export default function AssignmentsBrowser({ assignments, loadFailed = false }: 
   const normalizedQuery = query.trim().toLowerCase();
   const categories = [...new Set(assignments.map((a) => a.category).filter(Boolean))].sort();
   const locations = [...new Set(assignments.map((a) => a.location).filter(Boolean))].sort();
-  const visibleAssignments = assignments.filter(
-    (assignment) =>
-      [assignment.title, assignment.category, assignment.description].some((value) =>
-        value.toLowerCase().includes(normalizedQuery)
-      ) &&
-      (!category || assignment.category === category) &&
-      (!location || assignment.location === location)
+  // the closest match leads; with no search text the list keeps its newest-first order
+  const visibleAssignments = rankBy(
+    assignments.filter(
+      (assignment) =>
+        [assignment.title, assignment.category, assignment.description].some((value) =>
+          value.toLowerCase().includes(normalizedQuery)
+        ) &&
+        (!category || assignment.category === category) &&
+        (!location || assignment.location === location)
+    ),
+    normalizedQuery,
+    postedAssignmentRelevanceFields
   );
 
   const clearFilters = () => {

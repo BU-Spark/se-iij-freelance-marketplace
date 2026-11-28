@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import AssignmentsBrowser from './AssignmentsBrowser';
 import type { Assignment } from '../../types/assignments.types';
 
@@ -50,6 +50,30 @@ describe('AssignmentsBrowser', () => {
       expect(screen.getAllByRole('article')).toHaveLength(1);
       expect(screen.getByRole('heading', { name: /election night/i })).toBeInTheDocument();
     }
+  });
+
+  it('lists the closest match first when a word appears in several assignments', () => {
+    const inTitle = assignment({ id: 'in-title', title: 'Harbor Commission vote', description: 'Daily briefing.' });
+    const inDescription = assignment({
+      id: 'in-description',
+      title: 'Daily briefing',
+      description: 'Covers the harbor vote.',
+    });
+    render(<AssignmentsBrowser assignments={[inDescription, inTitle]} />);
+
+    fireEvent.change(screen.getByLabelText('Keywords'), { target: { value: 'harbor' } });
+
+    const [first] = screen.getAllByRole('article');
+    expect(within(first).getByRole('heading', { name: /harbor commission/i })).toBeInTheDocument();
+  });
+
+  it('keeps the order it was given when nothing is searched', () => {
+    const newer = assignment({ id: 'newer', title: 'Newer brief', createdAt: new Date(2030, 0, 2) });
+    const older = assignment({ id: 'older', title: 'Older brief', createdAt: new Date(2030, 0, 1) });
+    render(<AssignmentsBrowser assignments={[newer, older]} />);
+
+    const [first] = screen.getAllByRole('article');
+    expect(within(first).getByRole('heading', { name: /newer brief/i })).toBeInTheDocument();
   });
 
   it('combines filters, announces no matches, and clears all controls', () => {

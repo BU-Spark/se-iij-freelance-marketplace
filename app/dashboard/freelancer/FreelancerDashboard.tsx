@@ -6,7 +6,8 @@ import { taskStatus, FILTERS, type FeedFilter } from './freelancer.utils';
 import { TaskCard, TaskSummary, ActiveAssignments, TaskFilters } from './components';
 import PageSearch from '../components/PageSearch';
 import SegmentedControl from '../components/SegmentedControl';
-import { formatDeskDate } from '../../utils/dashboard.utils';
+import { assignmentRelevanceFields, formatDeskDate } from '../../utils/dashboard.utils';
+import { rankBy } from '../../utils/relevance.utils';
 import styles from './freelancer.module.css';
 import dashboardStyles from '../dashboard.module.css';
 
@@ -43,8 +44,9 @@ export default function FreelancerDashboard({
     .filter((task) => task.status === 'assigned' && task.assignedToId === freelancerId)
     .sort(byDeadline);
   const normalizedQuery = query.trim().toLowerCase();
-  const matching = relevant
-    .filter(
+  // the closest match leads; a search tie goes to the task that is due soonest
+  const matching = rankBy(
+    relevant.filter(
       (task) =>
         (filter === 'all' || taskStatus(task, freelancerId) === filter) &&
         (!category || task.category === category) &&
@@ -52,8 +54,11 @@ export default function FreelancerDashboard({
         [task.title, task.category, task.type, task.location, task.contact.name, task.contact.desk].some((value) =>
           value?.toLowerCase().includes(normalizedQuery)
         )
-    )
-    .sort(byDeadline);
+    ),
+    normalizedQuery,
+    assignmentRelevanceFields,
+    byDeadline
+  );
 
   const showStatus = (status: FeedFilter) => {
     setFilter(status);
