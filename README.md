@@ -225,6 +225,8 @@ mention buried in a bio, and a word that starts a value outranks one found in th
 - **Assignments** (the freelancer directory, the task feed and the editor desk's assignment column)
   rank the list they already filtered with [`rankBy`](./app/utils/relevance.utils.ts), with recency
   or deadline as the tie-break. The desk's roster column ranks people the same way.
+- **The roster page** keeps its own order control: choosing **Relevance** under *Sort by* ranks the
+  roster against its search box, so an editor can hunt through a long shortlist the same way.
 
 The weights live in `RELEVANCE_WEIGHTS` in
 [`app/utils/relevance.utils.ts`](./app/utils/relevance.utils.ts) and are interpolated into the SQL

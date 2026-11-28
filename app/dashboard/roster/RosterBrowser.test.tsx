@@ -126,6 +126,25 @@ describe('RosterBrowser', () => {
     expect(cardNames()).toEqual(['Sarah Jenkins', 'Amara Diallo']);
   });
 
+  it('sorts by relevance to the search text', () => {
+    const people = [
+      // the headline beat, which should outrank the same beat on someone else's longer list
+      member({ id: 'headline-beat', name: 'Zed Lane', specialty: 'Housing', beats: ['Housing'] }),
+      member({ id: 'tagged-beat', name: 'Amara Diallo', specialty: 'Photo', beats: ['Photo', 'Housing'] }),
+    ];
+    renderPage(<RosterBrowser members={people} invitable={[]} />);
+
+    fireEvent.change(screen.getByLabelText('Sort by'), { target: { value: 'relevance' } });
+    // without a search there is nothing to rank, so the name order stands
+    expect(cardNames()).toEqual(['Amara Diallo', 'Zed Lane']);
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'housing' } });
+    expect(cardNames()).toEqual(['Zed Lane', 'Amara Diallo']);
+
+    fireEvent.change(screen.getByLabelText('Sort by'), { target: { value: 'name' } });
+    expect(cardNames()).toEqual(['Amara Diallo', 'Zed Lane']);
+  });
+
   it('saves people who are off today too, straight onto the roster', async () => {
     fetchMock.mockResolvedValue({
       ok: true,
