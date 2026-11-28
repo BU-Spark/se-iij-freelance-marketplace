@@ -19,7 +19,7 @@ import {
   timeAgo,
   toDeskAssignment,
 } from './dashboard.utils';
-import { relevanceScore } from './relevance.utils';
+import { PREFIX_BONUS, RELEVANCE_WEIGHTS, relevanceScore } from './relevance.utils';
 
 describe('dashboard utils', () => {
   describe('hourSlots', () => {
@@ -203,6 +203,12 @@ describe('desk search ranking', () => {
     expect(relevanceScore('harbor', memberRelevanceFields(inName))).toBeGreaterThan(
       relevanceScore('harbor', memberRelevanceFields(inCity))
     );
+  });
+
+  it('counts the headline beat once, not as both the specialty and a listed beat', () => {
+    const headline = { ...ROSTER[0], specialty: 'Politics', beats: ['Politics', 'Housing'] };
+
+    expect(relevanceScore('politics', memberRelevanceFields(headline))).toBe(RELEVANCE_WEIGHTS.beat + PREFIX_BONUS);
   });
 
   it('puts a title match ahead of a category plus description match', () => {

@@ -9,6 +9,8 @@ import { useFavorites } from '../../hooks/useFavorites';
 import { useRoster } from '../../hooks/useRoster';
 import InvitePicker from './InvitePicker';
 import type { AvailabilityStatus, RosterInviteStatus, RosterMember } from '../../types/dashboard.types';
+import { memberRelevanceFields } from '../../utils/dashboard.utils';
+import { rankBy } from '../../utils/relevance.utils';
 import { US_STATE_NAMES, matchesLocation, usStateOf } from '../../utils/location.utils';
 import styles from './roster.module.css';
 
@@ -23,7 +25,7 @@ type RosterBrowserProps = {
   loadFailed?: boolean;
 };
 
-type SortKey = 'name' | 'recent' | 'availability';
+type SortKey = 'name' | 'recent' | 'availability' | 'relevance';
 
 const STATUS_FILTERS: { value: '' | AvailabilityStatus; label: string }[] = [
   { value: '', label: 'All' },
@@ -52,6 +54,7 @@ function compare(sort: SortKey) {
   return (a: RosterMember, b: RosterMember) => {
     if (sort === 'recent') return (b.invitedAt ?? '').localeCompare(a.invitedAt ?? '');
     if (sort === 'availability' && a.status !== b.status) return STATUS_RANK[a.status] - STATUS_RANK[b.status];
+    // relevance settles its own ties, and with no search text there is nothing else to rank
     return a.name.localeCompare(b.name);
   };
 }
@@ -94,7 +97,13 @@ export default function RosterBrowser({ editorId = '', members, invitable, loadF
   // the status chips count what the other filters leave, so the numbers always add up
   const statusCount = (value: '' | AvailabilityStatus) =>
     value ? withoutStatus.filter((member) => member.status === value).length : withoutStatus.length;
-  const visible = withoutStatus.filter((member) => !status || member.status === status).sort(compare(sort));
+  // Relevance uses the search box above; the other sorts ignore it and keep their own order
+  const visible = rankBy(
+    withoutStatus.filter((member) => !status || member.status === status),
+    sort === 'relevance' ? normalizedQuery : '',
+    memberRelevanceFields,
+    compare(sort)
+  );
 
   const activeFilters = [query.trim(), beat, city, status].filter(Boolean).length;
 
@@ -273,6 +282,7 @@ export default function RosterBrowser({ editorId = '', members, invitable, loadF
                   onChange={(event) => setSort(event.target.value as SortKey)}
                 >
                   <option value="name">Name</option>
+                  <option value="relevance">Relevance</option>
                   <option value="recent">Recently added</option>
                   <option value="availability">Available first</option>
                 </select>
