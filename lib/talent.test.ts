@@ -28,6 +28,8 @@ describe('buildTalentQuery', () => {
     expect(sql).toContain('ILIKE $1');
     expect(sql).not.toContain("o'brien");
     expect(params[0]).toBe("%50\\%\\_o'brien%");
+    // the words themselves are what the ranking scores
+    expect(params[1]).toEqual(["50%_o'brien"]);
   });
 
   it('adds one bound condition per filter, numbered in order', () => {
@@ -43,12 +45,50 @@ describe('buildTalentQuery', () => {
     expect(sql).toContain('$3 = ANY(f.work_mediums)');
     expect(sql).toContain('f.location = $4');
     expect(sql).toContain('u.available_now = true AND (u.available_until IS NULL OR u.available_until > NOW())');
-    expect(sql).toContain('LIMIT $5');
-    expect(params).toEqual(['%housing%', 'Politics', 'Audio', 'Leeds, UK', TALENT_PAGE_SIZE]);
+    expect(sql).toContain('unnest($5::text[])');
+    expect(sql).toContain('LIMIT $6');
+    expect(params).toEqual(['%housing%', 'Politics', 'Audio', 'Leeds, UK', ['housing'], TALENT_PAGE_SIZE]);
+  });
+
+  it('scores each search word and ranks the best matches first', () => {
+    const { sql } = buildTalentQuery({ q: 'climate policy' });
+
+    expect(sql).toContain('LEFT JOIN LATERAL (SELECT COALESCE(SUM(');
+    // the score leads, and free right now then the name still settle ties
+    expect(sql).toContain('ORDER BY (COALESCE(relevance.text_score, 0)) DESC');
+    expect(sql).toMatch(/\) DESC,\s*\(u\.available_now/);
+    // a beat counts for more than a bio, and a word that starts a value counts extra
+    expect(sql).toContain('THEN 6 ELSE 0 END');
+    expect(sql).toContain('THEN 2 ELSE 0 END');
+  });
+
+  it('puts a headline beat ahead of a beat that is only tagged', () => {
+    const { sql, params } = buildTalentQuery({ beat: 'Politics' });
+
+    expect(params).toEqual(['Politics', TALENT_PAGE_SIZE]);
+    expect(sql).toContain('ORDER BY (CASE WHEN $1 = ANY(f.beats) THEN 6');
+    expect(sql).toContain('WHEN $1 = ANY(f.beat_tags) THEN 3');
+    // no search text, so nothing to score word by word
+    expect(sql).not.toContain('LATERAL');
   });
 
   it('ignores blank search text', () => {
     expect(buildTalentQuery({ q: '   ' }).params).toEqual([TALENT_PAGE_SIZE]);
+  });
+
+  it('scores the raw words, so wildcard characters stay literal', () => {
+    const { sql, params } = buildTalentQuery({ q: '100%_harbor' });
+
+    expect(sql).toContain('unnest($2::text[])');
+    expect(params[0]).toBe('%100\\%\\_harbor%');
+    expect(params[1]).toEqual(['100%_harbor']);
+  });
+
+  it('combines the search score with the beat-filter score', () => {
+    const { sql, params } = buildTalentQuery({ q: 'harbor', beat: 'Politics' });
+
+    expect(sql).toMatch(/ORDER BY \(COALESCE\(relevance\.text_score, 0\) \+ CASE WHEN \$2 = ANY\(f\.beats\) THEN 6/);
+    expect(params).toEqual(['%harbor%', 'Politics', ['harbor'], TALENT_PAGE_SIZE]);
   });
 });
 
@@ -84,7 +124,7 @@ describe('searchTalent', () => {
       status: 'available',
       note: 'Free right now',
     });
-    expect(queryMock.mock.calls[0][1]).toEqual(['%sarah%', TALENT_PAGE_SIZE]);
+    expect(queryMock.mock.calls[0][1]).toEqual(['%sarah%', ['sarah'], TALENT_PAGE_SIZE]);
   });
 
   it('passes database errors up so the page can show its failed state', async () => {
