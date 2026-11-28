@@ -212,6 +212,18 @@ cannot leave the order in an odd state.
 [`app/onboarding/constants.ts`](./app/onboarding/constants.ts). The seed is skipped when the table
 already has rows, so a beat the team removes is not brought back by the next migration.
 
+## Search ranking
+
+Searches return the closest match first, then fall back to the order the list already had. A result
+is scored against the words typed and any filters applied, so a name or headline beat outranks a
+mention buried in a bio, and a word that starts a value outranks one found in the middle of it.
+
+The weights live in `RELEVANCE_WEIGHTS` in
+[`app/utils/relevance.utils.ts`](./app/utils/relevance.utils.ts) and are interpolated into the SQL
+where ranking runs in the database, so the two cannot drift apart. Filters decide *which* rows match
+exactly as before; only the order changes, and with no search text every list keeps its existing
+order.
+
 ## Work (business) email verification
 
 An editor's work email is proven through Clerk instead of being taken at face value, and Clerk
