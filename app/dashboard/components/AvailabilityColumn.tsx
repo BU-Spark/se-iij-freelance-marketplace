@@ -6,7 +6,8 @@ import SegmentedControl, { type SegmentOption } from './SegmentedControl';
 import RosterCard from '../../components/RosterCard/RosterCard';
 import { useDeskQuery } from './deskQuery';
 import type { RosterMember, RosterView } from '../../types/dashboard.types';
-import { countOnRoster, memberMatches } from '../../utils/dashboard.utils';
+import { countOnRoster, memberMatches, memberRelevanceFields } from '../../utils/dashboard.utils';
+import { rankBy } from '../../utils/relevance.utils';
 import styles from '../dashboard.module.css';
 
 const VIEWS: SegmentOption<RosterView>[] = [
@@ -25,7 +26,11 @@ type AvailabilityColumnProps = {
 export default function AvailabilityColumn({ roster, loadFailed = false }: AvailabilityColumnProps) {
   const [view, setView] = useState<RosterView>('day');
   const { query } = useDeskQuery();
-  const shown = roster.filter((m) => memberMatches(m, query));
+  const shown = rankBy(
+    roster.filter((m) => memberMatches(m, query)),
+    query,
+    memberRelevanceFields
+  );
 
   return (
     <section aria-labelledby="availability-heading">

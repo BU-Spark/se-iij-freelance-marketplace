@@ -224,7 +224,7 @@ mention buried in a bio, and a word that starts a value outranks one found in th
   where the beat is only tagged (+3). Free right now, then name, still settle ties.
 - **Assignments** (the freelancer directory, the task feed and the editor desk's assignment column)
   rank the list they already filtered with [`rankBy`](./app/utils/relevance.utils.ts), with recency
-  or deadline as the tie-break.
+  or deadline as the tie-break. The desk's roster column ranks people the same way.
 
 The weights live in `RELEVANCE_WEIGHTS` in
 [`app/utils/relevance.utils.ts`](./app/utils/relevance.utils.ts) and are interpolated into the SQL

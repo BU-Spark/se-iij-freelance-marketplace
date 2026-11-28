@@ -15,10 +15,11 @@ import {
   assignmentRelevanceFields,
   matchesQuery,
   memberMatches,
+  memberRelevanceFields,
   timeAgo,
   toDeskAssignment,
 } from './dashboard.utils';
-import { relevanceScore } from './relevance.utils';
+import { PREFIX_BONUS, RELEVANCE_WEIGHTS, relevanceScore } from './relevance.utils';
 
 describe('dashboard utils', () => {
   describe('hourSlots', () => {
@@ -193,6 +194,21 @@ describe('desk search ranking', () => {
     expect(relevanceScore('harbor', assignmentRelevanceFields(inTitle))).toBeGreaterThan(
       relevanceScore('harbor', assignmentRelevanceFields(inContact))
     );
+  });
+
+  it('puts a person’s name ahead of the same word found in their city', () => {
+    const inName = { ...ROSTER[0], name: 'Harbor Lee', city: 'London' };
+    const inCity = { ...ROSTER[0], name: 'Marcus Thorne', city: 'Harbor' };
+
+    expect(relevanceScore('harbor', memberRelevanceFields(inName))).toBeGreaterThan(
+      relevanceScore('harbor', memberRelevanceFields(inCity))
+    );
+  });
+
+  it('counts the headline beat once, not as both the specialty and a listed beat', () => {
+    const headline = { ...ROSTER[0], specialty: 'Politics', beats: ['Politics', 'Housing'] };
+
+    expect(relevanceScore('politics', memberRelevanceFields(headline))).toBe(RELEVANCE_WEIGHTS.beat + PREFIX_BONUS);
   });
 
   it('puts a title match ahead of a category plus description match', () => {
